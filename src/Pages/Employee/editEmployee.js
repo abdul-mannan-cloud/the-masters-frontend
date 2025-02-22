@@ -1,15 +1,18 @@
-import React, {useState, useEffect} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import {Container, InputAdornment, TextField} from "@mui/material";
-import plusIcon from '../../resources/Plus.png';
+import { toast } from 'react-toastify';
+import {
+    ArrowLeft, User, UserCog, Phone,
+    Lock, Shield, CreditCard, Save, X,
+    Loader2
+} from 'lucide-react';
 
-import Back from '../../resources/Icons/back.png'
-import {toast} from "react-toastify";
-
-const EditEmployee = ({types}) => {
-    const {id} = useParams();
+const EditEmployee = ({ types }) => {
+    const { id } = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [initialFetch, setInitialFetch] = useState(true);
 
     const [employeeData, setEmployeeData] = useState({
         name: '',
@@ -19,138 +22,253 @@ const EditEmployee = ({types}) => {
         role: '',
     });
 
-    const formatCNIC = (event) => {
-        let value = event.target.value.replace(/\D/g, "");  // Remove non-numeric characters
+    useEffect(() => {
+        fetchEmployeeDetails();
+    }, [id]);
 
+    const fetchEmployeeDetails = async () => {
+        try {
+            setInitialFetch(true);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getemployee/${id}`);
+            setEmployeeData(response.data);
+        } catch (error) {
+            toast.error('Failed to fetch employee details');
+            navigate('/employees');
+        } finally {
+            setInitialFetch(false);
+        }
+    };
+
+    const formatCNIC = (event) => {
+        let value = event.target.value.replace(/\D/g, "");
         if (value.length > 5) value = `${value.slice(0, 5)}-${value.slice(5)}`;
         if (value.length > 13) value = `${value.slice(0, 13)}-${value.slice(13, 14)}`;
-
         event.target.value = value;
     };
 
     const formatPhoneNumber = (event) => {
-        let value = event.target.value.replace(/\D/g, "");  // Remove non-numeric characters
-
-        // Format as "03XX-XXXXXXX"
+        let value = event.target.value.replace(/\D/g, "");
         if (value.length > 4) value = `${value.slice(0, 4)}-${value.slice(4)}`;
-        if (value.length > 11) value = value.slice(0, 12); // Restrict length to 11 digits + 1 dash
-
+        if (value.length > 11) value = value.slice(0, 12);
         event.target.value = value;
     };
 
-    useEffect(() => {
-        const fetchEmployeeDetails = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getemployee/${id}`);
-                setEmployeeData(response.data);
-            } catch (error) {
-                console.error('Error fetching employee details:', error.message);
-            }
-        };
-        fetchEmployeeDetails();
-    }, [id]);
-
     const handleInputChange = (e) => {
-        const {name, value} = e.target;
-        setEmployeeData((prevData) => ({
-            ...prevData,
+        const { name, value } = e.target;
+        setEmployeeData(prev => ({
+            ...prev,
             [name]: value,
         }));
     };
 
+    const validateForm = () => {
+        if (!employeeData.name.trim()) {
+            toast.error('Name is required');
+            return false;
+        }
+        if (employeeData.cnic.length !== 15) {
+            toast.error('Please enter a valid CNIC');
+            return false;
+        }
+        if (employeeData.phone.length !== 12) {
+            toast.error('Please enter a valid phone number');
+            return false;
+        }
+        if (!employeeData.password.trim()) {
+            toast.error('Password is required');
+            return false;
+        }
+        if (!employeeData.role) {
+            toast.error('Please select an employee type');
+            return false;
+        }
+        return true;
+    };
+
     const handleEditEmployee = async () => {
+        if (!validateForm()) return;
+
         try {
-
-            if (employeeData.cnic.length !== 15) {
-                toast.error('CNIC must be 15 characters long');
-                return
-            }
-
-            if (employeeData.phone.length !== 12) {
-                toast.error('Phone number must be 12 characters long');
-                return
-            }
-
-            console.log("Editing an employee...", employeeData);
-
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/employee/editemployee/${id}`, employeeData);
+            setLoading(true);
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/employee/editemployee/${id}`, employeeData);
+            toast.success('Employee updated successfully');
             navigate('/employees');
         } catch (error) {
-            console.error('Error editing employee:', error.message);
+            toast.error('Failed to update employee');
+        } finally {
+            setLoading(false);
         }
     };
 
+    if (initialFetch) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="flex items-center gap-2 text-gray-500">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Loading employee details...
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className='flex h-screen pl-16 pr-1 bg-gray-100 sm:pl-0 sm:pr-0'>
-            <div className='flex flex-col w-full ml-20 overflow-auto'>
-                <div
-                    className={`mt-20 sm:w-[50%] sm:self-center sm:mx-auto items-start justify-start flex flex-row gap-5`}>
-                    <img onClick={() => navigate('/employees')} src={Back}
-                         className='w-10 h-10 cursor-pointer hover:scale-105'/>
-                    <h className='text-3xl font-bold'>EDIT EMPLOYEE</h>
-                </div>
-                <div
-                    className="flex flex-col items-center self-center justify-center w-full py-5 mt-10 align-middle bg-white sm:w-1/2 rounded-xl sm:py-10 sm:px-20">
-                    <span className='text-xl font-bold'>Employee Details</span>
-                    <div className='self-center w-full p-10 bg-white rounded-xl'>
-                        <div className='flex flex-col w-full gap-5 font-bold'>
-                            <div className='flex flex-col w-full gap-2'>
-                                <label>Name</label>
-                                <input type='text'
-                                       className='w-full px-3 py-2 border border-gray-400 rounded-lg shadow-lg'
-                                       name='name' id='name' value={employeeData.name}
-                                       onChange={handleInputChange}></input>
-                            </div>
-                            <div className='flex flex-col w-full gap-2'>
-                                <label>CNIC</label>
-                                <input onInput={formatCNIC} maxLength={15} required
-                                       className='w-full px-3 py-2 border border-gray-400 rounded-lg shadow-lg '
-                                       name='cnic' id='cnic' value={employeeData.cnic} placeholder="#####-#######-#"
-                                       onChange={handleInputChange}></input>
-                            </div>
-                            <div className='flex flex-col w-full gap-2'>
-                                <label>Phone</label>
-                                <input maxLength={12} placeholder="03XX-XXXXXXX" onInput={formatPhoneNumber} required
-                                       className='w-full px-3 py-2 border border-gray-400 rounded-lg shadow-lg'
-                                       name='phone' id='phone' value={employeeData.phone}
-                                       onChange={handleInputChange}></input>
-                            </div>
-                            <div className='flex flex-col w-full gap-2'>
-                                <label>Password</label>
-                                <input className='w-full px-3 py-2 border border-gray-400 rounded-lg shadow-lg'
-                                       name='password' id='password' value={employeeData.password}
-                                       onChange={handleInputChange}></input>
-                            </div>
-                            <div className='flex flex-col w-full gap-2'>
-                                <label>Type</label>
-                                <select required
-                                        className='w-full px-3 py-3 border border-gray-400 rounded-lg shadow-lg'
-                                        name='type' id='type' value={employeeData.role} onChange={(e) => {
-
-                                    setEmployeeData((prevData) => ({
-                                        ...prevData,
-                                        role: e.target.value,
-                                    }));
-                                }}>
-                                    <option value=''>Select Type</option>
-                                    {types.map((type) => (
-                                        <option value={type}>{type}</option>
-                                    ))}
-                                </select>
-                            </div>
+        <div className="min-h-screen bg-gray-100">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="bg-white rounded-xl shadow-sm">
+                    {/* Header */}
+                    <div className="border-b border-gray-200">
+                        <div className="p-6 flex items-center gap-4">
+                            <button
+                                onClick={() => navigate('/employees')}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <ArrowLeft className="w-6 h-6 text-gray-600" />
+                            </button>
+                            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <UserCog className="w-6 h-6" />
+                                Edit Employee
+                            </h1>
                         </div>
                     </div>
-                    <div className='w-full px-10'>
-                        <button onClick={handleEditEmployee}
-                                className='w-full py-2 font-bold text-white transition-all duration-200 bg-opacity-75 rounded-lg shadow-lg bg-[#FAB005] hover:bg-opacity-100'>
-                            Save
-                        </button>
+
+                    {/* Form */}
+                    <div className="p-6">
+                        <div className="max-w-2xl mx-auto">
+                            <div className="space-y-6">
+                                {/* Name */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                        <User className="w-4 h-4" />
+                                        Full Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={employeeData.name}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    />
+                                </div>
+
+                                {/* CNIC */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                        <CreditCard className="w-4 h-4" />
+                                        CNIC
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="cnic"
+                                        placeholder="#####-#######-#"
+                                        maxLength={15}
+                                        value={employeeData.cnic}
+                                        onInput={formatCNIC}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    />
+                                </div>
+
+                                {/* Phone */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                        <Phone className="w-4 h-4" />
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        placeholder="03XX-XXXXXXX"
+                                        maxLength={12}
+                                        value={employeeData.phone}
+                                        onInput={formatPhoneNumber}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    />
+                                </div>
+
+                                {/* Password */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                        <Lock className="w-4 h-4" />
+                                        Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        value={employeeData.password}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    />
+                                </div>
+
+                                {/* Employee Type */}
+                                <div>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                                        <Shield className="w-4 h-4" />
+                                        Employee Type
+                                    </label>
+                                    <select
+                                        name="type"
+                                        value={employeeData.role}
+                                        onChange={(e) => setEmployeeData(prev => ({
+                                            ...prev,
+                                            role: e.target.value
+                                        }))}
+                                        className="w-full p-2.5 border border-gray-200 rounded-lg
+                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    >
+                                        <option value="">Select employee type</option>
+                                        {types.map((type) => (
+                                            <option key={type} value={type}>
+                                                {type}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        onClick={() => navigate('/employees')}
+                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5
+                                            border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50
+                                            transition-colors"
+                                        disabled={loading}
+                                    >
+                                        <X className="w-5 h-5" />
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleEditEmployee}
+                                        disabled={loading}
+                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5
+                                            bg-yellow-400 text-white rounded-lg hover:bg-yellow-500
+                                            transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-5 h-5" />
+                                                Save Changes
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default EditEmployee;
