@@ -91,7 +91,7 @@ const Orders = () => {
 
             // Fetch customer details
             const customerResponse = await axios.get(
-                `${process.env.REACT_APP_BACKEND_URL}/customer/${orderResponse.data.customer._id}`
+                `${process.env.REACT_APP_BACKEND_URL}/customer/get/${orderResponse.data.customer._id}`
             );
             setCustomer(customerResponse.data);
 
@@ -161,7 +161,10 @@ const Orders = () => {
     }
 
     const getAssignedEmployees = (product) => {
-        return product.assignedEmployees || [];
+        console.log('Getting assigned employees for product:', product);
+        //get employees through id
+        const employeeIds = product.assignedEmployees || [];
+        return employees.filter(emp => employeeIds.includes(emp._id));
     };
 
 

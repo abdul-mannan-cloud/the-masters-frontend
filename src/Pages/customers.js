@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -14,6 +14,11 @@ import {
     MapPin,
     ShoppingBag
 } from 'lucide-react';
+import {
+    Ruler, FileText, Image, Download, Save,
+    X, Upload, Camera, Trash
+} from 'lucide-react';
+
 
 const Customers = () => {
     const navigate = useNavigate();
@@ -29,7 +34,7 @@ const Customers = () => {
         try {
             setLoading(true);
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`);
-            setCustomers(response.data.customers);
+            setCustomers(response.data.customer);
         } catch (error) {
             toast.error('Failed to fetch customers');
             console.error('Error fetching customers:', error);
@@ -375,22 +380,44 @@ const EditCustomer = () => {
     );
 };
 
-// ViewCustomer.jsx component (keeping your existing implementation)...
+
+
 const ViewCustomer = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [customer, setCustomer] = useState(null);
     const [orders, setOrders] = useState([]);
+    const [editingMeasurements, setEditingMeasurements] = useState(false);
+    const [measurements, setMeasurements] = useState({});
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
 
     useEffect(() => {
         fetchCustomerDetails();
     }, [id]);
 
+    useEffect(() => {
+        if (customer && customer.measurements) {
+            setMeasurements({
+                chest: customer.measurements.chest || 0,
+                shoulders: customer.measurements.shoulders || 0,
+                neck: customer.measurements.neck || 0,
+                sleeves: customer.measurements.sleeves || 0,
+                topLenght: customer.measurements.topLenght || 0,
+                bottomLenght: customer.measurements.bottomLenght || 0,
+                waist: customer.measurements.waist || 0
+            });
+        }
+    }, [customer]);
+
     const fetchCustomerDetails = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/${id}`);
+            setLoading(true);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${id}`);
             setCustomer(response.data);
+
             // Fetch orders for this customer
             const ordersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/customer/${id}`);
             setOrders(ordersResponse.data);
@@ -402,13 +429,139 @@ const ViewCustomer = () => {
         }
     };
 
-    if (loading) {
+    const handleMeasurementChange = (field, value) => {
+        setMeasurements(prev => ({
+            ...prev,
+            [field]: Number(value)
+        }));
+    };
+
+    const saveMeasurements = async () => {
+        try {
+            setLoading(true);
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/customer/update/${id}`, {
+                measurements: measurements
+            });
+
+            // Update the local state
+            setCustomer(prev => ({
+                ...prev,
+                measurements: measurements
+            }));
+
+            setEditingMeasurements(false);
+            toast.success('Measurements updated successfully');
+        } catch (error) {
+            toast.error('Failed to update measurements');
+            console.error('Error updating measurements:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setUploading(true);
+
+        try {
+            const formData = new FormData();
+
+            files.forEach(file => {
+                // Check file type
+                if (!file.type.match('image.*') && !file.type.match('application/pdf')) {
+                    toast.error('Only images and PDF files are allowed');
+                    return;
+                }
+
+                // Check file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    toast.error('File size should be less than 5MB');
+                    return;
+                }
+
+                formData.append('files', file);
+            });
+
+            formData.append('customerId', id);
+
+            // Upload to server
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/customer/upload-measurement-files`,
+                formData,
+                { headers: { 'Content-Type': 'multipart/form-data' } }
+            );
+
+            if (response.data.success) {
+                // Update customer data with new files
+                const updatedFiles = [...(customer.measurementFiles || []), ...response.data.files];
+                setCustomer(prev => ({
+                    ...prev,
+                    measurementFiles: updatedFiles
+                }));
+
+                toast.success('Files uploaded successfully');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            toast.error('Failed to upload files');
+        } finally {
+            setUploading(false);
+            // Reset file input
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            if (cameraInputRef.current) cameraInputRef.current.value = '';
+        }
+    };
+
+    const removeFile = async (fileId) => {
+        if (!window.confirm('Are you sure you want to delete this file?')) return;
+
+        try {
+            setLoading(true);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/customer/remove-measurement-file/${fileId}`);
+
+            // Update local state
+            const updatedFiles = customer.measurementFiles.filter(file => file.id !== fileId);
+            setCustomer(prev => ({
+                ...prev,
+                measurementFiles: updatedFiles
+            }));
+
+            toast.success('File removed successfully');
+        } catch (error) {
+            toast.error('Failed to remove file');
+            console.error('Error removing file:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const viewFile = (file) => {
+        window.open(file.url, '_blank');
+    };
+
+    if (loading && !customer) {
         return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading...</div>;
     }
 
     if (!customer) {
         return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Customer not found</div>;
     }
+
+    // Check if customer has measurements
+    const hasMeasurements = editingMeasurements || (customer.measurements && (
+        customer.measurements.chest ||
+        customer.measurements.shoulders ||
+        customer.measurements.neck ||
+        customer.measurements.sleeves ||
+        customer.measurements.topLenght ||
+        customer.measurements.bottomLenght ||
+        customer.measurements.waist
+    ));
+
+    // Check if customer has measurement files
+    const hasMeasurementFiles = customer.measurementFiles && customer.measurementFiles.length > 0;
 
     return (
         <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -431,6 +584,7 @@ const ViewCustomer = () => {
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
+                                <h2 className="text-xl font-semibold">Personal Information</h2>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="w-5 h-5 text-gray-500" />
                                     <div>
@@ -460,11 +614,353 @@ const ViewCustomer = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Measurements */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                                        <Ruler className="w-5 h-5" />
+                                        Measurements
+                                    </h2>
+
+                                    {editingMeasurements ? (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setEditingMeasurements(false)}
+                                                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={saveMeasurements}
+                                                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded"
+                                            >
+                                                <Save className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setEditingMeasurements(true)}
+                                            className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded flex items-center gap-1"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            <span className="text-sm">Edit</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {hasMeasurements ? (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-sm text-gray-500">Chest</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.chest || ''}
+                                                    onChange={(e) => handleMeasurementChange('chest', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.chest || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Shoulders</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.shoulders || ''}
+                                                    onChange={(e) => handleMeasurementChange('shoulders', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.shoulders || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Neck</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.neck || ''}
+                                                    onChange={(e) => handleMeasurementChange('neck', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.neck || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Sleeves</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.sleeves || ''}
+                                                    onChange={(e) => handleMeasurementChange('sleeves', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.sleeves || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Top Length</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.topLenght || ''}
+                                                    onChange={(e) => handleMeasurementChange('topLenght', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.topLenght || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Bottom Length</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.bottomLenght || ''}
+                                                    onChange={(e) => handleMeasurementChange('bottomLenght', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.bottomLenght || 0} inches</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500">Waist</p>
+                                            {editingMeasurements ? (
+                                                <input
+                                                    type="number"
+                                                    value={measurements.waist || ''}
+                                                    onChange={(e) => handleMeasurementChange('waist', e.target.value)}
+                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                />
+                                            ) : (
+                                                <p className="font-medium">{customer.measurements.waist || 0} inches</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {editingMeasurements ? (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Chest</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.chest || ''}
+                                                        onChange={(e) => handleMeasurementChange('chest', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Shoulders</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.shoulders || ''}
+                                                        onChange={(e) => handleMeasurementChange('shoulders', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Neck</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.neck || ''}
+                                                        onChange={(e) => handleMeasurementChange('neck', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Sleeves</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.sleeves || ''}
+                                                        onChange={(e) => handleMeasurementChange('sleeves', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Top Length</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.topLenght || ''}
+                                                        onChange={(e) => handleMeasurementChange('topLenght', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Bottom Length</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.bottomLenght || ''}
+                                                        onChange={(e) => handleMeasurementChange('bottomLenght', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Waist</p>
+                                                    <input
+                                                        type="number"
+                                                        value={measurements.waist || ''}
+                                                        onChange={(e) => handleMeasurementChange('waist', e.target.value)}
+                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-gray-500">No measurements recorded</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Measurement Files */}
+                        <div className="mt-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-semibold flex items-center gap-2">
+                                    <FileText className="w-5 h-5" />
+                                    Measurement Documents
+                                </h2>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => fileInputRef.current.click()}
+                                        className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                                        disabled={uploading}
+                                    >
+                                        <Upload className="w-4 h-4" />
+                                        <span className="text-sm">Upload</span>
+                                    </button>
+                                    <button
+                                        onClick={() => cameraInputRef.current.click()}
+                                        className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100"
+                                        disabled={uploading}
+                                    >
+                                        <Camera className="w-4 h-4" />
+                                        <span className="text-sm">Camera</span>
+                                    </button>
+                                </div>
+
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    multiple
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                />
+
+                                <input
+                                    ref={cameraInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                />
+                            </div>
+
+                            {uploading && (
+                                <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
+                                    <p className="text-blue-600">Uploading files...</p>
+                                </div>
+                            )}
+
+                            {hasMeasurementFiles ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {customer.measurementFiles.map((file) => (
+                                        <div
+                                            key={file.id}
+                                            className="border rounded-lg p-3 hover:shadow-md transition-shadow relative"
+                                        >
+                                            <button
+                                                onClick={() => removeFile(file.id)}
+                                                className="absolute top-2 right-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"
+                                            >
+                                                <Trash className="w-4 h-4" />
+                                            </button>
+
+                                            <div className="flex items-start gap-3" onClick={() => viewFile(file)}>
+                                                {file.mimeType.includes('pdf') ? (
+                                                    <FileText className="w-10 h-10 text-red-500" />
+                                                ) : (
+                                                    <div className="relative w-14 h-14 bg-gray-100 rounded overflow-hidden">
+                                                        <img
+                                                            src={file.url}
+                                                            alt="Measurement document"
+                                                            className="absolute inset-0 w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm truncate">{file.name}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {new Date(file.uploadDate).toLocaleDateString()}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <button
+                                                            className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                viewFile(file);
+                                                            }}
+                                                        >
+                                                            <Eye className="w-3 h-3" />
+                                                            View
+                                                        </button>
+                                                        <a
+                                                            href={file.url}
+                                                            download
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="text-xs flex items-center gap-1 text-green-600 hover:text-green-800"
+                                                        >
+                                                            <Download className="w-3 h-3" />
+                                                            Download
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                    <FileText className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                                    <p className="text-gray-500">No measurement documents uploaded</p>
+                                    <button
+                                        onClick={() => fileInputRef.current.click()}
+                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 inline-flex items-center gap-2"
+                                    >
+                                        <Upload className="w-4 h-4" />
+                                        Upload Files
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Recent Orders */}
                         <div className="mt-8">
-                            <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
+                            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                <ShoppingBag className="w-5 h-5" />
+                                Recent Orders
+                            </h2>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead className="bg-gray-50">
@@ -499,18 +995,18 @@ const ViewCustomer = () => {
                                                     Rs. {order.total}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium
-                                    ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    order.status === 'in progress' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-yellow-100 text-yellow-800'}`}>
-                                    {order.status}
-                                </span>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium
+                                                        ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                        order.status === 'in progress' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-yellow-100 text-yellow-800'}`}>
+                                                        {order.status}
+                                                    </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium
-                                    ${order.paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {order.paid ? 'Paid' : 'Unpaid'}
-                                </span>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium
+                                                        ${order.paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                        {order.paid ? 'Paid' : 'Unpaid'}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))

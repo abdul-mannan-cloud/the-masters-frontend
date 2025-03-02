@@ -1,21 +1,26 @@
-// DonutChart.js
+import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
-const DonutChart = ({ title, value }) => {
+const DonutChart = ({ data = [0, 0, 0, 0] }) => {
+    // Default values in case data is missing
+    const seriesData = data.length ? data : [0, 0, 0, 0];
+
     const chartOptions = {
-        series: [35.1, 23.5, 2.4],
-        colors: ["#EF9A91", "#00A389", "#FFBB54"],
+        series: seriesData,
+        colors: ["#FFBB54", "#00A389", "#4F46E5", "#EF9A91"],
+        labels: ['Pending', 'In Progress', 'Completed', 'Shipped'],
         chart: {
-            height: 320,
-            width: "100%",
             type: "donut",
+            fontFamily: "Inter, sans-serif",
         },
         stroke: {
             colors: ["transparent"],
-            lineCap: "",
         },
         dataLabels: {
-            enabled: false,
+            enabled: true,
+            formatter: function (val) {
+                return val.toFixed(1) + "%";
+            },
         },
         legend: {
             position: "bottom",
@@ -25,27 +30,52 @@ const DonutChart = ({ title, value }) => {
             pie: {
                 donut: {
                     size: '75%',
+                    labels: {
+                        show: true,
+                        name: {
+                            show: true,
+                        },
+                        value: {
+                            show: true,
+                            formatter: function(val) {
+                                return val;
+                            }
+                        },
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter: function(w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            }
+                        }
+                    }
                 },
             },
         },
-        grid: {
-            padding: {
-              top: -2,
-            },
-        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    width: 280,
+                    height: 280
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }]
     };
 
-    const series =  [35.1, 23.5, 2.4];
-
     return (
-        <div className="w-full h-full ml-0 sm:ml-32 md:w-1/4">
-            <div className="">
-                <div>
-                    <p className="ml-10 text-xl font-semibold text-center">Chart Summary</p>
-                </div>
-                <div className='flex items-center justify-center w-full h-full mt-10 sm:mt-24'>
-                    <ReactApexChart options={chartOptions} series={series} type="donut" width={350} height={350}/>
-                </div>
+        <div className="w-full h-full">
+            <div className="h-80 flex items-center justify-center">
+                <ReactApexChart
+                    options={chartOptions}
+                    series={seriesData}
+                    type="donut"
+                    height="100%"
+                    width="100%"
+                />
             </div>
         </div>
     );

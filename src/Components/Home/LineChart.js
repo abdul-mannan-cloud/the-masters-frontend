@@ -1,83 +1,119 @@
-// BarChart.js
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
-const LineChart = ({ title , data}) => {
+const LineChart = ({ data = [], categories = [] }) => {
+    // Default values in case data is missing
+    const chartData = data.length ? data : [0, 0, 0, 0, 0, 0];
+    // Default categories if none provided
+    const chartCategories = categories.length ?
+        categories :
+        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
     const chartOptions = {
         chart: {
             height: "100%",
-            maxWidth: "100%",
             type: "area",
             fontFamily: "Inter, sans-serif",
-            dropShadow: {
-              enabled: false,
-            },
             toolbar: {
-              show: false,
+                show: false,
             },
-          },
-          colors: ["#FFBB54", "#00A389"],
-          tooltip: {
-            enabled: true,
-            x: {
-              show: false,
-            },
-          },
-          
-          dataLabels: {
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+            }
+        },
+        colors: ["#00A389"],
+        fill: {
+            type: "gradient",
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.7,
+                opacityTo: 0.3,
+                stops: [0, 90, 100]
+            }
+        },
+        dataLabels: {
             enabled: false,
-          },
-          stroke: {
+        },
+        stroke: {
+            curve: 'smooth',
             width: 3,
-          },
-          grid: {
-            show: false,
+        },
+        grid: {
+            show: true,
             strokeDashArray: 4,
             padding: {
-              left: 2,
-              right: 2,
-              top: 0
+                left: 0,
+                right: 0,
+                top: 0
             },
-          },
-          series: [
-            {
-              name: "New users",
-              data: [1500, 6418, 2456, 3526, 1356, 456],
-              color: "#1A56DB",
-            },
-          ],
-          xaxis: {
-            categories: ['01 February', '02 February', '03 February', '04 February', '05 February', '06 February', '07 February'],
+        },
+        xaxis: {
+            categories: chartCategories,
             labels: {
-              show: false,
+                show: true,
+                style: {
+                    fontFamily: 'Inter, sans-serif',
+                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                }
             },
             axisBorder: {
-              show: false,
+                show: false,
             },
             axisTicks: {
-              show: false,
+                show: false,
             },
-          },
-          yaxis: {
-            categories: [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000],
-            show: false,
-          },
-        }
+        },
+        yaxis: {
+            labels: {
+                show: true,
+                style: {
+                    fontFamily: 'Inter, sans-serif',
+                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                },
+                formatter: function (value) {
+                    return value.toLocaleString();
+                }
+            }
+        },
+        tooltip: {
+            enabled: true,
+            x: {
+                show: true,
+            },
+            y: {
+                formatter: function (value) {
+                    return 'Rs. ' + value.toLocaleString();
+                }
+            }
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    height: 200
+                }
+            }
+        }]
+    };
 
     const series = [
         {
-            name: 'Series 1',
-            data: data
+            name: 'Revenue',
+            data: chartData
         },
     ];
 
     return (
-        <div className="w-full xl:w-1/2">
-            <div className="flex flex-col gap-5">
-                <div className="bg-white">
-                    <ReactApexChart options={chartOptions} series={series} type="line" width={120} />
-                </div>
-            </div>
+        <div className="w-full h-full">
+            <ReactApexChart
+                options={chartOptions}
+                series={series}
+                type="area"
+                height="100%"
+                width="100%"
+            />
         </div>
     );
 };

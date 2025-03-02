@@ -1,43 +1,98 @@
-// BarChart.js
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
-const BarChart = ({ title , data}) => {
+const BarChart = ({ data = [], categories = [] }) => {
+    // Default values in case data is missing
+    const chartData = data.length ? data : [0, 0, 0, 0, 0];
+    // Default categories if none provided
+    const chartCategories = categories.length ? categories : ['Shirts', 'Kurta', 'Qameez', 'Pants', 'Suits'];
+
     const chartOptions = {
         chart: {
             type: 'bar',
-            stacked: true,
+            stacked: false,
+            toolbar: {
+                show: false
+            },
+            fontFamily: "Inter, sans-serif",
         },
-        colors: ["#FFBB54", "#00A389"],
+        colors: ["#FFBB54"],
         plotOptions: {
             bar: {
                 horizontal: false,
+                columnWidth: '55%',
+                borderRadius: 4,
+                dataLabels: {
+                    position: 'top',
+                },
             },
         },
+        dataLabels: {
+            enabled: false,
+        },
         xaxis: {
-            categories: [ 'Shirts', 'Kurta', 'Qameez', 'Pants', 'Suits'],
+            categories: chartCategories,
+            axisBorder: {
+                show: false,
+            },
+            axisTicks: {
+                show: false,
+            },
+        },
+        yaxis: {
+            labels: {
+                formatter: function (val) {
+                    return val.toFixed(0);
+                }
+            },
+        },
+        grid: {
+            borderColor: '#f1f1f1',
+            strokeDashArray: 4,
+            yaxis: {
+                lines: {
+                    show: true
+                }
+            }
         },
         legend: {
             position: 'bottom',
+            fontFamily: "Inter, sans-serif",
         },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val.toFixed(0);
+                }
+            }
+        },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: {
+                    height: 300
+                },
+            }
+        }]
     };
 
     const series = [
         {
-            name: 'Series 1',
-            data: data,
+            name: 'Orders',
+            data: chartData,
         },
     ];
 
     return (
-        <div className="w-full md:w-1/2">
-            <div className="flex flex-col gap-5 overflow-hidden">
-                <div>
-                    <p className="text-xl font-semibold text-center">Charts</p>
-                </div>
-                <div className="mt-10 bg-white">
-                    <ReactApexChart options={chartOptions} series={series} type="bar" height={350} />
-                </div>
+        <div className="w-full h-full">
+            <div className="h-60">
+                <ReactApexChart
+                    options={chartOptions}
+                    series={series}
+                    type="bar"
+                    height="100%"
+                    width="100%"
+                />
             </div>
         </div>
     );
