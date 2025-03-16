@@ -17,6 +17,11 @@ const PlaceOrder = () => {
     const [savedCustomer, setSavedCustomer] = useState();
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isMeasurementFileUploaded, setIsMeasurementFileUploaded] = useState(false);
+    const [hasUploadedFile, setHasUploadedFile] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [customer, setCustomer] = useState({
         name: '',
@@ -138,6 +143,10 @@ const PlaceOrder = () => {
         setProducts(updatedProducts);
     };
 
+    const handleFileUpload = (isUploaded) => {
+        setIsMeasurementFileUploaded(isUploaded);
+    };
+
     const filteredCustomers = customers.filter((customer) => {
         return customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             customer.phone.includes(searchQuery);
@@ -149,6 +158,37 @@ const PlaceOrder = () => {
         { icon: Ruler, label: "Measurements" },
         { icon: CreditCard, label: "Payment" }
     ];
+
+    useEffect(() => {
+        if (savedCustomer) {
+            fetchCustomerDetails();
+        }
+    }, [savedCustomer]);
+
+    const fetchCustomerDetails = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${savedCustomer}`);
+
+            // Update measurements state if customer has saved measurements
+            if (response.data.measurements) {
+                setMeasurements(response.data.measurements);
+            }
+
+            // Set uploaded files if customer has them
+            if (response.data.measurementFiles && response.data.measurementFiles.length > 0) {
+                setUploadedFiles(response.data.measurementFiles);
+                setHasUploadedFile(true);
+            } else {
+                setHasUploadedFile(false);
+            }
+        } catch (error) {
+            console.error('Error fetching customer details:', error);
+            toast.error('Failed to load customer measurement data');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -459,6 +499,15 @@ const PlaceOrder = () => {
                                             measurements={measurements}
                                             setMeasurements={setMeasurements}
                                             customer={savedCustomer}
+                                            onFileUpload={handleFileUpload}
+                                            setIsLoading={setIsLoading}
+                                            isLoading={isLoading}
+                                            setHasUploadedFile={setHasUploadedFile}
+                                            uploadedFiles={uploadedFiles}
+                                            isUploading={isUploading}
+                                            setIsUploading={setIsUploading}
+                                            setUploadedFiles={setUploadedFiles}
+                                            hasUploadedFile={hasUploadedFile}
                                         />
                                         <div className="flex justify-end gap-4 mt-6">
                                             <button
@@ -470,6 +519,17 @@ const PlaceOrder = () => {
                                             </button>
                                             <button
                                                 onClick={() => {
+                                                    // Skip validation if file is uploaded now or was uploaded before
+                                                    // Check if a measurement file exists for this customer
+                                                    const hasMeasurementFile = isMeasurementFileUploaded ||
+                                                        uploadedFiles.length>0 ||
+                                                        (measurements.hasExistingFile === true);
+
+                                                    if (hasMeasurementFile) {
+                                                        setStep(4);
+                                                        return;
+                                                    }
+
                                                     const invalidMeasurements = !measurements.chest || !measurements.shoulders ||
                                                         !measurements.neck || !measurements.sleeves || !measurements.waist ||
                                                         !measurements.bottomLenght || !measurements.topLenght;
