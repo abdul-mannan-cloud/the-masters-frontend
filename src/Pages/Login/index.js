@@ -1,24 +1,27 @@
-import {useEffect, useState} from "react";
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
 
-import MobileIcon from '../../resources/MobileIcon.png';
-import lockIcon from '../../resources/EOS_LOCK_OPEN_OUTLINED.png';
-import eyeIcon from '../../resources/eye_icon.png'
-import axios from "axios";
-import { toast } from "react-toastify";
-
-export default function Login () {
-
-    const [userName,setUsername] = useState('');
-    const [password,setPassword] = useState('');
+const Login = () => {
+    const [userName, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = async () => {
-        const formData = new FormData();
-        formData.append('userName', userName);
-        formData.append('password', password);
+    useEffect(() => {
+        localStorage.clear();
+    }, []);
 
+    const handleSubmit = async () => {
+        if (!userName || !password) {
+            toast.error('Please enter both username and password');
+            return;
+        }
+
+        setLoading(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/login`, {
                 params: {
@@ -27,40 +30,93 @@ export default function Login () {
                 }
             });
             localStorage.setItem('ciseauxtoken', res.data.token);
-            toast.success('You are logged in');
-            navigate('/home')
+            toast.success('Login successful');
+            navigate('/home');
         } catch (error) {
             console.error('Error:', error);
-            toast.error('Something went wrong');
+            toast.error('Invalid credentials or server error');
+        } finally {
+            setLoading(false);
         }
     };
 
-    useEffect(() => {
-        localStorage.clear();
-    },[]) 
-    
-    
-  return (
-    <div>
-        <div className="flex items-center justify-center w-full h-screen gap-32 p-24 py-0 align-middle bg-gray-100">
-            <div className="flex flex-wrap items-center justify-center w-full h-screen gap-10 align-middle bg-gray-100">
-                <form className="flex flex-col w-4/12 gap-3 p-10 bg-white border-2 rounded-2xl max-w-8/12 h-fit border-[#FAB005]">
-                    <h className="self-center text-2xl font-bold">Login</h>
-                    <label className="flex gap-3"><img src={MobileIcon} className="w-5 h-5"/>Username</label>
-                    <input value={userName} onChange={e=>setUsername(e.target.value)} type="text" className="w-full p-1 border-2 border-[#FAB005] rounded-lg"></input>
-                    <label  className="flex gap-3"><img src={lockIcon} className="w-5 h-5"/>Password</label>
-                    <div className="relative">
-                        <input value={password} onChange={e=>setPassword(e.target.value)} type={isPasswordVisible ? 'text' : 'password'} className="w-full p-1 border-2 border-[#FAB005] rounded-lg"></input>
-                        <img src={eyeIcon} onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="absolute w-5 h-5 transform -translate-y-1/2 cursor-pointer right-3 top-1/2"/>
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="max-w-md w-full p-8 bg-white rounded-xl  border border-gray-200">
+                <div className="mb-8 text-center">
+                    <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
+                    <p className="text-gray-600 mt-2">Sign in to your account</p>
+                </div>
+
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <User className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                value={userName}
+                                onChange={(e) => setUsername(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                placeholder="Enter your username"
+                            />
+                        </div>
                     </div>
-                    
-                    <button type="button" onClick={handleSubmit} className="w-full p-3 mt-10 font-bold text-center text-white transition-all duration-300 bg-[#FAB005] bg-opacity-75 rounded-lg hover:bg-opacity-100">Login</button>
-                    {/*<Link href="/signup" className="w-full p-3 font-bold text-center text-white transition-all duration-300 bg-gray-400 rounded-lg hover:bg-gray-500">Krijo një Llogari</Link>*/}
-                </form>
-                
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Lock className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type={isPasswordVisible ? 'text' : 'password'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                placeholder="Enter your password"
+                            />
+                            <div
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                            >
+                                {isPasswordVisible ? (
+                                    <EyeOff className="h-5 w-5 text-gray-400" />
+                                ) : (
+                                    <Eye className="h-5 w-5 text-gray-400" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="w-full p-3 bg-yellow-400 text-white font-medium rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                    </button>
+                </div>
+
+                <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600">
+                        Need help? Contact your administrator
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
-   )
-}
+    );
+};
 
+export default Login;

@@ -17,6 +17,7 @@ const Dashboard = () => {
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
     const [customers, setCustomers] = useState([]);
+    const [topCustomers, setTopCustomers] = useState([]); // New state for top customers
     const [orderStats, setOrderStats] = useState({
         totalOrders: 0,
         totalRevenue: 0,
@@ -29,7 +30,6 @@ const Dashboard = () => {
         categories: []
     });
     const [topProducts, setTopProducts] = useState([]);
-    const [recentOrders, setRecentOrders] = useState([]);
     const [productData, setProductData] = useState({
         counts: [],
         categories: []
@@ -90,11 +90,8 @@ const Dashboard = () => {
             processProductData(productData, orderData);
             calculateOrderStatusData(orderData);
 
-            // Get recent orders
-            const sortedOrders = [...orderData].sort((a, b) =>
-                new Date(b.date) - new Date(a.date)
-            );
-            setRecentOrders(sortedOrders.slice(0, 5));
+            // Calculate top customers by order frequency
+            processTopCustomers(orderData, customerData);
 
         } catch (error) {
             console.error("Error in dashboard data processing:", error);
@@ -102,6 +99,72 @@ const Dashboard = () => {
             setLoading(false);
         }
     };
+
+    // New function to process top customers
+    const processTopCustomers = (orderData, customerData) => {
+        // Create a map to count orders per customer
+        const customerOrderCount = {};
+        const customerTotalSpend = {};
+        const customerLastOrderDate = {};
+
+        // Count orders per customer and calculate total spend
+        orderData.forEach(order => {
+            console.log('order data:', order);
+            if (!order.customer) return;
+
+            const customerId = order.customer._id;
+
+
+            // Count orders
+            if (customerOrderCount[customerId]) {
+                customerOrderCount[customerId]++;
+                customerTotalSpend[customerId] += (order.total || 0);
+
+                // Update last order date if this order is more recent
+                const orderDate = new Date(order.date);
+                const lastDate = new Date(customerLastOrderDate[customerId]);
+                if (orderDate > lastDate) {
+                    customerLastOrderDate[customerId] = order.date;
+                }
+            } else {
+                customerOrderCount[customerId] = 1;
+                customerTotalSpend[customerId] = (order.total || 0);
+                customerLastOrderDate[customerId] = order.date;
+            }
+        });
+
+        // Create an array of customer objects with order counts
+        const customerArray = [];
+
+        // Match customer IDs with customer data
+        for (const customerId in customerOrderCount) {
+            // Find the customer in the customer data
+            const customerInfo = customerData.find(c => c._id === customerId);
+
+            if (customerInfo) {
+                customerArray.push({
+                    id: customerId,
+                    name: `${customerInfo.name || ''}`.trim() || 'Unknown',
+                    phone: customerInfo.phone || 'N/A',
+                    orderCount: customerOrderCount[customerId],
+                    totalSpend: customerTotalSpend[customerId],
+                    lastOrderDate: customerLastOrderDate[customerId]
+                });
+            }
+        }
+
+        // Sort by number of orders (descending)
+        const sortedCustomers = customerArray.sort((a, b) => b.orderCount - a.orderCount);
+
+        // Get top 5 customers
+        setTopCustomers(sortedCustomers.slice(0, 5));
+
+        console.log("Order data:", orderData);
+        console.log("Customer data:", customerData);
+        console.log("Customer order counts:", customerOrderCount);
+        console.log("Final top customers:", sortedCustomers.slice(0, 5));
+    };
+
 
     const calculateOrderStats = (orderData) => {
         const totalOrders = orderData.length;
@@ -600,7 +663,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Bottom Section - Popular Items & Recent Orders */}
+                {/* Bottom Section - Popular Items & Top Customers */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Popular Products */}
                     <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -634,7 +697,7 @@ const Dashboard = () => {
                                                 <div className="bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center">
                                                     <Scissors className="h-4 w-4 text-gray-600" />
                                                 </div>
-                                                <div className="ml-3">
+                                                <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900">{product.type}</div>
                                                 </div>
                                             </div>
@@ -647,84 +710,56 @@ const Dashboard = () => {
                                         </td>
                                     </tr>
                                 ))}
-                                {topProducts.length === 0 && (
-                                    <tr>
-                                        <td colSpan="3" className="px-4 py-3 text-center text-sm text-gray-500">
-                                            No product data available
-                                        </td>
-                                    </tr>
-                                )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    {/* Recent Orders */}
+                    {/* Top Customers */}
                     <div className="bg-white p-6 rounded-xl shadow-sm">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <ShoppingBag className="h-5 w-5 mr-2 text-green-500" />
-                                Recent Orders
+                                <Users className="h-5 w-5 mr-2 text-purple-500" />
+                                Top Customers
                             </h2>
-                            <button onClick={() => navigate('/orders')} className="text-sm text-blue-600 hover:text-blue-800">
-                                View all
-                            </button>
+                            <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead>
                                 <tr>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Order ID
+                                        Name
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Date
+                                        Orders
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
+                                        Total Spend
                                     </th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Total
+                                        Last Order
                                     </th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                {recentOrders.map((order) => (
-                                    <tr
-                                        key={order._id}
-                                        className="hover:bg-gray-50 cursor-pointer"
-                                        onClick={() => navigate(`/orders/${order._id}`)}
-                                    >
+                                {topCustomers.map((customer, index) => (
+                                    <tr key={index} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-blue-600">
-                                                #{order._id.substring(0, 8)}
-                                            </div>
+                                            <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                                            <div className="text-xs text-gray-500">{customer.phone}</div>
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {new Date(order.date).toLocaleDateString()}
-                                            </div>
+                                            <div className="text-sm text-gray-900">{customer.orderCount}</div>
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                              ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-blue-100 text-blue-800'}`}>
-                                              {order.status}
-                                            </span>
+                                            <div className="text-sm text-gray-900">{formatCurrency(customer.totalSpend)}</div>
                                         </td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                            {formatCurrency(order.total)}
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{new Date(customer.lastOrderDate).toLocaleDateString()}</div>
                                         </td>
                                     </tr>
                                 ))}
-                                {recentOrders.length === 0 && (
-                                    <tr>
-                                        <td colSpan="4" className="px-4 py-3 text-center text-sm text-gray-500">
-                                            No recent orders
-                                        </td>
-                                    </tr>
-                                )}
                                 </tbody>
                             </table>
                         </div>
@@ -733,6 +768,6 @@ const Dashboard = () => {
             </div>
         </div>
     );
-};
+}
 
 export default Dashboard;

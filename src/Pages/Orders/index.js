@@ -101,9 +101,6 @@ const Orders = () => {
             const filteredProducts = productsData.data.filter(product =>
                 productIds.includes(product._id)
             );
-            console.log('all products:', productsData.data);
-            console.log('order response products:', orderResponse.data.products);
-            console.log('filtered products:', filteredProducts);
             setProducts(filteredProducts);
         } catch (error) {
             toast.error('Failed to fetch order details');
@@ -256,6 +253,7 @@ const Orders = () => {
                     {/* Main Content Grid */}
                     <div className="grid grid-cols-3 gap-6 p-6">
                         {/* Customer Details */}
+                        {/* Customer Details */}
                         <div className="col-span-1 bg-gray-50 rounded-lg p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -266,9 +264,9 @@ const Orders = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                                        <span className="text-yellow-800 font-medium">
-                                            {customer?.name?.[0]?.toUpperCase()}
-                                        </span>
+                <span className="text-yellow-800 font-medium">
+                    {customer?.name?.[0]?.toUpperCase()}
+                </span>
                                     </div>
                                     <div>
                                         <p className="font-medium text-gray-900">{customer.name}</p>
@@ -278,6 +276,33 @@ const Orders = () => {
                                 <div className="pt-4 border-t border-gray-200">
                                     <p className="text-sm text-gray-500">Delivery Address</p>
                                     <p className="mt-1 text-sm text-gray-900">{customer.address}</p>
+                                </div>
+
+                                {/* Customer Measurements */}
+                                <div className="pt-4 border-t border-gray-200">
+                                    <p className="text-sm text-gray-500">Measurements</p>
+                                    <div className="mt-2 grid grid-cols-2 gap-2">
+                                        {customer.measurements && Object.entries(customer.measurements).map(([key, value]) => (
+                                            <div key={key} className="text-sm">
+                                                <span className="font-medium capitalize">{key}: </span>
+                                                <span>{value}</span>
+                                            </div>
+                                        ))}
+                                        {(!customer.measurements || Object.keys(customer.measurements).length === 0) && (
+                                            <p className="text-sm text-gray-400">No measurements available</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* View Customer Button */}
+                                <div className="pt-4">
+                                    <button
+                                        onClick={() => navigate(`/customers/view/${customer._id}`)}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        View Customer Profile
+                                    </button>
                                 </div>
                             </div>
                         </div>
