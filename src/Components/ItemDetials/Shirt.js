@@ -3,45 +3,12 @@ import { toast } from 'react-toastify';
 import { Upload, FileText, Camera, X, AlertCircle, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
-const MeasurementDetails = ({ measurements, setMeasurements, customer }) => {
-    const [hasUploadedFile, setHasUploadedFile] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [isUploading, setIsUploading] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploadedFile,setHasUploadedFile,uploadedFiles,setUploadedFiles,isUploading,setIsUploading,isLoading,setIsLoading }) => {
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
 
     // Fetch customer's measurements and files when the component mounts or customer changes
-    useEffect(() => {
-        if (customer) {
-            fetchCustomerDetails();
-        }
-    }, [customer]);
 
-    const fetchCustomerDetails = async () => {
-        setIsLoading(true);
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${customer}`);
-
-            // Update measurements state if customer has saved measurements
-            if (response.data.measurements) {
-                setMeasurements(response.data.measurements);
-            }
-
-            // Set uploaded files if customer has them
-            if (response.data.measurementFiles && response.data.measurementFiles.length > 0) {
-                setUploadedFiles(response.data.measurementFiles);
-                setHasUploadedFile(true);
-            } else {
-                setHasUploadedFile(false);
-            }
-        } catch (error) {
-            console.error('Error fetching customer details:', error);
-            toast.error('Failed to load customer measurement data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleMeasurementChange = (field, value) => {
         setMeasurements(prev => ({
