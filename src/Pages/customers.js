@@ -25,16 +25,45 @@ const Customers = () => {
     const [customers, setCustomers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
+    });
+    const customersPerPage = 10;
 
     useEffect(() => {
-        fetchCustomers();
-    }, []);
+        const timeoutId = setTimeout(() => {
+            fetchCustomers(currentPage, searchQuery);
+        }, 300);
 
-    const fetchCustomers = async () => {
+        return () => clearTimeout(timeoutId);
+    }, [currentPage, searchQuery]);
+
+    const fetchCustomers = async (page = 1, query = '') => {
         try {
             setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`);
-            setCustomers(response.data.customer);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
+                params: {
+                    page,
+                    limit: customersPerPage,
+                    query
+                }
+            });
+            const responseData = response.data;
+            setCustomers(responseData?.data || responseData?.customer || []);
+            setPagination(responseData?.pagination || {
+                page,
+                limit: customersPerPage,
+                total: 0,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPrevPage: false
+            });
         } catch (error) {
             toast.error('Failed to fetch customers');
             console.error('Error fetching customers:', error);
@@ -48,7 +77,7 @@ const Customers = () => {
             try {
                 await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/customer/delete/${id}`);
                 toast.success('Customer deleted successfully');
-                fetchCustomers();
+                fetchCustomers(currentPage, searchQuery);
             } catch (error) {
                 toast.error('Failed to delete customer');
                 console.error('Error deleting customer:', error);
@@ -56,10 +85,26 @@ const Customers = () => {
         }
     };
 
-    const filteredCustomers = customers.filter(customer =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.phone.includes(searchQuery)
-    );
+    const effectiveTotalPages = pagination.totalPages || Math.max(1, Math.ceil((pagination.total || 0) / customersPerPage));
+    const canGoPrev = pagination.hasPrevPage ?? currentPage > 1;
+    const canGoNext = pagination.hasNextPage ?? currentPage < effectiveTotalPages;
+
+    const getPageNumbers = () => {
+        const pageNumbers = [];
+        const maxButtons = 5;
+        let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        let end = Math.min(effectiveTotalPages, start + maxButtons - 1);
+
+        if (end - start + 1 < maxButtons) {
+            start = Math.max(1, end - maxButtons + 1);
+        }
+
+        for (let i = start; i <= end; i++) {
+            pageNumbers.push(i);
+        }
+
+        return pageNumbers;
+    };
 
     return (
                 <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -85,7 +130,10 @@ const Customers = () => {
                                 type="text"
                                 placeholder="Search customers by name or phone..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                             />
                         </div>
@@ -108,12 +156,12 @@ const Customers = () => {
                                 <tr>
                                     <td colSpan="5" className="text-center py-4">Loading...</td>
                                 </tr>
-                            ) : filteredCustomers.length === 0 ? (
+                            ) : customers.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="text-center py-4">No customers found</td>
                                 </tr>
                             ) : (
-                                filteredCustomers.map((customer) => (
+                                customers.map((customer) => (
                                     <tr key={customer._id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 text-sm text-gray-900">{customer.name}</td>
                                         <td className="px-4 py-3 text-sm text-gray-600">{customer.phone}</td>
@@ -147,6 +195,43 @@ const Customers = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {!loading && (
+                        <div className="flex items-center justify-between mt-6">
+                            <p className="text-sm text-gray-600">
+                                Page {currentPage} of {effectiveTotalPages} ({pagination.total} total customers)
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                                <button
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={!canGoPrev}
+                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                >
+                                    Previous
+                                </button>
+                                {getPageNumbers().map((pageNumber) => (
+                                    <button
+                                        key={pageNumber}
+                                        onClick={() => setCurrentPage(pageNumber)}
+                                        className={`px-3 py-1 rounded-lg border ${
+                                            currentPage === pageNumber
+                                                ? 'bg-yellow-400 text-white border-yellow-400'
+                                                : 'border-gray-300 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                                    disabled={!canGoNext}
+                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -391,12 +476,22 @@ const ViewCustomer = () => {
     const [editingMeasurements, setEditingMeasurements] = useState(false);
     const [measurements, setMeasurements] = useState({});
     const [uploading, setUploading] = useState(false);
+    const [ordersPage, setOrdersPage] = useState(1);
+    const [ordersSearchQuery] = useState('');
+    const [ordersPagination, setOrdersPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
+    });
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
 
     useEffect(() => {
-        fetchCustomerDetails();
-    }, [id]);
+        fetchCustomerDetails(ordersPage);
+    }, [id, ordersPage]);
 
     useEffect(() => {
         if (customer && customer.measurements) {
@@ -412,15 +507,30 @@ const ViewCustomer = () => {
         }
     }, [customer]);
 
-    const fetchCustomerDetails = async () => {
+    const fetchCustomerDetails = async (page = 1) => {
         try {
             setLoading(true);
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${id}`);
             setCustomer(response.data);
 
             // Fetch orders for this customer
-            const ordersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/customer/${id}`);
-            setOrders(ordersResponse.data);
+            const ordersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/customer/${id}`, {
+                params: {
+                    page,
+                    limit: 10,
+                    query: ordersSearchQuery
+                }
+            });
+            const ordersData = ordersResponse.data;
+            setOrders(ordersData?.data || ordersData?.orders || []);
+            setOrdersPagination(ordersData?.pagination || {
+                page,
+                limit: 10,
+                total: 0,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPrevPage: false
+            });
         } catch (error) {
             toast.error('Failed to fetch customer details');
             console.error('Error fetching customer details:', error);
@@ -1013,6 +1123,27 @@ const ViewCustomer = () => {
                                     )}
                                     </tbody>
                                 </table>
+                            </div>
+                            <div className="flex items-center justify-between mt-4">
+                                <p className="text-sm text-gray-600">
+                                    Page {ordersPagination.page} of {ordersPagination.totalPages} ({ordersPagination.total} total orders)
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setOrdersPage((prev) => Math.max(prev - 1, 1))}
+                                        disabled={!ordersPagination.hasPrevPage}
+                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        onClick={() => setOrdersPage((prev) => prev + 1)}
+                                        disabled={!ordersPagination.hasNextPage}
+                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

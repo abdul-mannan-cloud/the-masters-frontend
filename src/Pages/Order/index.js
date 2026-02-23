@@ -22,13 +22,20 @@ import {
 const AllOrders = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
-    const [allOrders, setAllOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [statusQuery, setStatusQuery] = useState('All');
     const [expandedOrderId, setExpandedOrderId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 8,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
+    });
     const ordersPerPage = 8;
 
     useEffect(() => {
@@ -36,15 +43,36 @@ const AllOrders = () => {
             navigate('/login');
             return;
         }
-        getOrders();
     }, []);
 
-    const getOrders = async () => {
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            getOrders(currentPage, searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [currentPage, searchQuery]);
+
+    const getOrders = async (page = 1, query = '') => {
         try {
             setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/getallorders`);
-            setOrders(response.data);
-            setAllOrders(response.data);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/getallorders`, {
+                params: {
+                    page,
+                    limit: ordersPerPage,
+                    query
+                }
+            });
+            const responseData = response.data;
+            setOrders(responseData?.data || responseData?.orders || []);
+            setPagination(responseData?.pagination || {
+                page,
+                limit: ordersPerPage,
+                total: 0,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPrevPage: false
+            });
         } catch (error) {
             toast.error("Failed to fetch orders");
             console.error("Error fetching data:", error);
@@ -53,24 +81,10 @@ const AllOrders = () => {
         }
     };
 
-    useEffect(() => {
-        if (selectedDate) {
-            const filteredOrders = allOrders.filter((order) => {
-                const jobDate = format(new Date(order.date), 'yyyy-MM-dd');
-                return jobDate === selectedDate;
-            });
-            setOrders(filteredOrders);
-        } else {
-            setOrders(allOrders);
-        }
-    }, [selectedDate, allOrders]);
-
     const filteredOrders = orders.filter((order) => {
-        const orderStatus = order.status.toLowerCase().includes(searchQuery.toLowerCase());
-        const orderIdMatch = order._id.toLowerCase().includes(searchQuery.toLowerCase());
-        const customerMatch = order.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        const orderDateMatch = !selectedDate || format(new Date(order.date), 'yyyy-MM-dd') === selectedDate;
         const statusQueryMatch = statusQuery === 'All' || order.status.toLowerCase() === statusQuery.toLowerCase();
-        return (orderIdMatch || orderStatus || customerMatch) && statusQueryMatch;
+        return orderDateMatch && statusQueryMatch;
     });
 
     const getStatusColor = (status) => {
@@ -103,15 +117,15 @@ const AllOrders = () => {
         }
     };
 
-    // Pagination
-    const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
-    const indexOfLastOrder = currentPage * ordersPerPage;
-    const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-    const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+    const currentOrders = filteredOrders;
+    const effectiveTotalPages = pagination.totalPages || Math.max(1, Math.ceil((pagination.total || 0) / ordersPerPage));
+    const canGoPrev = pagination.hasPrevPage ?? currentPage > 1;
+    const canGoNext = pagination.hasNextPage ?? currentPage < effectiveTotalPages;
 
     const getPageNumbers = () => {
         const pageNumbers = [];
         const maxButtons = 5;
+        const totalPages = effectiveTotalPages;
         let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let end = Math.min(totalPages, start + maxButtons - 1);
 
@@ -147,12 +161,18 @@ const AllOrders = () => {
                             <input
                                 type="date"
                                 value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedDate(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                             />
                             <select
                                 value={statusQuery}
-                                onChange={(e) => setStatusQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setStatusQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                             >
                                 <option value="All">All Status</option>
@@ -172,7 +192,10 @@ const AllOrders = () => {
                                 type="text"
                                 placeholder="Search orders by ID, status, or customer..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                             />
                         </div>
@@ -297,11 +320,11 @@ const AllOrders = () => {
                     </div>
 
                     {/* Pagination */}
-                    {!loading && filteredOrders.length > 0 && (
+                    {!loading && pagination.total > 0 && (
                         <div className="flex justify-center items-center gap-2 mt-6">
                             <button
                                 onClick={() => setCurrentPage(currentPage - 1)}
-                                disabled={currentPage === 1}
+                                disabled={!canGoPrev}
                                 className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
                             >
                                 <ChevronLeft className="w-5 h-5" />
@@ -322,7 +345,7 @@ const AllOrders = () => {
                             ))}
                             <button
                                 onClick={() => setCurrentPage(currentPage + 1)}
-                                disabled={currentPage === totalPages}
+                                disabled={!canGoNext}
                                 className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
                             >
                                 <ChevronRight className="w-5 h-5" />

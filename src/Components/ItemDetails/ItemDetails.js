@@ -22,9 +22,12 @@ const Shirt = ({item, model, setModel}) => {
 
     const getEmployees = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`);
-            const cutters = response.data.filter((employee) => { return employee.role == 'cutter'})
-            const tailors = response.data.filter((employee) => { return employee.role == 'tailor'})
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`, {
+                params: { page: 1, limit: 200, query: '' }
+            });
+            const employees = response.data?.data || response.data?.employees || [];
+            const cutters = employees.filter((employee) => { return employee.role == 'cutter'})
+            const tailors = employees.filter((employee) => { return employee.role == 'tailor'})
             console.log(cutters);
             console.log(tailors);
             setCutters(cutters);

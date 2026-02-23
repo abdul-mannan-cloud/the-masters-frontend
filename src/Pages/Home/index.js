@@ -53,9 +53,13 @@ const Dashboard = () => {
 
             try {
                 [ordersResponse, productsResponse, customersResponse] = await Promise.all([
-                    axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/getallorders`),
+                    axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/getallorders`, {
+                        params: { page: 1, limit: 200, query: '' }
+                    }),
                     axios.get(`${process.env.REACT_APP_BACKEND_URL}/product/getallproducts`),
-                    axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`)
+                    axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
+                        params: { page: 1, limit: 200, query: '' }
+                    })
                 ]);
 
                 // Try to get stats if available
@@ -70,9 +74,9 @@ const Dashboard = () => {
                 return;
             }
 
-            const orderData = ordersResponse.data || [];
+            const orderData = ordersResponse.data?.data || ordersResponse.data?.orders || ordersResponse.data || [];
             const productData = productsResponse.data || [];
-            const customerData = customersResponse.data?.customer || [];
+            const customerData = customersResponse.data?.data || customersResponse.data?.customer || [];
 
             setOrders(orderData);
             setProducts(productData);
