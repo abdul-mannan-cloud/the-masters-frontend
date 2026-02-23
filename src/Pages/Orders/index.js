@@ -24,8 +24,10 @@ const Orders = () => {
 
     const fetchEmployees = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`);
-            setEmployees(response.data);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`, {
+                params: { page: 1, limit: 200, query: '' }
+            });
+            setEmployees(response.data?.data || response.data?.employees || []);
         } catch (error) {
             toast.error('Failed to fetch employees');
             console.error('Error:', error);
