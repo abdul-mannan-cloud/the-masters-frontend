@@ -37,22 +37,54 @@ const Employees = ({ types }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeQuery, setTypeQuery] = useState('All');
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
+    });
     const [modalIsOpen, setIsOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [payment, setPayment] = useState(0);
+    const employeesPerPage = 10;
 
     useEffect(() => {
         if (localStorage.getItem('ciseauxtoken') === null) {
             navigate('/login');
         }
-        fetchEmployees();
     }, []);
 
-    const fetchEmployees = async () => {
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchEmployees(currentPage, searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [currentPage, searchQuery]);
+
+    const fetchEmployees = async (page = 1, query = '') => {
         try {
             setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`);
-            setEmployees(response.data);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/employee/getallemployee`, {
+                params: {
+                    page,
+                    limit: employeesPerPage,
+                    query
+                }
+            });
+            const responseData = response.data;
+            setEmployees(responseData?.data || responseData?.employees || []);
+            setPagination(responseData?.pagination || {
+                page,
+                limit: employeesPerPage,
+                total: 0,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPrevPage: false
+            });
         } catch (error) {
             toast.error('Failed to fetch employees');
             console.error('Error:', error);
@@ -66,7 +98,7 @@ const Employees = ({ types }) => {
             try {
                 await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/employee/deleteemployee/${id}`);
                 toast.success('Employee deleted successfully');
-                fetchEmployees();
+                fetchEmployees(currentPage, searchQuery);
             } catch (error) {
                 toast.error('Failed to delete employee');
                 console.error('Error:', error);
@@ -86,7 +118,7 @@ const Employees = ({ types }) => {
             );
             toast.success('Payment successful');
             setIsOpen(false);
-            fetchEmployees();
+            fetchEmployees(currentPage, searchQuery);
         } catch (error) {
             toast.error('Failed to process payment');
             console.error('Error:', error);
@@ -94,11 +126,30 @@ const Employees = ({ types }) => {
     };
 
     const filteredEmployees = employees.filter(employee => {
-        const nameMatch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const phoneMatch = employee.phone.toLowerCase().includes(searchQuery.toLowerCase());
         const roleMatch = typeQuery === 'All' || employee.role.toLowerCase() === typeQuery.toLowerCase();
-        return (nameMatch || phoneMatch) && roleMatch;
+        return roleMatch;
     });
+
+    const effectiveTotalPages = pagination.totalPages || Math.max(1, Math.ceil((pagination.total || 0) / employeesPerPage));
+    const canGoPrev = pagination.hasPrevPage ?? currentPage > 1;
+    const canGoNext = pagination.hasNextPage ?? currentPage < effectiveTotalPages;
+
+    const getPageNumbers = () => {
+        const pageNumbers = [];
+        const maxButtons = 5;
+        let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        let end = Math.min(effectiveTotalPages, start + maxButtons - 1);
+
+        if (end - start + 1 < maxButtons) {
+            start = Math.max(1, end - maxButtons + 1);
+        }
+
+        for (let i = start; i <= end; i++) {
+            pageNumbers.push(i);
+        }
+
+        return pageNumbers;
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
@@ -125,14 +176,20 @@ const Employees = ({ types }) => {
                                     type="text"
                                     placeholder="Search by name or phone..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                                 />
                             </div>
                         </div>
                         <select
                             value={typeQuery}
-                            onChange={(e) => setTypeQuery(e.target.value)}
+                            onChange={(e) => {
+                                setTypeQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="w-full sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
                         >
                             <option value="All">All Roles</option>
@@ -226,6 +283,43 @@ const Employees = ({ types }) => {
                             </tbody>
                         </table>
                     </div>
+
+                    {!loading && (
+                        <div className="flex items-center justify-between mt-6">
+                            <p className="text-sm text-gray-600">
+                                Page {currentPage} of {effectiveTotalPages} ({pagination.total} total employees)
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                                <button
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={!canGoPrev}
+                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                >
+                                    Previous
+                                </button>
+                                {getPageNumbers().map((pageNumber) => (
+                                    <button
+                                        key={pageNumber}
+                                        onClick={() => setCurrentPage(pageNumber)}
+                                        className={`px-3 py-1 rounded-lg border ${
+                                            currentPage === pageNumber
+                                                ? 'bg-yellow-400 text-white border-yellow-400'
+                                                : 'border-gray-300 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                                    disabled={!canGoNext}
+                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Payment Modal */}
                     <Modal
