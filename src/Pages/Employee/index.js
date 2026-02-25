@@ -160,7 +160,7 @@ const Employees = ({ types }) => {
                         <h1 className="text-2xl font-bold text-gray-800">Employees</h1>
                         <button
                             onClick={() => navigate('/employees/add')}
-                            className="flex items-center gap-2 bg-yellow-400 text-white px-4 py-2 rounded-lg hover:bg-yellow-500 transition-colors"
+                            className="flex items-center gap-2 bg-[rgba(253,224,71,0.3)] text-[#854d0e] px-4 py-2 rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                         >
                             <Plus className="w-5 h-5" />
                             Add Employee
@@ -180,7 +180,7 @@ const Employees = ({ types }) => {
                                         setSearchQuery(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                 />
                             </div>
                         </div>
@@ -190,7 +190,7 @@ const Employees = ({ types }) => {
                                 setTypeQuery(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                            className="w-full sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)] bg-white"
                         >
                             <option value="All">All Roles</option>
                             {types.map((type, index) => (
@@ -226,14 +226,14 @@ const Employees = ({ types }) => {
                                         <td className="px-4 py-3 text-sm text-gray-900">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                                                    <span className="text-yellow-600 font-medium">{employee.name[0].toUpperCase()}</span>
+                                                    <span className="text-[#854d0e] font-medium">{employee.name[0].toUpperCase()}</span>
                                                 </div>
                                                 {employee.name}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-600">{employee.phone}</td>
                                         <td className="px-4 py-3 text-sm text-gray-600">
-                                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                                                <span className="px-2 py-1 bg-yellow-100 text-[#854d0e] rounded-full text-xs">
                                                     {employee.role}
                                                 </span>
                                         </td>
@@ -253,7 +253,7 @@ const Employees = ({ types }) => {
                                                         setSelectedEmployee(employee);
                                                         setIsOpen(true);
                                                     }}
-                                                    className="p-1 text-yellow-600 hover:bg-yellow-50 rounded"
+                                                    className="p-1 text-[#854d0e] hover:bg-yellow-50 rounded"
                                                 >
                                                     <DollarSign className="w-5 h-5" />
                                                 </button>
@@ -303,7 +303,7 @@ const Employees = ({ types }) => {
                                         onClick={() => setCurrentPage(pageNumber)}
                                         className={`px-3 py-1 rounded-lg border ${
                                             currentPage === pageNumber
-                                                ? 'bg-yellow-400 text-white border-yellow-400'
+                                                ? 'bg-[rgba(253,224,71,0.3)] text-[#854d0e] border-[rgba(253,224,71,0.3)]'
                                                 : 'border-gray-300 hover:bg-gray-100'
                                         }`}
                                     >
@@ -346,13 +346,13 @@ const Employees = ({ types }) => {
                                     type="number"
                                     value={payment}
                                     onChange={(e) => setPayment(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     placeholder="Enter amount"
                                 />
                             </div>
                             <button
                                 onClick={handlePayment}
-                                className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors"
+                                className="w-full bg-[rgba(253,224,71,0.3)] text-[#854d0e] py-2 px-4 rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                             >
                                 Process Payment
                             </button>
@@ -365,3 +365,4 @@ const Employees = ({ types }) => {
 };
 
 export default Employees;
+

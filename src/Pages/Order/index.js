@@ -90,7 +90,7 @@ const AllOrders = () => {
     const getStatusColor = (status) => {
         switch (status.toLowerCase()) {
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 text-[#854d0e]';
             case 'in progress':
                 return 'bg-blue-100 text-blue-800';
             case 'completed':
@@ -165,7 +165,7 @@ const AllOrders = () => {
                                     setSelectedDate(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                             <select
                                 value={statusQuery}
@@ -173,7 +173,7 @@ const AllOrders = () => {
                                     setStatusQuery(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             >
                                 <option value="All">All Status</option>
                                 <option value="pending">Pending</option>
@@ -196,7 +196,7 @@ const AllOrders = () => {
                                     setSearchQuery(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                         </div>
                     </div>
@@ -219,7 +219,7 @@ const AllOrders = () => {
                                 <tr>
                                     <td colSpan="6" className="px-4 py-8 text-center">
                                         <div className="flex justify-center">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[rgba(253,224,71,0.3)]"></div>
                                         </div>
                                     </td>
                                 </tr>
@@ -243,11 +243,16 @@ const AllOrders = () => {
                                             <td className="px-4 py-3 text-sm text-gray-600">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                                                            <span className="text-yellow-800 font-medium">
+                                                            <span className="text-[#854d0e] font-medium">
                                                                 {order.customer?.name?.[0]?.toUpperCase() || '?'}
                                                             </span>
                                                     </div>
-                                                    <span>{order.customer?.name}</span>
+                                                    <div>
+                                                        <div>{order.customer?.name}</div>
+                                                        <div className="text-xs text-gray-500">
+                                                            Order #: {order.customer?.orderNumber || '-'}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-sm">
@@ -301,6 +306,9 @@ const AllOrders = () => {
                                                                     Name: {order.customer?.name}
                                                                 </p>
                                                                 <p className="flex items-center gap-2 mt-1">
+                                                                    Order #: {order.customer?.orderNumber || '-'}
+                                                                </p>
+                                                                <p className="flex items-center gap-2 mt-1">
                                                                     Phone: {order.customer?.phone}
                                                                 </p>
                                                                 <p className="flex items-center gap-2 mt-1">
@@ -335,7 +343,7 @@ const AllOrders = () => {
                                     onClick={() => typeof number === 'number' && setCurrentPage(number)}
                                     className={`px-3 py-1 rounded-lg ${
                                         currentPage === number
-                                            ? 'bg-yellow-400 text-white'
+                                            ? 'bg-[rgba(253,224,71,0.3)] text-[#854d0e]'
                                             : 'hover:bg-gray-100'
                                     }`}
                                     disabled={typeof number !== 'number'}
@@ -359,3 +367,4 @@ const AllOrders = () => {
 };
 
 export default AllOrders;
+

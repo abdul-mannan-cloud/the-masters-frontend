@@ -172,7 +172,7 @@ const Items = () => {
                             <button
                                 onClick={resetForm}
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2
-                                    bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors"
+                                    bg-[rgba(253,224,71,0.3)] text-[#854d0e] rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                             >
                                 {isEditing ? (
                                     <>
@@ -205,7 +205,7 @@ const Items = () => {
                                             onChange={(e) => setName(e.target.value)}
                                             placeholder="Enter item name"
                                             className="w-full p-2 border border-gray-200 rounded-lg
-                                                focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                         />
                                     </div>
                                     <div>
@@ -219,7 +219,7 @@ const Items = () => {
                                                 onChange={(e) => setPrice(e.target.value)}
                                                 placeholder="Enter price"
                                                 className="w-full pl-2 pr-4 py-2 border border-gray-200 rounded-lg
-                                                    focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                    focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                             />
                                         </div>
                                     </div>
@@ -260,7 +260,7 @@ const Items = () => {
                                                             onChange={(e) => handleOptionChange(optionIndex, 'name', e.target.value)}
                                                             placeholder="e.g., Size, Color, Style"
                                                             className="w-full p-2 border border-gray-200 rounded-lg
-                                                                focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                                focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                         />
                                                     </div>
                                                     {options.length > 1 && (
@@ -287,7 +287,7 @@ const Items = () => {
                                                                 )}
                                                                 placeholder={`Value ${customizationIndex + 1}`}
                                                                 className="flex-1 p-2 border border-gray-200 rounded-lg
-                                                                    focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                                    focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                             />
                                                             {option.customizations.length > 1 && (
                                                                 <button
@@ -322,7 +322,7 @@ const Items = () => {
                                     <button
                                         onClick={isEditing ? () => handleEditItem(editingItemId) : handleAddItem}
                                         className="w-full sm:w-auto inline-flex items-center justify-center gap-2
-                                            px-6 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500
+                                            px-6 py-2 bg-[rgba(253,224,71,0.3)] text-[#854d0e] rounded-lg hover:bg-[rgba(253,224,71,0.3)]
                                             transition-colors"
                                     >
                                         <Save className="w-5 h-5" />
@@ -348,7 +348,7 @@ const Items = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg
-                                        focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                        focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                 />
                             </div>
                         </div>
@@ -366,7 +366,7 @@ const Items = () => {
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <h3 className="font-medium text-gray-900">{item.name}</h3>
-                                                    <p className="text-yellow-600 font-medium">
+                                                    <p className="text-[#854d0e] font-medium">
                                                         Rs. {item.price.toLocaleString()}
                                                     </p>
                                                 </div>
@@ -379,7 +379,7 @@ const Items = () => {
                                                             setIsEditing(true);
                                                             setEditingItemId(item._id);
                                                         }}
-                                                        className="p-2 text-yellow-600 hover:bg-yellow-50
+                                                        className="p-2 text-[#854d0e] hover:bg-yellow-50
                                                             rounded-lg transition-colors"
                                                     >
                                                         <Edit2 className="w-5 h-5" />
@@ -405,7 +405,7 @@ const Items = () => {
                                                 )}
                                             </button>
                                             {expandedItems.includes(item._id) && (
-                                                <div className="mt-4 pl-4 border-l-2 border-yellow-400">
+                                                <div className="mt-4 pl-4 border-l-2 border-[rgba(253,224,71,0.3)]">
                                                     {item.options.map((option, index) => (
                                                         <div key={index} className="mb-4 last:mb-0">
                                                             <h4 className="font-medium text-gray-900 mb-2">
@@ -467,7 +467,7 @@ const Items = () => {
                                                     <div className="font-medium text-gray-900">{item.name}</div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-yellow-600 font-medium">
+                                                    <div className="text-[#854d0e] font-medium">
                                                         Rs. {item.price.toLocaleString()}
                                                     </div>
                                                 </td>
@@ -495,7 +495,7 @@ const Items = () => {
                                                                 setEditingItemId(item._id);
                                                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                                                             }}
-                                                            className="p-2 text-yellow-600 hover:bg-yellow-50
+                                                            className="p-2 text-[#854d0e] hover:bg-yellow-50
                                                                     rounded-lg transition-colors"
                                                             title="Edit Item"
                                                         >
@@ -515,7 +515,7 @@ const Items = () => {
                                             {expandedItems.includes(item._id) && (
                                                 <tr>
                                                     <td colSpan="4" className="px-6 py-4 bg-gray-50">
-                                                        <div className="pl-4 border-l-2 border-yellow-400">
+                                                        <div className="pl-4 border-l-2 border-[rgba(253,224,71,0.3)]">
                                                             {item.options.map((option, index) => (
                                                                 <div key={index} className="mb-4 last:mb-0">
                                                                     <h4 className="font-medium text-gray-900 mb-2">

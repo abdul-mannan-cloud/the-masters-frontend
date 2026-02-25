@@ -122,7 +122,7 @@ const Employee = ({ types }) => {
                                         value={employeeData.name}
                                         onChange={handleInputChange}
                                         className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                            focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     />
                                 </div>
 
@@ -140,7 +140,7 @@ const Employee = ({ types }) => {
                                         onInput={formatCNIC}
                                         onChange={handleInputChange}
                                         className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                            focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     />
                                 </div>
 
@@ -158,7 +158,7 @@ const Employee = ({ types }) => {
                                         onInput={formatPhoneNumber}
                                         onChange={handleInputChange}
                                         className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                            focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     />
                                 </div>
 
@@ -174,7 +174,7 @@ const Employee = ({ types }) => {
                                         placeholder="Enter secure password"
                                         onChange={handleInputChange}
                                         className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                            focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     />
                                 </div>
 
@@ -191,7 +191,7 @@ const Employee = ({ types }) => {
                                             role: e.target.value
                                         }))}
                                         className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                            focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                     >
                                         <option value="">Select employee type</option>
                                         {types.map((type) => (
@@ -217,7 +217,7 @@ const Employee = ({ types }) => {
                                         onClick={handleAddEmployee}
                                         disabled={loading}
                                         className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5
-                                            bg-yellow-400 text-white rounded-lg hover:bg-yellow-500
+                                            bg-[rgba(253,224,71,0.3)] text-[#854d0e] rounded-lg hover:bg-[rgba(253,224,71,0.3)]
                                             transition-colors disabled:opacity-50"
                                     >
                                         <Save className="w-5 h-5" />
