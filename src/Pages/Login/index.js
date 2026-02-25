@@ -66,7 +66,7 @@ const Login = () => {
                                 value={userName}
                                 onChange={(e) => setUsername(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                 placeholder="Enter your username"
                             />
                         </div>
@@ -83,7 +83,7 @@ const Login = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                 placeholder="Enter your password"
                             />
                             <div
@@ -103,7 +103,7 @@ const Login = () => {
                         type="button"
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="w-full p-3 bg-yellow-400 text-white font-medium rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                        className="w-full p-3 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors disabled:opacity-50"
                     >
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>

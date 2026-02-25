@@ -14,9 +14,21 @@ const PlaceOrder = () => {
     const [step, setStep] = useState(1);
     const [items, setItems] = useState([]);
     const [customers, setCustomers] = useState([]);
+    const [customersPagination, setCustomersPagination] = useState({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+    });
+    const [customersPage, setCustomersPage] = useState(1);
+    const [customersLoading, setCustomersLoading] = useState(false);
     const [savedCustomer, setSavedCustomer] = useState();
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchType, setSearchType] = useState('name');
     const [loading, setLoading] = useState(false);
+    const [loadingOrderNumber, setLoadingOrderNumber] = useState(false);
     const [isMeasurementFileUploaded, setIsMeasurementFileUploaded] = useState(false);
     const [hasUploadedFile, setHasUploadedFile] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -27,6 +39,7 @@ const PlaceOrder = () => {
         name: '',
         phone: '',
         address: '',
+        orderNumber: '',
     });
 
     const [measurements, setMeasurements] = useState({
@@ -52,9 +65,37 @@ const PlaceOrder = () => {
         if (localStorage.getItem('ciseauxtoken') === null) {
             navigate('/login');
         }
-        getCustomers();
+        getCustomers(customersPage, searchQuery, searchType);
         getItems();
     }, []);
+
+    useEffect(() => {
+        const fetchNextOrderNumber = async () => {
+            try {
+                setLoadingOrderNumber(true);
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/next-order-number`);
+                const nextOrderNumber = response?.data?.nextOrderNumber;
+                if (nextOrderNumber && !customer.orderNumber) {
+                    setCustomer((prev) => ({ ...prev, orderNumber: String(nextOrderNumber) }));
+                }
+            } catch (error) {
+                console.error('Error fetching next order number:', error);
+            } finally {
+                setLoadingOrderNumber(false);
+            }
+        };
+
+        fetchNextOrderNumber();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            getCustomers(customersPage, searchQuery, searchType);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [customersPage, searchQuery, searchType]);
 
     useEffect(() => {
         setTotalPrice(products.reduce((total, product) => total + product.price, 0))
@@ -62,12 +103,38 @@ const PlaceOrder = () => {
 
     const specialCharactersRegex = /[!@#$%^&*(),.?":{}|<>]/;
 
-    const getCustomers = async () => {
+    const getCustomers = async (page = 1, query = '', type = 'name') => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/cloth/getallcustomers`);
-            setCustomers(response.data.customer);
+            setCustomersLoading(true);
+            const trimmedQuery = query.trim();
+            const params = {
+                page,
+                limit: 10,
+            };
+            if (trimmedQuery) {
+                if (type === 'query') {
+                    params.query = trimmedQuery;
+                } else {
+                    params[type] = trimmedQuery;
+                }
+            }
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
+                params,
+            });
+            const responseData = response.data;
+            setCustomers(responseData?.data || responseData?.customer || []);
+            setCustomersPagination(responseData?.pagination || {
+                page,
+                limit: 10,
+                total: 0,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPrevPage: false,
+            });
         } catch (error) {
             toast.error('Failed to fetch customers');
+        } finally {
+            setCustomersLoading(false);
         }
     };
 
@@ -147,10 +214,9 @@ const PlaceOrder = () => {
         setIsMeasurementFileUploaded(isUploaded);
     };
 
-    const filteredCustomers = customers.filter((customer) => {
-        return customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            customer.phone.includes(searchQuery);
-    });
+    const effectiveCustomersTotalPages = customersPagination.totalPages || Math.max(1, Math.ceil((customersPagination.total || 0) / 10));
+    const canCustomersGoPrev = customersPagination.hasPrevPage ?? customersPage > 1;
+    const canCustomersGoNext = customersPagination.hasNextPage ?? customersPage < effectiveCustomersTotalPages;
 
     const steps = [
         { icon: User, label: "Customer" },
@@ -217,7 +283,7 @@ const PlaceOrder = () => {
                             <div className="relative">
                                 <div className="absolute top-5 left-0 w-full h-1 bg-gray-200">
                                     <div
-                                        className="h-full bg-yellow-400 transition-all duration-500"
+                                        className="h-full bg-[rgba(253,224,71,0.3)] transition-all duration-500"
                                         style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
                                     />
                                 </div>
@@ -225,8 +291,8 @@ const PlaceOrder = () => {
                                     {steps.map((stepItem, index) => (
                                         <div key={index} className="flex flex-col items-center">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                                                ${step > index ? 'bg-yellow-400 border-yellow-400 text-white' :
-                                                step === index + 1 ? 'bg-white border-yellow-400 text-yellow-400' :
+                                                ${step > index ? 'bg-[rgba(253,224,71,0.3)] border-[rgba(253,224,71,0.3)] text-[#854d0e]' :
+                                                step === index + 1 ? 'bg-white border-[rgba(253,224,71,0.3)] text-[#854d0e]' :
                                                     'bg-white border-gray-300 text-gray-400'}`}>
                                                 <stepItem.icon className="w-5 h-5" />
                                             </div>
@@ -257,8 +323,18 @@ const PlaceOrder = () => {
                                             <input
                                                 type="text"
                                                 onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                 placeholder="Enter customer name"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Order #</label>
+                                            <input
+                                                type="text"
+                                                value={customer.orderNumber}
+                                                onChange={(e) => setCustomer({ ...customer, orderNumber: e.target.value })}
+                                                placeholder={loadingOrderNumber ? 'Fetching next order #' : 'Enter order #'}
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                             />
                                         </div>
                                         <div>
@@ -268,14 +344,14 @@ const PlaceOrder = () => {
                                                 placeholder="03XX-XXXXXXX"
                                                 onInput={formatPhoneNumber}
                                                 onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                                             <textarea
                                                 onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                 rows={3}
                                                 placeholder="Enter delivery address"
                                             />
@@ -293,8 +369,8 @@ const PlaceOrder = () => {
                                                 }
                                             }}
                                             disabled={loading}
-                                            className="w-full p-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                                            className="w-full p-3 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg
+                                                hover:bg-[rgba(253,224,71,0.3)] transition-colors disabled:opacity-50"
                                         >
                                             {loading ? 'Adding Customer...' : 'Continue with New Customer'}
                                         </button>
@@ -310,48 +386,104 @@ const PlaceOrder = () => {
                                         </h2>
                                     </div>
                                     <div className="p-6">
-                                        <div className="relative mb-4">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search by name or phone..."
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg
-                                                    focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                            />
+                                        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                                            <div className="sm:w-48">
+                                                <select
+                                                    value={searchType}
+                                                    onChange={(e) => {
+                                                        setSearchType(e.target.value);
+                                                        setCustomersPage(1);
+                                                    }}
+                                                    className="w-full p-2 border border-gray-200 rounded-lg
+                                                        focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)] bg-white"
+                                                >
+                                                    <option value="name">Name</option>
+                                                    <option value="orderNumber">Order #</option>
+                                                    <option value="phone">Phone</option>
+                                                    <option value="address">Address</option>
+                                                    <option value="email">Email</option>
+                                                    <option value="query">Generic</option>
+                                                </select>
+                                            </div>
+                                            <div className="relative flex-1">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                                <input
+                                                    type="text"
+                                                    placeholder={`Search by ${searchType === 'orderNumber' ? 'order #' : searchType}...`}
+                                                    value={searchQuery}
+                                                    onChange={(e) => {
+                                                        setSearchQuery(e.target.value);
+                                                        setCustomersPage(1);
+                                                    }}
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg
+                                                        focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
+                                                />
+                                            </div>
                                         </div>
                                         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                            {filteredCustomers.map((customer) => (
-                                                <div
-                                                    key={customer._id}
-                                                    onClick={() => {
-                                                        setSavedCustomer(customer._id);
-                                                        setStep(2);
-                                                    }}
-                                                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-200
-                                                        hover:bg-gray-50 cursor-pointer transition-colors"
-                                                >
-                                                    <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                                                        <span className="text-yellow-800 font-medium">
-                                                            {customer.name[0].toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="font-medium">{customer.name}</p>
-                                                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                                            <span className="flex items-center gap-1">
-                                                                <Phone className="w-4 h-4" />
-                                                                {customer.phone}
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <MapPin className="w-4 h-4" />
-                                                                {customer.address}
+                                            {customersLoading ? (
+                                                <div className="text-center py-6 text-gray-500">Loading...</div>
+                                            ) : customers.length === 0 ? (
+                                                <div className="text-center py-6 text-gray-500">No customers found</div>
+                                            ) : (
+                                                customers.map((customer) => (
+                                                    <div
+                                                        key={customer._id}
+                                                        onClick={() => {
+                                                            setSavedCustomer(customer._id);
+                                                            setStep(2);
+                                                        }}
+                                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200
+                                                            hover:bg-gray-50 cursor-pointer transition-colors"
+                                                    >
+                                                        <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                                            <span className="text-[#854d0e] font-medium">
+                                                                {customer.name[0].toUpperCase()}
                                                             </span>
                                                         </div>
+                                                        <div className="flex-1">
+                                                            <p className="font-medium">{customer.name}</p>
+                                                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                                                                <span className="flex items-center gap-1">
+                                                                    <Phone className="w-4 h-4" />
+                                                                    {customer.phone}
+                                                                </span>
+                                                                <span className="flex items-center gap-1">
+                                                                    <MapPin className="w-4 h-4" />
+                                                                    {customer.address}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                Order #: {customer.orderNumber || '-'}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))
+                                            )}
                                         </div>
+                                        {!customersLoading && (
+                                            <div className="flex items-center justify-between mt-4">
+                                                <p className="text-xs text-gray-500">
+                                                    Page {customersPage} of {effectiveCustomersTotalPages} ({customersPagination.total} total)
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => setCustomersPage((prev) => Math.max(prev - 1, 1))}
+                                                        disabled={!canCustomersGoPrev}
+                                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setCustomersPage((prev) => prev + 1)}
+                                                        disabled={!canCustomersGoNext}
+                                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -395,8 +527,8 @@ const PlaceOrder = () => {
                                                             }}
                                                             className={`p-4 text-center rounded-lg cursor-pointer transition-colors border
                                                                 ${product.type === item.name
-                                                                ? 'bg-yellow-400 border-yellow-400 text-white'
-                                                                : 'border-gray-200 hover:border-yellow-400 hover:bg-yellow-50'
+                                                                ? 'bg-[rgba(253,224,71,0.3)] border-[rgba(253,224,71,0.3)] text-[#854d0e]'
+                                                                : 'border-gray-200 hover:border-[rgba(253,224,71,0.3)] hover:bg-yellow-50'
                                                             }`}
                                                         >
                                                             <Scissors className="w-5 h-5 mx-auto mb-2" />
@@ -416,7 +548,7 @@ const PlaceOrder = () => {
                                                                 <select
                                                                     onChange={(e) => handleOptionChange(index, option.name, e.target.value)}
                                                                     className="w-full p-2 border border-gray-200 rounded-lg
-                                                                        focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                                        focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                                 >
                                                                     <option value="">Select {option.name}</option>
                                                                     {option.customizations.map((customization) => (
@@ -437,7 +569,7 @@ const PlaceOrder = () => {
                                                     placeholder="Enter any special instructions or notes"
                                                     onChange={(e) => handleProductChange(index, 'instructions', e.target.value)}
                                                     className="w-full p-3 border border-gray-200 rounded-lg
-                                                        focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                        focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                     rows={3}
                                                 />
                                             </div>
@@ -458,8 +590,8 @@ const PlaceOrder = () => {
                                         options: [],
                                     }])}
                                     className="w-full p-4 mb-6 rounded-lg border-2 border-dashed border-gray-300
-                                        hover:border-yellow-400 hover:bg-yellow-50 transition-colors flex
-                                        items-center justify-center gap-2 text-gray-600 hover:text-yellow-600"
+                                        hover:border-[rgba(253,224,71,0.3)] hover:bg-yellow-50 transition-colors flex
+                                        items-center justify-center gap-2 text-gray-600 hover:text-[#854d0e]"
                                 >
                                     <Scissors className="w-5 h-5" />
                                     Add Another Item
@@ -475,8 +607,8 @@ const PlaceOrder = () => {
                                                 setStep(3);
                                             }
                                         }}
-                                        className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                            hover:bg-yellow-500 transition-colors"
+                                        className="px-6 py-3 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg
+                                            hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                                     >
                                         Continue to Measurements
                                     </button>
@@ -547,8 +679,8 @@ const PlaceOrder = () => {
                                                         setStep(4);
                                                     }
                                                 }}
-                                                className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                    hover:bg-yellow-500 transition-colors"
+                                                className="px-6 py-3 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg
+                                                    hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                                             >
                                                 Review Order
                                             </button>
@@ -605,7 +737,7 @@ const PlaceOrder = () => {
                                                             value={totalPrice}
                                                             onChange={(e) => setTotalPrice(Number(e.target.value))}
                                                             className="w-40 p-2 text-right border border-gray-200 rounded-lg
-                                                                focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                                                focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                                                         />
                                                         <p className="text-sm text-gray-500 text-right">
                                                             Final price can be adjusted
@@ -625,8 +757,8 @@ const PlaceOrder = () => {
                                                 <button
                                                     onClick={handlePlaceOrder}
                                                     disabled={loading}
-                                                    className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                        hover:bg-yellow-500 transition-colors disabled:opacity-50 flex
+                                                    className="px-6 py-3 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg
+                                                        hover:bg-[rgba(253,224,71,0.3)] transition-colors disabled:opacity-50 flex
                                                         items-center gap-2"
                                                 >
                                                     {loading ? 'Placing Order...' : 'Place Order'}
@@ -646,3 +778,4 @@ const PlaceOrder = () => {
 };
 
 export default PlaceOrder;
+

@@ -24,6 +24,7 @@ const Customers = () => {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchType, setSearchType] = useState('name');
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -38,21 +39,29 @@ const Customers = () => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchCustomers(currentPage, searchQuery);
+            fetchCustomers(currentPage, searchQuery, searchType);
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, searchQuery]);
+    }, [currentPage, searchQuery, searchType]);
 
-    const fetchCustomers = async (page = 1, query = '') => {
+    const fetchCustomers = async (page = 1, query = '', type = 'name') => {
         try {
             setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
-                params: {
-                    page,
-                    limit: customersPerPage,
-                    query
+            const trimmedQuery = query.trim();
+            const params = {
+                page,
+                limit: customersPerPage,
+            };
+            if (trimmedQuery) {
+                if (type === 'query') {
+                    params.query = trimmedQuery;
+                } else {
+                    params[type] = trimmedQuery;
                 }
+            }
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
+                params
             });
             const responseData = response.data;
             setCustomers(responseData?.data || responseData?.customer || []);
@@ -115,7 +124,7 @@ const Customers = () => {
                         <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
                         <button
                             onClick={() => navigate('/customers/add')}
-                            className="flex items-center gap-2 bg-yellow-400 text-white px-4 py-2 rounded-lg hover:bg-yellow-500 transition-colors"
+                            className="flex items-center gap-2 bg-[rgba(253,224,71,0.3)] text-[#854d0e] px-4 py-2 rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                         >
                             <Plus className="w-5 h-5" />
                             Add Customer
@@ -124,18 +133,37 @@ const Customers = () => {
 
                     {/* Search Bar */}
                     <div className="mb-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search customers by name or phone..."
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="sm:w-56">
+                                <select
+                                    value={searchType}
+                                    onChange={(e) => {
+                                        setSearchType(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)] bg-white"
+                                >
+                                    <option value="name">Name</option>
+                                    <option value="orderNumber">Order #</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="address">Address</option>
+                                    <option value="email">Email</option>
+                                    <option value="query">Generic</option>
+                                </select>
+                            </div>
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    placeholder={`Search by ${searchType === 'orderNumber' ? 'order #' : searchType}...`}
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -144,6 +172,7 @@ const Customers = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                             <tr>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order #</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Phone</th>
                                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Address</th>
@@ -154,15 +183,16 @@ const Customers = () => {
                             <tbody className="divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">Loading...</td>
+                                    <td colSpan="6" className="text-center py-4">Loading...</td>
                                 </tr>
                             ) : customers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">No customers found</td>
+                                    <td colSpan="6" className="text-center py-4">No customers found</td>
                                 </tr>
                             ) : (
                                 customers.map((customer) => (
                                     <tr key={customer._id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 text-sm text-gray-900">{customer.orderNumber || '-'}</td>
                                         <td className="px-4 py-3 text-sm text-gray-900">{customer.name}</td>
                                         <td className="px-4 py-3 text-sm text-gray-600">{customer.phone}</td>
                                         <td className="px-4 py-3 text-sm text-gray-600">{customer.address}</td>
@@ -215,7 +245,7 @@ const Customers = () => {
                                         onClick={() => setCurrentPage(pageNumber)}
                                         className={`px-3 py-1 rounded-lg border ${
                                             currentPage === pageNumber
-                                                ? 'bg-yellow-400 text-white border-yellow-400'
+                                                ? 'bg-[rgba(253,224,71,0.3)] text-[#854d0e] border-[rgba(253,224,71,0.3)]'
                                                 : 'border-gray-300 hover:bg-gray-100'
                                         }`}
                                     >
@@ -241,11 +271,33 @@ const Customers = () => {
 const AddCustomer = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [loadingOrderNumber, setLoadingOrderNumber] = useState(false);
     const [customer, setCustomer] = useState({
         name: '',
         phone: '',
         address: '',
+        orderNumber: '',
     });
+
+    useEffect(() => {
+        const fetchNextOrderNumber = async () => {
+            try {
+                setLoadingOrderNumber(true);
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/next-order-number`);
+                const nextOrderNumber = response?.data?.nextOrderNumber;
+                if (nextOrderNumber && !customer.orderNumber) {
+                    setCustomer((prev) => ({ ...prev, orderNumber: String(nextOrderNumber) }));
+                }
+            } catch (error) {
+                console.error('Error fetching next order number:', error);
+            } finally {
+                setLoadingOrderNumber(false);
+            }
+        };
+
+        fetchNextOrderNumber();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // In AddCustomer component, update the handleSubmit function:
     const handleSubmit = async (e) => {
@@ -296,7 +348,20 @@ const AddCustomer = () => {
                                 required
                                 value={customer.name}
                                 onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Order #
+                            </label>
+                            <input
+                                type="text"
+                                value={customer.orderNumber}
+                                onChange={(e) => setCustomer({ ...customer, orderNumber: e.target.value })}
+                                placeholder={loadingOrderNumber ? 'Fetching next order #' : 'Enter order #'}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                         </div>
 
@@ -311,7 +376,7 @@ const AddCustomer = () => {
                                 value={customer.phone}
                                 onChange={formatPhoneNumber}
                                 maxLength={12}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                         </div>
 
@@ -323,14 +388,14 @@ const AddCustomer = () => {
                                 required
                                 value={customer.address}
                                 onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[100px]"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)] min-h-[100px]"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                            className="w-full bg-[rgba(253,224,71,0.3)] text-[#854d0e] py-2 px-4 rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors disabled:opacity-50"
                         >
                             {loading ? 'Adding...' : 'Add Customer'}
                         </button>
@@ -420,7 +485,7 @@ const EditCustomer = () => {
                                 required
                                 value={customer.name}
                                 onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                         </div>
 
@@ -435,7 +500,7 @@ const EditCustomer = () => {
                                 value={customer.phone}
                                 onChange={formatPhoneNumber}
                                 maxLength={12}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                             />
                         </div>
 
@@ -447,14 +512,14 @@ const EditCustomer = () => {
                                 required
                                 value={customer.address}
                                 onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[100px]"
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)] min-h-[100px]"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
+                            className="w-full bg-[rgba(253,224,71,0.3)] text-[#854d0e] py-2 px-4 rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors disabled:opacity-50"
                         >
                             {loading ? 'Saving...' : 'Save Changes'}
                         </button>
@@ -678,11 +743,11 @@ const ViewCustomer = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {/* Header */}
-                    <div className="bg-yellow-400 p-6">
+                    <div className="bg-[rgba(253,224,71,0.3)] p-6">
                         <div className="flex items-center">
                             <button
                                 onClick={() => navigate('/customers')}
-                                className="p-2 hover:bg-yellow-500 rounded-full mr-4"
+                                className="p-2 hover:bg-[rgba(253,224,71,0.3)] rounded-full mr-4"
                             >
                                 <ArrowLeft className="w-6 h-6 text-white" />
                             </button>
@@ -700,6 +765,13 @@ const ViewCustomer = () => {
                                     <div>
                                         <p className="text-sm text-gray-500">Created At</p>
                                         <p className="font-medium">{new Date(customer.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-gray-500" />
+                                    <div>
+                                        <p className="text-sm text-gray-500">Order #</p>
+                                        <p className="font-medium">{customer.orderNumber || '-'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1108,7 +1180,7 @@ const ViewCustomer = () => {
                                                     <span className={`px-2 py-1 rounded-full text-xs font-medium
                                                         ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
                                                         order.status === 'in progress' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-yellow-100 text-yellow-800'}`}>
+                                                            'bg-yellow-100 text-[#854d0e]'}`}>
                                                         {order.status}
                                                     </span>
                                                 </td>
@@ -1161,3 +1233,4 @@ export {
     EditCustomer,
     ViewCustomer
 };
+

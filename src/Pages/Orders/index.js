@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import {
     ArrowLeft, Package, Calendar, User, MapPin, Phone, CreditCard,
     Truck, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight,
-    Scissors, Eye
+    Scissors, Eye, MessageCircle
 } from 'lucide-react';
 
 
@@ -21,6 +21,8 @@ const Orders = () => {
     const [selectedProductForAssignment, setSelectedProductForAssignment] = useState(null);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployees, setSelectedEmployees] = useState([]);
+    const [whatsappMessage, setWhatsappMessage] = useState('');
+    const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
 
     const fetchEmployees = async () => {
         try {
@@ -58,7 +60,7 @@ const Orders = () => {
     const statuses = ['pending', 'in progress', 'completed', 'shipped'];
 
     const statusColors = {
-        pending: 'bg-yellow-100 text-yellow-800',
+        pending: 'bg-yellow-100 text-[#854d0e]',
         'in progress': 'bg-blue-100 text-blue-800',
         completed: 'bg-green-100 text-green-800',
         shipped: 'bg-purple-100 text-purple-800'
@@ -143,10 +145,35 @@ const Orders = () => {
         }
     };
 
+    const handleSendWhatsappReady = async () => {
+        try {
+            setSendingWhatsapp(true);
+            const message = whatsappMessage.trim();
+            const payload = message ? { message } : {};
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/order/${id}/notify-whatsapp-ready`,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            toast.success(response.data?.message || 'WhatsApp message sent successfully');
+            setWhatsappMessage('');
+        } catch (error) {
+            const errorMessage = error?.response?.data?.message || 'Failed to send WhatsApp message';
+            toast.error(errorMessage);
+            console.error('Error:', error);
+        } finally {
+            setSendingWhatsapp(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-400"></div>
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[rgba(253,224,71,0.3)]"></div>
             </div>
         );
     }
@@ -171,7 +198,7 @@ const Orders = () => {
         const baseStyle = "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-full";
         switch (status.toLowerCase()) {
             case 'pending':
-                return `${baseStyle} bg-yellow-100 text-yellow-800`;
+                return `${baseStyle} bg-yellow-100 text-[#854d0e]`;
             case 'in progress':
                 return `${baseStyle} bg-blue-100 text-blue-800`;
             case 'completed':
@@ -182,8 +209,6 @@ const Orders = () => {
                 return `${baseStyle} bg-gray-100 text-gray-800`;
         }
     };
-
-
     // Rest of the JSX remains the same...
     return (
         <div className="min-h-screen bg-gray-100">
@@ -227,7 +252,7 @@ const Orders = () => {
                                 {/* Progress Line */}
                                 <div className="absolute top-5 left-0 w-full h-1 bg-gray-200">
                                     <div
-                                        className="h-full bg-yellow-400 transition-all duration-500"
+                                        className="h-full bg-[rgba(253,224,71,0.3)] transition-all duration-500"
                                         style={{ width: `${(statuses.indexOf(order.status) / (statuses.length - 1)) * 100}%` }}
                                     />
                                 </div>
@@ -238,7 +263,7 @@ const Orders = () => {
                                         <div key={status} className="flex flex-col items-center">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
                                                 ${statuses.indexOf(order.status) >= index
-                                                ? 'bg-yellow-400 border-yellow-400 text-white'
+                                                ? 'bg-[rgba(253,224,71,0.3)] border-[rgba(253,224,71,0.3)] text-[#854d0e]'
                                                 : 'bg-white border-gray-300 text-gray-400'}`}>
                                                 {statusIcons[status]}
                                             </div>
@@ -266,13 +291,14 @@ const Orders = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                <span className="text-yellow-800 font-medium">
+                <span className="text-[#854d0e] font-medium">
                     {customer?.name?.[0]?.toUpperCase()}
                 </span>
                                     </div>
                                     <div>
                                         <p className="font-medium text-gray-900">{customer.name}</p>
                                         <p className="text-sm text-gray-500">{customer.phone}</p>
+                                        <p className="text-sm text-gray-500">Order #: {customer.orderNumber || '-'}</p>
                                     </div>
                                 </div>
                                 <div className="pt-4 border-t border-gray-200">
@@ -300,7 +326,7 @@ const Orders = () => {
                                 <div className="pt-4">
                                     <button
                                         onClick={() => navigate(`/customers/view/${customer._id}`)}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[rgba(253,224,71,0.3)] text-[#854d0e] rounded-lg hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                                     >
                                         <Eye className="w-4 h-4" />
                                         View Customer Profile
@@ -336,7 +362,7 @@ const Orders = () => {
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded bg-yellow-100 flex items-center justify-center">
-                                                        <Scissors className="w-5 h-5 text-yellow-700" />
+                                                        <Scissors className="w-5 h-5 text-[#854d0e]" />
                                                     </div>
                                                     <div>
                                                         <p className="font-medium">{product.name || product.type}</p>
@@ -374,7 +400,7 @@ const Orders = () => {
                                                     </button>
                                                     <button
                                                         onClick={() => setSelectedProductForAssignment(product)}
-                                                        className="flex items-center gap-1 text-yellow-600 hover:text-yellow-700"
+                                                        className="flex items-center gap-1 text-[#854d0e] hover:text-[#854d0e]"
                                                     >
                                                         <User className="w-4 h-4" />
                                                         Assign Employees
@@ -402,7 +428,7 @@ const Orders = () => {
 
                     {/* Action Buttons */}
                     <div className="p-6 bg-gray-50 border-t border-gray-200">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col xl:flex-row justify-between gap-4 xl:items-end">
                             <div className="flex items-center gap-4">
                                 {order.status !== 'pending' && (
                                     <button
@@ -417,24 +443,50 @@ const Orders = () => {
                                 {order.status !== 'shipped' && (
                                     <button
                                         onClick={() => handleStatusUpdate(statuses[statuses.indexOf(order.status) + 1])}
-                                        className="inline-flex items-center px-4 py-2 bg-yellow-400 text-white rounded-lg
-                                            hover:bg-yellow-500 transition-colors"
+                                        className="inline-flex items-center px-4 py-2 bg-[rgba(253,224,71,0.3)] text-[#854d0e] rounded-lg
+                                            hover:bg-[rgba(253,224,71,0.3)] transition-colors"
                                     >
                                         Next Status
                                         <ChevronRight className="w-5 h-5 ml-1" />
                                     </button>
                                 )}
                             </div>
-                            <button
-                                onClick={handlePaymentUpdate}
-                                className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors
-                                    ${order.paid
-                                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                    : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                            >
-                                <CreditCard className="w-5 h-5 mr-2" />
-                                {order.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
-                            </button>
+                            <div className="w-full xl:w-auto flex flex-col sm:flex-row gap-3 xl:items-end">
+                                <div className="w-full sm:w-[430px]">
+                                    <label className="block text-xs text-gray-500 mb-1">
+                                        Optional custom WhatsApp message
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={whatsappMessage}
+                                            onChange={(e) => setWhatsappMessage(e.target.value)}
+                                            placeholder="Leave empty to auto-generate message"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
+                                        />
+                                        <button
+                                            onClick={handleSendWhatsappReady}
+                                            disabled={sendingWhatsapp}
+                                            className="inline-flex items-center px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200
+                                                transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                            title="Send WhatsApp message for this order"
+                                        >
+                                            <MessageCircle className="w-5 h-5 mr-2" />
+                                            {sendingWhatsapp ? 'Sending...' : 'Notify on WhatsApp'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handlePaymentUpdate}
+                                    className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors whitespace-nowrap
+                                        ${order.paid
+                                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                        : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                >
+                                    <CreditCard className="w-5 h-5 mr-2" />
+                                    {order.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -474,7 +526,7 @@ const Orders = () => {
                                                         setSelectedEmployees(selectedEmployees.filter(id => id !== employee._id));
                                                     }
                                                 }}
-                                                className="rounded border-gray-300 text-yellow-400 focus:ring-yellow-400"
+                                                className="rounded border-gray-300 text-[#854d0e] focus:ring-[rgba(253,224,71,0.3)]"
                                             />
                                             <span className="text-sm text-gray-700">{employee.name} ({employee.role})</span>
                                         </label>
@@ -485,7 +537,7 @@ const Orders = () => {
                                 <button
                                     onClick={() => handleAssignEmployees(selectedProductForAssignment)}
                                     disabled={!selectedEmployees.length}
-                                    className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500
+                                    className="w-full bg-[rgba(253,224,71,0.3)] text-[#854d0e] py-2 px-4 rounded-lg hover:bg-[rgba(253,224,71,0.3)]
                                         transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Assign Selected Employees
@@ -544,3 +596,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

@@ -130,8 +130,8 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                     <div className="flex space-x-3">
                         <button
                             onClick={() => fileInputRef.current.click()}
-                            className="flex-1 py-3 px-4 bg-yellow-400 text-white font-medium rounded-lg
-                hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-3 px-4 bg-[rgba(253,224,71,0.3)] text-[#854d0e] font-medium rounded-lg
+                hover:bg-[rgba(253,224,71,0.3)] transition-colors flex items-center justify-center gap-2"
                             disabled={isUploading}
                         >
                             <Upload className="w-5 h-5" />
@@ -228,7 +228,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.chest || ''}
                             onChange={(e) => handleMeasurementChange('chest', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -237,7 +237,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.shoulders || ''}
                             onChange={(e) => handleMeasurementChange('shoulders', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -246,7 +246,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.neck || ''}
                             onChange={(e) => handleMeasurementChange('neck', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -255,7 +255,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.sleeves || ''}
                             onChange={(e) => handleMeasurementChange('sleeves', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -264,7 +264,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.topLenght || ''}
                             onChange={(e) => handleMeasurementChange('topLenght', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -273,7 +273,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.bottomLenght || ''}
                             onChange={(e) => handleMeasurementChange('bottomLenght', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                     <div>
@@ -282,7 +282,7 @@ const MeasurementDetails = ({ measurements, setMeasurements, customer,hasUploade
                             type="number"
                             value={measurements.waist || ''}
                             onChange={(e) => handleMeasurementChange('waist', e.target.value)}
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgba(253,224,71,0.3)]"
                         />
                     </div>
                 </div>

@@ -150,6 +150,7 @@ const Dashboard = () => {
                     id: customerId,
                     name: `${customerInfo.name || ''}`.trim() || 'Unknown',
                     phone: customerInfo.phone || 'N/A',
+                    orderNumber: customerInfo.orderNumber || '-',
                     orderCount: customerOrderCount[customerId],
                     totalSpend: customerTotalSpend[customerId],
                     lastOrderDate: customerLastOrderDate[customerId]
@@ -422,7 +423,7 @@ const Dashboard = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgba(253,224,71,0.3)]"></div>
             </div>
         );
     }
@@ -441,7 +442,7 @@ const Dashboard = () => {
                         <button
                             onClick={() => setTimeFrame('week')}
                             className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'week'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
+                                ? 'bg-yellow-100 text-[#854d0e] font-medium'
                                 : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             Week
@@ -449,7 +450,7 @@ const Dashboard = () => {
                         <button
                             onClick={() => setTimeFrame('month')}
                             className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'month'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
+                                ? 'bg-yellow-100 text-[#854d0e] font-medium'
                                 : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             Month
@@ -457,7 +458,7 @@ const Dashboard = () => {
                         <button
                             onClick={() => setTimeFrame('year')}
                             className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'year'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
+                                ? 'bg-yellow-100 text-[#854d0e] font-medium'
                                 : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             Year
@@ -581,7 +582,7 @@ const Dashboard = () => {
                         <div className="p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0 bg-yellow-50 p-3 rounded-lg">
-                                    <TrendingUp className="h-6 w-6 text-yellow-600" />
+                                    <TrendingUp className="h-6 w-6 text-[#854d0e]" />
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
@@ -598,7 +599,7 @@ const Dashboard = () => {
                             </div>
                         </div>
                         <div className="bg-yellow-50 px-5 py-1">
-                            <div className="text-xs text-yellow-600 flex items-center justify-end">
+                            <div className="text-xs text-[#854d0e] flex items-center justify-end">
                                 <span>View analytics</span>
                                 <ArrowRight className="ml-1 h-3 w-3" />
                             </div>
@@ -643,7 +644,7 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex flex-col items-center bg-yellow-50 rounded-lg p-3">
                                     <span className="text-sm text-gray-500">Pending</span>
-                                    <span className="text-xl font-semibold text-yellow-600">{orderStats.pendingOrders}</span>
+                                    <span className="text-xl font-semibold text-[#854d0e]">{orderStats.pendingOrders}</span>
                                 </div>
                             </div>
                         </div>
@@ -673,7 +674,7 @@ const Dashboard = () => {
                     <div className="bg-white p-6 rounded-xl shadow-sm">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <Scissors className="h-5 w-5 mr-2 text-yellow-500" />
+                                <Scissors className="h-5 w-5 mr-2 text-[#854d0e]" />
                                 Top Products
                             </h2>
                             <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
@@ -752,6 +753,7 @@ const Dashboard = () => {
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">{customer.name}</div>
                                             <div className="text-xs text-gray-500">{customer.phone}</div>
+                                            <div className="text-xs text-gray-500">Order #: {customer.orderNumber || '-'}</div>
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">{customer.orderCount}</div>
@@ -775,3 +777,5 @@ const Dashboard = () => {
 }
 
 export default Dashboard;
+
+
