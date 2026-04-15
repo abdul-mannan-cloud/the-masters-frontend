@@ -2,22 +2,6 @@ import React, {useState, useEffect, useRef} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import {
-    Plus,
-    Edit,
-    Trash2,
-    Eye,
-    Search,
-    ArrowLeft,
-    Calendar,
-    Phone,
-    MapPin,
-    ShoppingBag
-} from 'lucide-react';
-import {
-    Ruler, FileText, Image, Download, Save,
-    X, Upload, Camera, Trash
-} from 'lucide-react';
 
 
 const Customers = () => {
@@ -107,132 +91,160 @@ const Customers = () => {
     };
 
     return (
-                <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                        <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
-                        <button
-                            onClick={() => navigate('/customers/add')}
-                            className="flex items-center gap-2 bg-yellow-400 text-white px-4 py-2 rounded-lg hover:bg-yellow-500 transition-colors"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add Customer
-                        </button>
-                    </div>
+        <div className="p-8 font-body">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">Customers</h1>
+                    <p className="text-stone-400 mt-1 text-sm">Manage your atelier's client relationships.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/customers/add')}
+                    className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-sm hover:bg-primary-container transition-all font-label"
+                >
+                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    Add Customer
+                </button>
+            </div>
 
-                    {/* Search Bar */}
-                    <div className="mb-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search customers by name or phone..."
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                        </div>
-                    </div>
+            {/* Search */}
+            <div className="mb-6">
+                <div className="relative max-w-md">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
+                    <input
+                        type="text"
+                        placeholder="Search by name or phone…"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                        className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                    />
+                </div>
+            </div>
 
-                    {/* Customers Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
+            {/* Table Card */}
+            <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                <div className="overflow-x-auto">
+                    <table className="w-full masters-table">
+                        <thead>
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Phone</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Address</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Orders</th>
-                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600">Actions</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Orders</th>
+                                <th className="text-right">Actions</th>
                             </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
+                        </thead>
+                        <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">Loading...</td>
+                                    <td colSpan="5" className="py-16 text-center">
+                                        <div className="flex justify-center">
+                                            <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : customers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">No customers found</td>
+                                    <td colSpan="5">
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <span className="material-symbols-outlined text-[28px] text-stone-300">person_search</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-stone-400 font-headline">No customers found</p>
+                                            <p className="text-xs text-stone-300">Try adjusting your search query</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : (
-                                customers.map((customer) => (
-                                    <tr key={customer._id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm text-gray-900">{customer.name}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{customer.phone}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{customer.address}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{customer.orders?.length || 0}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex justify-center gap-2">
-                                                <button
-                                                    onClick={() => navigate(`/customers/view/${customer._id}`)}
-                                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                                >
-                                                    <Eye className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/customers/edit/${customer._id}`)}
-                                                    className="p-1 text-green-600 hover:bg-green-50 rounded"
-                                                >
-                                                    <Edit className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(customer._id)}
-                                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                customers.map((customer) => {
+                                    const initials = customer.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+                                    return (
+                                        <tr key={customer._id}>
+                                            <td>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                                                        {initials}
+                                                    </div>
+                                                    <span className="font-medium text-on-surface">{customer.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="text-on-surface-variant">{customer.phone}</td>
+                                            <td className="text-on-surface-variant max-w-[200px] truncate">{customer.address}</td>
+                                            <td>
+                                                <span className="status-badge bg-secondary-container text-on-secondary-container">
+                                                    {customer.orders?.length || 0} orders
+                                                </span>
+                                            </td>
+                                            <td className="text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button
+                                                        onClick={() => navigate(`/customers/view/${customer._id}`)}
+                                                        className="p-2 text-stone-400 hover:text-primary hover:bg-surface-container-low rounded-lg transition-colors"
+                                                        title="View"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/customers/edit/${customer._id}`)}
+                                                        className="p-2 text-stone-400 hover:text-primary hover:bg-surface-container-low rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(customer._id)}
+                                                        className="p-2 text-stone-400 hover:text-error hover:bg-error-container/20 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {!loading && (
-                        <div className="flex items-center justify-between mt-6">
-                            <p className="text-sm text-gray-600">
-                                Page {currentPage} of {effectiveTotalPages} ({pagination.total} total customers)
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={!canGoPrev}
-                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                >
-                                    Previous
-                                </button>
-                                {getPageNumbers().map((pageNumber) => (
-                                    <button
-                                        key={pageNumber}
-                                        onClick={() => setCurrentPage(pageNumber)}
-                                        className={`px-3 py-1 rounded-lg border ${
-                                            currentPage === pageNumber
-                                                ? 'bg-yellow-400 text-white border-yellow-400'
-                                                : 'border-gray-300 hover:bg-gray-100'
-                                        }`}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                                    disabled={!canGoNext}
-                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                        </tbody>
+                    </table>
                 </div>
+
+                {/* Pagination */}
+                {!loading && pagination.total > 0 && (
+                    <div className="px-8 py-5 flex items-center justify-between border-t border-outline-variant/10">
+                        <span className="text-sm text-stone-400">
+                            Page {currentPage} of {effectiveTotalPages} · {pagination.total} total
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                disabled={!canGoPrev}
+                                className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </button>
+                            {getPageNumbers().map((n) => (
+                                <button
+                                    key={n}
+                                    onClick={() => setCurrentPage(n)}
+                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
+                                        currentPage === n
+                                            ? 'bg-primary text-on-primary'
+                                            : 'hover:bg-surface-container-low text-on-surface'
+                                    }`}
+                                >
+                                    {n}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setCurrentPage(p => p + 1)}
+                                disabled={!canGoNext}
+                                className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -273,67 +285,74 @@ const AddCustomer = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center mb-6">
-                        <button
-                            onClick={() => navigate('/customers')}
-                            className="p-2 hover:bg-gray-100 rounded-full mr-4"
-                        >
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                        <h1 className="text-2xl font-bold text-gray-800">Add New Customer</h1>
+        <div className="p-8 font-body">
+            <div className="max-w-xl mx-auto">
+                <div className="flex items-center gap-4 mb-8">
+                    <button
+                        onClick={() => navigate('/customers')}
+                        className="p-2 rounded-xl hover:bg-surface-container-low transition-colors text-on-surface-variant"
+                    >
+                        <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-primary font-headline">Add New Customer</h1>
+                        <p className="text-stone-400 mt-1 text-sm">Register a new client in your CRM.</p>
                     </div>
+                </div>
 
+                <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {[
+                            { label: 'Full Name', key: 'name', type: 'text', icon: 'person' },
+                            { label: 'Phone', key: 'phone', type: 'text', icon: 'call', placeholder: '03XX-XXXXXXX', onChange: formatPhoneNumber, maxLength: 12 },
+                        ].map(({ label, key, type, icon, placeholder, onChange, maxLength }) => (
+                            <div key={key}>
+                                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">{label}</label>
+                                <div className="relative">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">{icon}</span>
+                                    <input
+                                        type={type}
+                                        required
+                                        placeholder={placeholder}
+                                        value={customer[key]}
+                                        onChange={onChange || ((e) => setCustomer({ ...customer, [key]: e.target.value }))}
+                                        maxLength={maxLength}
+                                        className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                    />
+                                </div>
+                            </div>
+                        ))}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={customer.name}
-                                onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="03XX-XXXXXXX"
-                                value={customer.phone}
-                                onChange={formatPhoneNumber}
-                                maxLength={12}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Address
-                            </label>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Address</label>
                             <textarea
                                 required
                                 value={customer.address}
                                 onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[100px]"
+                                rows={3}
+                                className="w-full px-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body resize-none"
                             />
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
-                        >
-                            {loading ? 'Adding...' : 'Add Customer'}
-                        </button>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/customers')}
+                                className="flex-1 py-3 border border-outline-variant/30 text-on-surface-variant font-bold rounded-full text-sm hover:bg-surface-container-low transition-colors font-label"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-all disabled:opacity-60 font-label flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                                ) : (
+                                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                                )}
+                                {loading ? 'Adding…' : 'Add Customer'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -393,71 +412,82 @@ const EditCustomer = () => {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading...</div>;
+        return (
+            <div className="flex-1 flex items-center justify-center bg-surface">
+                <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center mb-6">
-                        <button
-                            onClick={() => navigate('/customers')}
-                            className="p-2 hover:bg-gray-100 rounded-full mr-4"
-                        >
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                        <h1 className="text-2xl font-bold text-gray-800">Edit Customer</h1>
+        <div className="p-8 font-body">
+            <div className="max-w-xl mx-auto">
+                <div className="flex items-center gap-4 mb-8">
+                    <button
+                        onClick={() => navigate('/customers')}
+                        className="p-2 rounded-xl hover:bg-surface-container-low transition-colors text-on-surface-variant"
+                    >
+                        <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-primary font-headline">Edit Customer</h1>
+                        <p className="text-stone-400 mt-1 text-sm">Update client information.</p>
                     </div>
+                </div>
 
+                <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {[
+                            { label: 'Full Name', key: 'name', type: 'text', icon: 'person' },
+                            { label: 'Phone', key: 'phone', type: 'text', icon: 'call', placeholder: '03XX-XXXXXXX', onChange: formatPhoneNumber, maxLength: 12 },
+                        ].map(({ label, key, type, icon, placeholder, onChange, maxLength }) => (
+                            <div key={key}>
+                                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">{label}</label>
+                                <div className="relative">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">{icon}</span>
+                                    <input
+                                        type={type}
+                                        required
+                                        placeholder={placeholder}
+                                        value={customer[key]}
+                                        onChange={onChange || ((e) => setCustomer({ ...customer, [key]: e.target.value }))}
+                                        maxLength={maxLength}
+                                        className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                    />
+                                </div>
+                            </div>
+                        ))}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={customer.name}
-                                onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="03XX-XXXXXXX"
-                                value={customer.phone}
-                                onChange={formatPhoneNumber}
-                                maxLength={12}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Address
-                            </label>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Address</label>
                             <textarea
                                 required
                                 value={customer.address}
                                 onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[100px]"
+                                rows={3}
+                                className="w-full px-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body resize-none"
                             />
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50"
-                        >
-                            {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/customers')}
+                                className="flex-1 py-3 border border-outline-variant/30 text-on-surface-variant font-bold rounded-full text-sm hover:bg-surface-container-low transition-colors font-label"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-all disabled:opacity-60 font-label flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                                ) : (
+                                    <span className="material-symbols-outlined text-[18px]">save</span>
+                                )}
+                                {loading ? 'Saving…' : 'Save Changes'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -652,11 +682,19 @@ const ViewCustomer = () => {
     };
 
     if (loading && !customer) {
-        return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading...</div>;
+        return (
+            <div className="flex-1 flex items-center justify-center bg-surface">
+                <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            </div>
+        );
     }
 
     if (!customer) {
-        return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Customer not found</div>;
+        return (
+            <div className="flex-1 flex items-center justify-center bg-surface">
+                <p className="text-stone-400">Customer not found</p>
+            </div>
+        );
     }
 
     // Check if customer has measurements
@@ -674,268 +712,136 @@ const ViewCustomer = () => {
     const hasMeasurementFiles = customer.measurementFiles && customer.measurementFiles.length > 0;
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-yellow-400 p-6">
-                        <div className="flex items-center">
-                            <button
-                                onClick={() => navigate('/customers')}
-                                className="p-2 hover:bg-yellow-500 rounded-full mr-4"
-                            >
-                                <ArrowLeft className="w-6 h-6 text-white" />
-                            </button>
-                            <h1 className="text-2xl font-bold text-white">Customer Details</h1>
+        <div className="p-8 font-body">
+            <div className="max-w-4xl">
+                {/* Back + title */}
+                <button
+                    onClick={() => navigate('/customers')}
+                    className="flex items-center gap-2 text-stone-400 hover:text-primary text-sm font-medium mb-6 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Back to Customers
+                </button>
+                <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
+
+                    {/* Customer Info */}
+                    {/* Customer Profile Hero */}
+                    <div className="bg-primary p-8 relative overflow-hidden">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+                        <div className="relative flex items-center gap-6">
+                            <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center text-2xl font-bold text-on-primary flex-shrink-0 font-headline">
+                                {customer.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-on-primary font-headline">{customer.name}</h1>
+                                <p className="text-on-primary/60 text-sm mt-1">Member since {new Date(customer.createdAt).toLocaleDateString()}</p>
+                                <div className="flex gap-3 mt-3">
+                                    <button
+                                        onClick={() => navigate(`/customers/edit/${id}`)}
+                                        className="text-xs font-bold text-on-primary border border-white/30 px-4 py-1.5 rounded-full hover:bg-white/10 transition-colors font-label"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Customer Info */}
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-4">
-                                <h2 className="text-xl font-semibold">Personal Information</h2>
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5 text-gray-500" />
-                                    <div>
-                                        <p className="text-sm text-gray-500">Created At</p>
-                                        <p className="font-medium">{new Date(customer.createdAt).toLocaleDateString()}</p>
+                                <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline mb-4">Personal Information</h2>
+                                {[
+                                    { icon: 'call', label: 'Phone', value: customer.phone },
+                                    { icon: 'location_on', label: 'Address', value: customer.address },
+                                    { icon: 'shopping_bag', label: 'Total Orders', value: customer.orders?.length || 0 },
+                                    { icon: 'calendar_today', label: 'Member Since', value: new Date(customer.createdAt).toLocaleDateString() },
+                                ].map(({ icon, label, value }) => (
+                                    <div key={label} className="flex items-start gap-3">
+                                        <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center flex-shrink-0">
+                                            <span className="material-symbols-outlined text-[18px] text-primary">{icon}</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-stone-400 font-label">{label}</p>
+                                            <p className="font-bold text-on-surface text-sm">{value}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Phone className="w-5 h-5 text-gray-500" />
-                                    <div>
-                                        <p className="text-sm text-gray-500">Phone</p>
-                                        <p className="font-medium">{customer.phone}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="w-5 h-5 text-gray-500" />
-                                    <div>
-                                        <p className="text-sm text-gray-500">Address</p>
-                                        <p className="font-medium">{customer.address}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <ShoppingBag className="w-5 h-5 text-gray-500" />
-                                    <div>
-                                        <p className="text-sm text-gray-500">Total Orders</p>
-                                        <p className="font-medium">{customer.orders?.length || 0}</p>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
 
                             {/* Measurements */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                                        <Ruler className="w-5 h-5" />
-                                        Measurements
-                                    </h2>
-
+                                    <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline">Measurements</h2>
                                     {editingMeasurements ? (
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => setEditingMeasurements(false)}
-                                                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                                                className="flex items-center gap-1 px-3 py-1.5 text-stone-400 hover:text-on-surface hover:bg-surface-container-low rounded-lg transition-colors text-xs font-bold font-label"
                                             >
-                                                <X className="w-5 h-5" />
+                                                <span className="material-symbols-outlined text-[14px]">close</span>
+                                                Cancel
                                             </button>
                                             <button
                                                 onClick={saveMeasurements}
-                                                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded"
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-lg transition-colors text-xs font-bold font-label"
                                             >
-                                                <Save className="w-5 h-5" />
+                                                <span className="material-symbols-outlined text-[14px]">save</span>
+                                                Save
                                             </button>
                                         </div>
                                     ) : (
                                         <button
                                             onClick={() => setEditingMeasurements(true)}
-                                            className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded flex items-center gap-1"
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-surface-container-low text-primary rounded-lg text-xs font-bold hover:bg-surface-container transition-colors font-label"
                                         >
-                                            <Edit className="w-4 h-4" />
-                                            <span className="text-sm">Edit</span>
+                                            <span className="material-symbols-outlined text-[14px]">edit</span>
+                                            Edit
                                         </button>
                                     )}
                                 </div>
 
-                                {hasMeasurements ? (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-sm text-gray-500">Chest</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.chest || ''}
-                                                    onChange={(e) => handleMeasurementChange('chest', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.chest || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Shoulders</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.shoulders || ''}
-                                                    onChange={(e) => handleMeasurementChange('shoulders', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.shoulders || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Neck</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.neck || ''}
-                                                    onChange={(e) => handleMeasurementChange('neck', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.neck || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Sleeves</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.sleeves || ''}
-                                                    onChange={(e) => handleMeasurementChange('sleeves', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.sleeves || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Top Length</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.topLenght || ''}
-                                                    onChange={(e) => handleMeasurementChange('topLenght', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.topLenght || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Bottom Length</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.bottomLenght || ''}
-                                                    onChange={(e) => handleMeasurementChange('bottomLenght', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.bottomLenght || 0} inches</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Waist</p>
-                                            {editingMeasurements ? (
-                                                <input
-                                                    type="number"
-                                                    value={measurements.waist || ''}
-                                                    onChange={(e) => handleMeasurementChange('waist', e.target.value)}
-                                                    className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                />
-                                            ) : (
-                                                <p className="font-medium">{customer.measurements.waist || 0} inches</p>
-                                            )}
-                                        </div>
+                                {(editingMeasurements || hasMeasurements) ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { label: 'Chest',         key: 'chest' },
+                                            { label: 'Shoulders',     key: 'shoulders' },
+                                            { label: 'Neck',          key: 'neck' },
+                                            { label: 'Sleeves',       key: 'sleeves' },
+                                            { label: 'Top Length',    key: 'topLenght' },
+                                            { label: 'Bottom Length', key: 'bottomLenght' },
+                                            { label: 'Waist',         key: 'waist' },
+                                        ].map(({ label, key }) => (
+                                            <div key={key} className="bg-surface-container-low rounded-xl p-3">
+                                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider font-label mb-1">{label}</p>
+                                                {editingMeasurements ? (
+                                                    <input
+                                                        type="number"
+                                                        value={measurements[key] || ''}
+                                                        onChange={(e) => handleMeasurementChange(key, e.target.value)}
+                                                        className="w-full bg-transparent border-none text-sm font-bold text-on-surface focus:outline-none focus:ring-0 p-0"
+                                                        placeholder="0"
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm font-bold text-on-surface">
+                                                        {customer.measurements?.[key] || 0}
+                                                        <span className="text-xs font-normal text-stone-400 ml-1">in</span>
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : (
-                                    <div>
-                                        {editingMeasurements ? (
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Chest</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.chest || ''}
-                                                        onChange={(e) => handleMeasurementChange('chest', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Shoulders</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.shoulders || ''}
-                                                        onChange={(e) => handleMeasurementChange('shoulders', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Neck</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.neck || ''}
-                                                        onChange={(e) => handleMeasurementChange('neck', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Sleeves</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.sleeves || ''}
-                                                        onChange={(e) => handleMeasurementChange('sleeves', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Top Length</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.topLenght || ''}
-                                                        onChange={(e) => handleMeasurementChange('topLenght', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Bottom Length</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.bottomLenght || ''}
-                                                        onChange={(e) => handleMeasurementChange('bottomLenght', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Waist</p>
-                                                    <input
-                                                        type="number"
-                                                        value={measurements.waist || ''}
-                                                        onChange={(e) => handleMeasurementChange('waist', e.target.value)}
-                                                        className="w-full p-1 text-sm border border-gray-300 rounded mt-1"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="text-gray-500">No measurements recorded</p>
-                                        )}
+                                    <div className="border-2 border-dashed border-outline-variant/20 rounded-xl p-6 text-center">
+                                        <span className="material-symbols-outlined text-[32px] text-stone-300 block mb-2">straighten</span>
+                                        <p className="text-sm text-stone-400 font-label">No measurements recorded</p>
+                                        <button
+                                            onClick={() => setEditingMeasurements(true)}
+                                            className="mt-3 px-4 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-bold hover:bg-primary/10 inline-flex items-center gap-1 font-label"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">add</span>
+                                            Add Measurements
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -944,27 +850,27 @@ const ViewCustomer = () => {
                         {/* Measurement Files */}
                         <div className="mt-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-semibold flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
+                                <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">description</span>
                                     Measurement Documents
                                 </h2>
 
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => fileInputRef.current.click()}
-                                        className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-bold hover:bg-primary/10 font-label"
                                         disabled={uploading}
                                     >
-                                        <Upload className="w-4 h-4" />
-                                        <span className="text-sm">Upload</span>
+                                        <span className="material-symbols-outlined text-[14px]">upload</span>
+                                        Upload
                                     </button>
                                     <button
                                         onClick={() => cameraInputRef.current.click()}
-                                        className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold hover:opacity-80 font-label"
                                         disabled={uploading}
                                     >
-                                        <Camera className="w-4 h-4" />
-                                        <span className="text-sm">Camera</span>
+                                        <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                                        Camera
                                     </button>
                                 </div>
 
@@ -988,8 +894,8 @@ const ViewCustomer = () => {
                             </div>
 
                             {uploading && (
-                                <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
-                                    <p className="text-blue-600">Uploading files...</p>
+                                <div className="mb-4 p-3 bg-primary/5 rounded-xl text-center">
+                                    <p className="text-primary text-sm font-bold font-label">Uploading files…</p>
                                 </div>
                             )}
 
@@ -998,20 +904,20 @@ const ViewCustomer = () => {
                                     {customer.measurementFiles.map((file) => (
                                         <div
                                             key={file.id}
-                                            className="border rounded-lg p-3 hover:shadow-md transition-shadow relative"
+                                            className="bg-surface-container-low rounded-xl p-3 relative hover:bg-surface-container transition-colors"
                                         >
                                             <button
                                                 onClick={() => removeFile(file.id)}
-                                                className="absolute top-2 right-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200"
+                                                className="absolute top-2 right-2 p-1 bg-error/10 text-error rounded-full hover:bg-error/20"
                                             >
-                                                <Trash className="w-4 h-4" />
+                                                <span className="material-symbols-outlined text-[16px]">delete</span>
                                             </button>
 
                                             <div className="flex items-start gap-3" onClick={() => viewFile(file)}>
                                                 {file.mimeType.includes('pdf') ? (
-                                                    <FileText className="w-10 h-10 text-red-500" />
+                                                    <span className="material-symbols-outlined text-[40px] text-error">picture_as_pdf</span>
                                                 ) : (
-                                                    <div className="relative w-14 h-14 bg-gray-100 rounded overflow-hidden">
+                                                    <div className="relative w-14 h-14 bg-surface-container-low rounded-xl overflow-hidden">
                                                         <img
                                                             src={file.url}
                                                             alt="Measurement document"
@@ -1021,27 +927,27 @@ const ViewCustomer = () => {
                                                 )}
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-sm truncate">{file.name}</p>
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="text-xs text-stone-400 mt-1">
                                                         {new Date(file.uploadDate).toLocaleDateString()}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-2">
                                                         <button
-                                                            className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                                            className="text-xs flex items-center gap-1 text-primary hover:underline font-bold font-label"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 viewFile(file);
                                                             }}
                                                         >
-                                                            <Eye className="w-3 h-3" />
+                                                            <span className="material-symbols-outlined text-[12px]">visibility</span>
                                                             View
                                                         </button>
                                                         <a
                                                             href={file.url}
                                                             download
                                                             onClick={(e) => e.stopPropagation()}
-                                                            className="text-xs flex items-center gap-1 text-green-600 hover:text-green-800"
+                                                            className="text-xs flex items-center gap-1 text-primary hover:underline font-bold font-label"
                                                         >
-                                                            <Download className="w-3 h-3" />
+                                                            <span className="material-symbols-outlined text-[12px]">download</span>
                                                             Download
                                                         </a>
                                                     </div>
@@ -1051,14 +957,14 @@ const ViewCustomer = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                    <FileText className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                                    <p className="text-gray-500">No measurement documents uploaded</p>
+                                <div className="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center">
+                                    <span className="material-symbols-outlined text-[40px] text-stone-300 block mb-2">description</span>
+                                    <p className="text-stone-400 text-sm">No measurement documents uploaded</p>
                                     <button
                                         onClick={() => fileInputRef.current.click()}
-                                        className="mt-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 inline-flex items-center gap-2"
+                                        className="mt-3 px-4 py-2 bg-primary/5 text-primary rounded-full text-sm font-bold hover:bg-primary/10 inline-flex items-center gap-2 font-label"
                                     >
-                                        <Upload className="w-4 h-4" />
+                                        <span className="material-symbols-outlined text-[16px]">upload</span>
                                         Upload Files
                                     </button>
                                 </div>
@@ -1067,84 +973,70 @@ const ViewCustomer = () => {
 
                         {/* Recent Orders */}
                         <div className="mt-8">
-                            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                                <ShoppingBag className="w-5 h-5" />
-                                Recent Orders
-                            </h2>
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Products</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Payment</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                    {orders.length === 0 ? (
+                            <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline mb-4">Recent Orders</h2>
+                            <div className="overflow-x-auto rounded-xl border border-outline-variant/10">
+                                <table className="w-full masters-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="6" className="text-center py-4 text-gray-500">No orders found</td>
+                                            <th>Order ID</th>
+                                            <th>Date</th>
+                                            <th>Products</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Payment</th>
                                         </tr>
-                                    ) : (
-                                        orders.map((order) => (
-                                            <tr key={order._id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-3 text-sm text-blue-600 cursor-pointer"
-                                                    onClick={() => navigate(`/order/details/${order._id}`)}>
-                                                    {order._id.substring(0, 8)}...
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600">
-                                                    {new Date(order.date).toLocaleString()}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600">
-                                                    {order.products?.length || 0} products
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                                                    Rs. {order.total}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium
-                                                        ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                        order.status === 'in progress' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-yellow-100 text-yellow-800'}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium
-                                                        ${order.paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                        {order.paid ? 'Paid' : 'Unpaid'}
-                                                    </span>
-                                                </td>
+                                    </thead>
+                                    <tbody>
+                                        {orders.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6" className="py-8 text-center text-stone-400">No orders found</td>
                                             </tr>
-                                        ))
-                                    )}
+                                        ) : (
+                                            orders.map((order) => (
+                                                <tr key={order._id} onClick={() => navigate(`/order/details/${order._id}`)}>
+                                                    <td className="font-bold text-primary">#{order._id.substring(0, 8).toUpperCase()}</td>
+                                                    <td className="text-on-surface-variant">{new Date(order.date).toLocaleDateString()}</td>
+                                                    <td className="text-on-surface-variant">{order.products?.length || 0}</td>
+                                                    <td className="font-bold">Rs. {order.total?.toLocaleString()}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${
+                                                            order.status === 'completed' ? 'bg-primary-fixed text-on-primary-fixed-variant' :
+                                                            order.status === 'in progress' ? 'bg-secondary-container text-on-secondary-container' :
+                                                            'bg-tertiary-fixed text-on-tertiary-fixed-variant'
+                                                        }`}>{order.status}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`status-badge ${order.paid ? 'bg-primary-fixed text-on-primary-fixed-variant' : 'bg-error-container text-on-error-container'}`}>
+                                                            {order.paid ? 'Paid' : 'Unpaid'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="flex items-center justify-between mt-4">
-                                <p className="text-sm text-gray-600">
-                                    Page {ordersPagination.page} of {ordersPagination.totalPages} ({ordersPagination.total} total orders)
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setOrdersPage((prev) => Math.max(prev - 1, 1))}
-                                        disabled={!ordersPagination.hasPrevPage}
-                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                    >
-                                        Previous
-                                    </button>
-                                    <button
-                                        onClick={() => setOrdersPage((prev) => prev + 1)}
-                                        disabled={!ordersPagination.hasNextPage}
-                                        className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                    >
-                                        Next
-                                    </button>
+                            {ordersPagination.totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <p className="text-sm text-stone-400">Page {ordersPagination.page} of {ordersPagination.totalPages}</p>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setOrdersPage(p => Math.max(p - 1, 1))}
+                                            disabled={!ordersPagination.hasPrevPage}
+                                            className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setOrdersPage(p => p + 1)}
+                                            disabled={!ordersPagination.hasNextPage}
+                                            className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

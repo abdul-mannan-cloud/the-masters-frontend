@@ -1,82 +1,101 @@
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
+// Using design-system colors: tertiary-fixed, secondary-container, primary-fixed, primary
+const STATUS_COLORS = ['#ffdea5', '#dae1e3', '#baeed9', '#003629'];
+
 const DonutChart = ({ data = [0, 0, 0, 0] }) => {
-    // Default values in case data is missing
     const seriesData = data.length ? data : [0, 0, 0, 0];
+    const hasData = seriesData.some((v) => v > 0);
 
     const chartOptions = {
         series: seriesData,
-        colors: ["#FFBB54", "#00A389", "#4F46E5", "#EF9A91"],
+        colors: STATUS_COLORS,
         labels: ['Pending', 'In Progress', 'Completed', 'Shipped'],
         chart: {
-            type: "donut",
-            fontFamily: "Inter, sans-serif",
-        },
-        stroke: {
-            colors: ["transparent"],
-        },
-        dataLabels: {
-            enabled: true,
-            formatter: function (val) {
-                return val.toFixed(1) + "%";
+            type: 'donut',
+            fontFamily: 'Manrope, sans-serif',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600,
             },
         },
+        stroke: {
+            colors: ['transparent'],
+        },
+        dataLabels: {
+            enabled: hasData,
+            style: {
+                fontFamily: 'Manrope, sans-serif',
+                fontSize: '11px',
+                fontWeight: '700',
+            },
+            formatter: (val) => `${val.toFixed(0)}%`,
+            dropShadow: { enabled: false },
+        },
         legend: {
-            position: "bottom",
-            fontFamily: "Inter, sans-serif",
+            position: 'bottom',
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: { colors: '#404945' },
+            markers: { width: 8, height: 8, radius: 4 },
+            itemMargin: { horizontal: 8, vertical: 4 },
         },
         plotOptions: {
             pie: {
                 donut: {
-                    size: '75%',
+                    size: '72%',
                     labels: {
-                        show: true,
+                        show: hasData,
                         name: {
                             show: true,
+                            fontFamily: 'Plus Jakarta Sans, sans-serif',
+                            fontWeight: '700',
+                            color: '#191c1b',
                         },
                         value: {
                             show: true,
-                            formatter: function(val) {
-                                return val;
-                            }
+                            fontFamily: 'Manrope, sans-serif',
+                            fontWeight: '600',
+                            color: '#404945',
+                            formatter: (val) => `${parseFloat(val).toFixed(0)}%`,
                         },
                         total: {
                             show: true,
-                            label: 'Total',
-                            formatter: function(w) {
-                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                            }
-                        }
-                    }
+                            label: 'Pipeline',
+                            fontFamily: 'Plus Jakarta Sans, sans-serif',
+                            fontWeight: '700',
+                            color: '#191c1b',
+                            formatter: () => 'Active',
+                        },
+                    },
                 },
             },
+        },
+        tooltip: {
+            style: { fontFamily: 'Manrope, sans-serif' },
+            y: { formatter: (val) => `${val.toFixed(1)}%` },
         },
         responsive: [{
             breakpoint: 480,
             options: {
-                chart: {
-                    width: 280,
-                    height: 280
-                },
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }]
+                chart: { width: 280, height: 280 },
+                legend: { position: 'bottom' },
+            },
+        }],
     };
 
     return (
         <div className="w-full h-full">
-            <div className="h-80 flex items-center justify-center">
-                <ReactApexChart
-                    options={chartOptions}
-                    series={seriesData}
-                    type="donut"
-                    height="100%"
-                    width="100%"
-                />
-            </div>
+            <ReactApexChart
+                options={chartOptions}
+                series={seriesData}
+                type="donut"
+                height="100%"
+                width="100%"
+            />
         </div>
     );
 };

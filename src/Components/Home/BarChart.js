@@ -2,98 +2,79 @@ import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 const BarChart = ({ data = [], categories = [] }) => {
-    // Default values in case data is missing
     const chartData = data.length ? data : [0, 0, 0, 0, 0];
-    // Default categories if none provided
     const chartCategories = categories.length ? categories : ['Shirts', 'Kurta', 'Qameez', 'Pants', 'Suits'];
 
     const chartOptions = {
         chart: {
             type: 'bar',
             stacked: false,
-            toolbar: {
-                show: false
+            toolbar: { show: false },
+            fontFamily: 'Manrope, sans-serif',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600,
             },
-            fontFamily: "Inter, sans-serif",
         },
-        colors: ["#FFBB54"],
+        colors: ['#003629'],
         plotOptions: {
             bar: {
                 horizontal: false,
-                columnWidth: '55%',
-                borderRadius: 4,
-                dataLabels: {
-                    position: 'top',
-                },
+                columnWidth: '48%',
+                borderRadius: 6,
+                dataLabels: { position: 'top' },
             },
         },
-        dataLabels: {
-            enabled: false,
-        },
+        dataLabels: { enabled: false },
         xaxis: {
             categories: chartCategories,
-            axisBorder: {
-                show: false,
-            },
-            axisTicks: {
-                show: false,
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+            labels: {
+                style: {
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '12px',
+                    colors: '#707974',
+                },
             },
         },
         yaxis: {
             labels: {
-                formatter: function (val) {
-                    return val.toFixed(0);
-                }
+                style: {
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '12px',
+                    colors: '#707974',
+                },
+                formatter: (val) => val.toFixed(0),
             },
         },
         grid: {
-            borderColor: '#f1f1f1',
+            borderColor: 'rgba(192, 201, 195, 0.2)',
             strokeDashArray: 4,
-            yaxis: {
-                lines: {
-                    show: true
-                }
-            }
-        },
-        legend: {
-            position: 'bottom',
-            fontFamily: "Inter, sans-serif",
+            yaxis: { lines: { show: true } },
+            xaxis: { lines: { show: false } },
         },
         tooltip: {
-            y: {
-                formatter: function (val) {
-                    return val.toFixed(0);
-                }
-            }
+            style: { fontFamily: 'Manrope, sans-serif' },
+            y: { formatter: (val) => `${val.toFixed(0)} orders` },
         },
-        responsive: [{
-            breakpoint: 480,
-            options: {
-                chart: {
-                    height: 300
-                },
-            }
-        }]
+        states: {
+            hover: { filter: { type: 'darken', value: 0.85 } },
+        },
     };
 
-    const series = [
-        {
-            name: 'Orders',
-            data: chartData,
-        },
-    ];
+    const series = [{ name: 'Orders', data: chartData }];
 
     return (
         <div className="w-full h-full">
-            <div className="h-60">
-                <ReactApexChart
-                    options={chartOptions}
-                    series={series}
-                    type="bar"
-                    height="100%"
-                    width="100%"
-                />
-            </div>
+            <ReactApexChart
+                options={chartOptions}
+                series={series}
+                type="bar"
+                height="100%"
+                width="100%"
+            />
         </div>
     );
 };

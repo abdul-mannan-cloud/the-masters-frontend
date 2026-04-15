@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import {
-    BarChart3, PieChart, LineChart as LineChartIcon, TrendingUp, Users, Scissors,
-    ShoppingBag, CreditCard, Clock, Calendar, Package, ArrowUp, ArrowDown, ArrowRight
-} from 'lucide-react';
 
 // Import your chart components
 import BarChart from '../../Components/Home/BarChart';
@@ -421,352 +417,227 @@ const Dashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+            <div className="flex-1 flex items-center justify-center bg-surface">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                    <p className="text-sm text-stone-400 font-label">Loading atelier data…</p>
+                </div>
             </div>
         );
     }
 
+    const statCards = [
+        {
+            label: 'Total Orders',
+            value: orderStats.totalOrders || orders.length,
+            icon: 'receipt_long',
+            trend: orderTrend,
+            dark: false,
+            onClick: () => navigate('/orders'),
+        },
+        {
+            label: 'Total Revenue',
+            value: formatCurrency(orderStats.totalRevenue || 0),
+            icon: 'payments',
+            trend: revenueTrend,
+            dark: true,
+            onClick: () => navigate('/orders'),
+        },
+        {
+            label: 'Total Customers',
+            value: customers.length,
+            icon: 'person_pin',
+            trend: null,
+            dark: false,
+            onClick: () => navigate('/customers'),
+        },
+        {
+            label: 'Avg. Order Value',
+            value: formatCurrency(orderStats.averageOrderValue || 0),
+            icon: 'analytics',
+            trend: null,
+            dark: false,
+            onClick: null,
+        },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                {/* Dashboard Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                        <p className="text-gray-500 mt-1">Welcome to your tailoring business analytics</p>
-                    </div>
-
-                    <div className="mt-4 md:mt-0 flex items-center bg-white rounded-lg shadow-sm p-1">
+        <div className="p-8 space-y-8 font-body">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <p className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-1 font-label">Good day, Master</p>
+                    <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">Atelier Overview</h1>
+                </div>
+                {/* Time Frame Selector */}
+                <div className="flex items-center bg-surface-container-lowest rounded-xl p-1 gap-1" style={{ boxShadow: '0 2px 8px rgba(25,28,27,0.06)' }}>
+                    {['week', 'month', 'year'].map((tf) => (
                         <button
-                            onClick={() => setTimeFrame('week')}
-                            className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'week'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
-                                : 'text-gray-600 hover:bg-gray-100'}`}
+                            key={tf}
+                            onClick={() => setTimeFrame(tf)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all font-label ${
+                                timeFrame === tf
+                                    ? 'bg-primary text-on-primary'
+                                    : 'text-stone-500 hover:text-primary'
+                            }`}
                         >
-                            Week
+                            {tf}
                         </button>
-                        <button
-                            onClick={() => setTimeFrame('month')}
-                            className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'month'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
-                                : 'text-gray-600 hover:bg-gray-100'}`}
+                    ))}
+                </div>
+            </div>
+
+            {/* Stats Bento Grid */}
+            <div className="grid grid-cols-12 gap-6">
+                {statCards.map((card, i) => {
+                    const colSpans = ['col-span-12 md:col-span-4', 'col-span-12 md:col-span-4', 'col-span-6 md:col-span-2', 'col-span-6 md:col-span-2'];
+                    return (
+                        <div
+                            key={i}
+                            onClick={card.onClick}
+                            className={`${colSpans[i]} p-6 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 ${
+                                card.dark
+                                    ? 'bg-primary text-on-primary cursor-pointer hover:shadow-2xl'
+                                    : `bg-surface-container-lowest ${card.onClick ? 'cursor-pointer' : ''} hover:shadow-lg`
+                            }`}
+                            style={{ boxShadow: card.dark ? '0 12px 40px rgba(25,83,0,0.18)' : '0 4px 20px rgba(25,28,27,0.05)' }}
                         >
-                            Month
-                        </button>
-                        <button
-                            onClick={() => setTimeFrame('year')}
-                            className={`px-3 py-1 text-sm rounded-md ${timeFrame === 'year'
-                                ? 'bg-yellow-100 text-yellow-800 font-medium'
-                                : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            Year
-                        </button>
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={`p-3 rounded-xl ${card.dark ? 'bg-white/10' : 'bg-primary/5 text-primary'}`}>
+                                    <span className="material-symbols-outlined text-[22px]">{card.icon}</span>
+                                </div>
+                                {card.trend !== null && (
+                                    <span className={`text-xs font-bold flex items-center gap-0.5 px-2 py-1 rounded-full ${
+                                        card.trend >= 0
+                                            ? card.dark ? 'bg-white/10 text-on-primary' : 'bg-primary-fixed text-on-primary-fixed-variant'
+                                            : 'bg-error/5 text-error'
+                                    }`}>
+                                        <span className="material-symbols-outlined text-[14px]">
+                                            {card.trend >= 0 ? 'trending_up' : 'trending_down'}
+                                        </span>
+                                        {Math.abs(card.trend)}%
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <p className={`text-xs font-bold uppercase tracking-wider mb-2 font-label ${card.dark ? 'text-on-primary/60' : 'text-stone-400'}`}>
+                                    {card.label}
+                                </p>
+                                <h3 className={`text-2xl font-extrabold font-headline ${card.dark ? 'text-on-primary' : 'text-on-surface'}`}>
+                                    {card.value}
+                                </h3>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Revenue Trend */}
+                <div className="lg:col-span-2 bg-surface-container-lowest rounded-xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 className="text-xl font-bold text-on-surface font-headline">Revenue Trend</h3>
+                            <p className="text-sm text-stone-400">Monthly breakdown of atelier earnings</p>
+                        </div>
+                    </div>
+                    <div className="h-72">
+                        <LineChart data={revenueData.values} categories={revenueData.categories} />
                     </div>
                 </div>
 
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {/* Total Orders */}
-                    <div className="bg-white rounded-xl flex flex-col justify-between shadow-sm overflow-hidden">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-blue-50 p-3 rounded-lg">
-                                    <ShoppingBag className="h-6 w-6 text-blue-600" />
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
-                                        <dd>
-                                            <div className="flex items-baseline">
-                                                <div className="text-2xl font-semibold text-gray-900">{orderStats.totalOrders || orders.length}</div>
-                                                <div className={`ml-2 flex items-baseline text-sm font-semibold ${orderTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {orderTrend >= 0 ? (
-                                                        <ArrowUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" />
-                                                    ) : (
-                                                        <ArrowDown className="self-center flex-shrink-0 h-4 w-4 text-red-500" />
-                                                    )}
-                                                    <span className="ml-1">{Math.abs(orderTrend)}%</span>
-                                                </div>
-                                            </div>
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-blue-50 px-5 py-1">
-                            <div
-                                className="text-xs text-blue-600 flex items-center justify-end cursor-pointer"
-                                onClick={() => navigate('/orders')}
-                            >
-                                <span>View orders</span>
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                            </div>
-                        </div>
+                {/* Order Status */}
+                <div className="bg-surface-container-lowest rounded-xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                    <h3 className="text-xl font-bold text-on-surface font-headline mb-1">Order Status</h3>
+                    <p className="text-sm text-stone-400 mb-6">Production pipeline</p>
+                    <div className="h-52">
+                        <DonutChart data={orderStatusData} />
                     </div>
-
-                    {/* Total Revenue */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-green-50 p-3 rounded-lg">
-                                    <CreditCard className="h-6 w-6 text-green-600" />
+                    <div className="space-y-3 mt-6">
+                        {[
+                            { label: 'Completed', value: orderStats.completedOrders, color: 'bg-primary' },
+                            { label: 'Pending', value: orderStats.pendingOrders, color: 'bg-tertiary-fixed-dim' },
+                        ].map((item) => (
+                            <div key={item.label} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                                    <span className="text-stone-500">{item.label}</span>
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                                        <dd>
-                                            <div className="flex items-baseline">
-                                                <div className="text-2xl font-semibold text-gray-900">{formatCurrency(orderStats.totalRevenue || 0)}</div>
-                                                <div className={`ml-2 flex items-baseline text-sm font-semibold ${revenueTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {revenueTrend >= 0 ? (
-                                                        <ArrowUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" />
-                                                    ) : (
-                                                        <ArrowDown className="self-center flex-shrink-0 h-4 w-4 text-red-500" />
-                                                    )}
-                                                    <span className="ml-1">{Math.abs(revenueTrend)}%</span>
-                                                </div>
-                                            </div>
-                                        </dd>
-                                    </dl>
-                                </div>
+                                <span className="font-bold text-on-surface">{item.value ?? '—'}</span>
                             </div>
-                        </div>
-                        <div className="bg-green-50 px-5 py-1 cursor-pointer"
-                             onClick={() => navigate('/orders')}
-
-                        >
-                            <div className="text-xs text-green-600 flex items-center justify-end">
-                                <span>View details</span>
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                            </div>
-                        </div>
+                        ))}
                     </div>
+                </div>
+            </div>
 
-                    {/* Customers */}
-                    <div className="bg-white rounded-xl flex flex-col justify-between shadow-sm overflow-hidden">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-purple-50 p-3 rounded-lg">
-                                    <Users className="h-6 w-6 text-purple-600" />
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Customers</dt>
-                                        <dd>
-                                            <div className="flex items-baseline">
-                                                <div className="text-2xl font-semibold text-gray-900">{customers.length}</div>
-                                                <div className="ml-2 flex items-baseline text-sm font-semibold text-gray-500">
-                                                    <span>Active</span>
-                                                </div>
-                                            </div>
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-purple-50 px-5 py-1">
-                            <div
-                                className="text-xs text-purple-600 flex items-center justify-end cursor-pointer"
-                                onClick={() => navigate('/customers')}
-                            >
-                                <span>View customers</span>
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                            </div>
-                        </div>
+            {/* Product Distribution */}
+            <div className="bg-surface-container-lowest rounded-xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                <h3 className="text-xl font-bold text-on-surface font-headline mb-1">Product Distribution</h3>
+                <p className="text-sm text-stone-400 mb-6">Orders by garment category</p>
+                <div className="h-72">
+                    <BarChart data={productData.counts} categories={productData.categories} />
+                </div>
+            </div>
+
+            {/* Bottom Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Top Products */}
+                <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                    <div className="p-8 pb-4 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-on-surface font-headline">Top Signature Cuts</h3>
+                        <button className="text-sm font-bold text-primary hover:underline font-label">View All</button>
                     </div>
-
-                    {/* Average Order Value */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-yellow-50 p-3 rounded-lg">
-                                    <TrendingUp className="h-6 w-6 text-yellow-600" />
+                    <div className="px-8 pb-8 space-y-2">
+                        {topProducts.length === 0 && (
+                            <p className="text-sm text-stone-400 py-4 text-center">No product data available</p>
+                        )}
+                        {topProducts.map((product, index) => (
+                            <div key={index} className="flex items-center gap-4 p-4 rounded-xl hover:bg-surface-container-low transition-colors">
+                                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary flex-shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]">content_cut</span>
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Avg. Order Value</dt>
-                                        <dd>
-                                            <div className="flex items-baseline">
-                                                <div className="text-2xl font-semibold text-gray-900">
-                                                    {formatCurrency(orderStats.averageOrderValue || 0)}
-                                                </div>
-                                            </div>
-                                        </dd>
-                                    </dl>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-on-surface text-sm truncate">{product.type}</h4>
+                                    <p className="text-xs text-stone-400">{product.count} orders</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                    <p className="font-bold text-primary text-sm">{formatCurrency(product.revenue)}</p>
                                 </div>
                             </div>
-                        </div>
-                        <div className="bg-yellow-50 px-5 py-1">
-                            <div className="text-xs text-yellow-600 flex items-center justify-end">
-                                <span>View analytics</span>
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Charts and Tables Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    {/* Revenue Chart - Takes 2/3 width on large screens */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <LineChartIcon className="h-5 w-5 mr-2 text-blue-500" />
-                                Revenue Trend
-                            </h2>
-                        </div>
-                        <div className="h-80">
-                            {/* Display revenue chart with real data */}
-                            <LineChart
-                                data={revenueData.values}
-                                categories={revenueData.categories}
-                            />
-                        </div>
+                {/* Top Customers */}
+                <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                    <div className="p-8 pb-4 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-on-surface font-headline">Vanguard Clients</h3>
+                        <button onClick={() => navigate('/customers')} className="text-sm font-bold text-primary hover:underline font-label">View CRM</button>
                     </div>
-
-                    {/* Order Status Chart - Takes 1/3 width */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <PieChart className="h-5 w-5 mr-2 text-purple-500" />
-                                Order Status
-                            </h2>
-                        </div>
-                        <div className="h-60">
-                            {/* Pass real order status data to DonutChart */}
-                            <DonutChart data={orderStatusData} />
-                            <div className="grid grid-cols-2 gap-4 mt-6 w-full">
-                                <div className="flex flex-col items-center bg-green-50 rounded-lg p-3">
-                                    <span className="text-sm text-gray-500">Completed</span>
-                                    <span className="text-xl font-semibold text-green-600">{orderStats.completedOrders}</span>
+                    <div className="px-8 pb-8 space-y-2">
+                        {topCustomers.length === 0 && (
+                            <p className="text-sm text-stone-400 py-4 text-center">No customer data available</p>
+                        )}
+                        {topCustomers.map((customer, index) => {
+                            const initials = customer.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                            const bgColors = ['bg-tertiary-fixed', 'bg-secondary-fixed', 'bg-primary-fixed', 'bg-surface-container-high', 'bg-tertiary-container'];
+                            return (
+                                <div key={index} className="flex items-center gap-4 p-4 rounded-xl hover:bg-surface-container-low transition-colors">
+                                    <div className={`w-10 h-10 rounded-full ${bgColors[index % bgColors.length]} flex items-center justify-center text-xs font-bold text-on-surface flex-shrink-0`}>
+                                        {initials}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-on-surface text-sm truncate">{customer.name}</h4>
+                                        <p className="text-xs text-stone-400">{customer.orderCount} orders · {customer.phone}</p>
+                                    </div>
+                                    <div className="text-right flex-shrink-0">
+                                        <p className="font-bold text-primary text-sm">{formatCurrency(customer.totalSpend)}</p>
+                                        <p className="text-xs text-stone-400">{new Date(customer.lastOrderDate).toLocaleDateString()}</p>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-center bg-yellow-50 rounded-lg p-3">
-                                    <span className="text-sm text-gray-500">Pending</span>
-                                    <span className="text-xl font-semibold text-yellow-600">{orderStats.pendingOrders}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Product Distribution Bar Chart */}
-                <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                            <BarChart3 className="h-5 w-5 mr-2 text-green-500" />
-                            Product Distribution
-                        </h2>
-                    </div>
-                    <div className="h-80">
-                        {/* Pass real product data to BarChart */}
-                        <BarChart
-                            data={productData.counts}
-                            categories={productData.categories}
-                        />
-                    </div>
-                </div>
-
-                {/* Bottom Section - Popular Items & Top Customers */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Popular Products */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <Scissors className="h-5 w-5 mr-2 text-yellow-500" />
-                                Top Products
-                            </h2>
-                            <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead>
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Product
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Orders
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Revenue
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                {topProducts.map((product, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center">
-                                                    <Scissors className="h-4 w-4 text-gray-600" />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">{product.type}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{product.count}</div>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{formatCurrency(product.revenue)}</div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Top Customers */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                                <Users className="h-5 w-5 mr-2 text-purple-500" />
-                                Top Customers
-                            </h2>
-                            <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead>
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Orders
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Total Spend
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Last Order
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                {topCustomers.map((customer, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                                            <div className="text-xs text-gray-500">{customer.phone}</div>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{customer.orderCount}</div>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{formatCurrency(customer.totalSpend)}</div>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{new Date(customer.lastOrderDate).toLocaleDateString()}</div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

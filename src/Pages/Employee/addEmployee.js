@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import {
-    ArrowLeft, User, UserPlus, Phone,
-    Lock, Shield, CreditCard, Save, X
-} from 'lucide-react';
 
 const Employee = ({ types }) => {
     const navigate = useNavigate();
@@ -40,39 +36,20 @@ const Employee = ({ types }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setEmployeeData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
+        setEmployeeData(prev => ({ ...prev, [name]: value }));
     };
 
     const validateForm = () => {
-        if (!employeeData.name.trim()) {
-            toast.error('Name is required');
-            return false;
-        }
-        if (employeeData.cnic.length !== 15) {
-            toast.error('Please enter a valid CNIC');
-            return false;
-        }
-        if (employeeData.phone.length !== 12) {
-            toast.error('Please enter a valid phone number');
-            return false;
-        }
-        if (!employeeData.password.trim()) {
-            toast.error('Password is required');
-            return false;
-        }
-        if (!employeeData.role) {
-            toast.error('Please select an employee type');
-            return false;
-        }
+        if (!employeeData.name.trim()) { toast.error('Name is required'); return false; }
+        if (employeeData.cnic.length !== 15) { toast.error('Please enter a valid CNIC'); return false; }
+        if (employeeData.phone.length !== 12) { toast.error('Please enter a valid phone number'); return false; }
+        if (!employeeData.password.trim()) { toast.error('Password is required'); return false; }
+        if (!employeeData.role) { toast.error('Please select an employee type'); return false; }
         return true;
     };
 
     const handleAddEmployee = async () => {
         if (!validateForm()) return;
-
         try {
             setLoading(true);
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}/employee/addemployee`, employeeData);
@@ -85,147 +62,97 @@ const Employee = ({ types }) => {
         }
     };
 
+    const fields = [
+        { name: 'name', label: 'Full Name', icon: 'person', type: 'text', placeholder: 'Enter employee name' },
+        { name: 'cnic', label: 'CNIC', icon: 'badge', type: 'text', placeholder: '#####-#######-#', maxLength: 15, onInput: formatCNIC },
+        { name: 'phone', label: 'Phone Number', icon: 'call', type: 'text', placeholder: '03XX-XXXXXXX', maxLength: 12, onInput: formatPhoneNumber },
+        { name: 'password', label: 'Password', icon: 'lock', type: 'password', placeholder: 'Enter secure password' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-xl shadow-sm">
-                    {/* Header */}
-                    <div className="border-b border-gray-200">
-                        <div className="p-6 flex items-center gap-4">
-                            <button
-                                onClick={() => navigate('/employees')}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        <div className="p-8 font-body">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-8">
+                <button
+                    onClick={() => navigate('/employees')}
+                    className="p-2 rounded-xl hover:bg-surface-container-low transition-colors text-on-surface-variant"
+                >
+                    <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+                </button>
+                <div>
+                    <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">Add Employee</h1>
+                    <p className="text-stone-400 mt-1 text-sm">Register a new artisan or staff member.</p>
+                </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="max-w-2xl bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                <div className="space-y-5">
+                    {fields.map((field) => (
+                        <div key={field.name}>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">
+                                {field.label}
+                            </label>
+                            <div className="relative">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">
+                                    {field.icon}
+                                </span>
+                                <input
+                                    type={field.type}
+                                    name={field.name}
+                                    placeholder={field.placeholder}
+                                    value={employeeData[field.name]}
+                                    onChange={handleInputChange}
+                                    maxLength={field.maxLength}
+                                    onInput={field.onInput}
+                                    className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                />
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Role */}
+                    <div>
+                        <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">
+                            Employee Role
+                        </label>
+                        <div className="relative">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">
+                                work
+                            </span>
+                            <select
+                                name="role"
+                                onChange={(e) => setEmployeeData(prev => ({ ...prev, role: e.target.value }))}
+                                className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body appearance-none"
                             >
-                                <ArrowLeft className="w-6 h-6 text-gray-600" />
-                            </button>
-                            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                <UserPlus className="w-6 h-6" />
-                                Add New Employee
-                            </h1>
+                                <option value="">Select employee role</option>
+                                {types.map((type) => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
-                    {/* Form */}
-                    <div className="p-6">
-                        <div className="max-w-2xl mx-auto">
-                            <div className="space-y-6">
-                                {/* Name */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                        <User className="w-4 h-4" />
-                                        Full Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        placeholder="Enter employee name"
-                                        value={employeeData.name}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    />
-                                </div>
-
-                                {/* CNIC */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                        <CreditCard className="w-4 h-4" />
-                                        CNIC
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="cnic"
-                                        placeholder="#####-#######-#"
-                                        maxLength={15}
-                                        onInput={formatCNIC}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    />
-                                </div>
-
-                                {/* Phone */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                        <Phone className="w-4 h-4" />
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        placeholder="03XX-XXXXXXX"
-                                        maxLength={12}
-                                        onInput={formatPhoneNumber}
-                                        onChange={handleInputChange}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    />
-                                </div>
-
-                                {/* Password */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                        <Lock className="w-4 h-4" />
-                                        Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Enter secure password"
-                                        onChange={handleInputChange}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    />
-                                </div>
-
-                                {/* Employee Type */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                                        <Shield className="w-4 h-4" />
-                                        Employee Type
-                                    </label>
-                                    <select
-                                        name="type"
-                                        onChange={(e) => setEmployeeData(prev => ({
-                                            ...prev,
-                                            role: e.target.value
-                                        }))}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg
-                                            focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    >
-                                        <option value="">Select employee type</option>
-                                        {types.map((type) => (
-                                            <option key={type} value={type}>
-                                                {type}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => navigate('/employees')}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5
-                                            border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50
-                                            transition-colors"
-                                    >
-                                        <X className="w-5 h-5" />
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleAddEmployee}
-                                        disabled={loading}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5
-                                            bg-yellow-400 text-white rounded-lg hover:bg-yellow-500
-                                            transition-colors disabled:opacity-50"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        {loading ? 'Adding...' : 'Save Employee'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={() => navigate('/employees')}
+                            className="flex-1 py-3 border border-outline-variant/30 text-on-surface-variant font-bold rounded-full text-sm hover:bg-surface-container-low transition-colors font-label"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleAddEmployee}
+                            disabled={loading}
+                            className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors disabled:opacity-60 font-label flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                            ) : (
+                                <span className="material-symbols-outlined text-[18px]">save</span>
+                            )}
+                            {loading ? 'Saving…' : 'Save Employee'}
+                        </button>
                     </div>
                 </div>
             </div>

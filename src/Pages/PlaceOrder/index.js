@@ -3,11 +3,13 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MeasurementDetails from "../../Components/ItemDetials/Shirt";
-import {
-    ArrowLeft, User, Package,
-    CreditCard, Scissors, Search,
-    Phone, MapPin, Ruler
-} from 'lucide-react';
+
+const steps = [
+    { icon: 'person', label: 'Customer' },
+    { icon: 'content_cut', label: 'Items' },
+    { icon: 'straighten', label: 'Measurements' },
+    { icon: 'receipt_long', label: 'Review' },
+];
 
 const PlaceOrder = () => {
     const navigate = useNavigate();
@@ -23,42 +25,32 @@ const PlaceOrder = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [customer, setCustomer] = useState({
-        name: '',
-        phone: '',
-        address: '',
-    });
+    const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
 
     const [measurements, setMeasurements] = useState({
-        chest: 0,
-        neck: 0,
-        shoulders: 0,
-        sleeves: 0,
-        topLenght: 0,
-        bottomLenght: 0,
-        waist: 0
+        chest: 0, neck: 0, shoulders: 0, sleeves: 0,
+        topLenght: 0, bottomLenght: 0, waist: 0
     });
 
     const [products, setProducts] = useState([{
-        type: '',
-        instructions: '',
-        price: 0,
-        options: [],
+        type: '', instructions: '', price: 0, options: [],
     }]);
 
     const [totalPrice, setTotalPrice] = useState(0);
 
     useEffect(() => {
-        if (localStorage.getItem('ciseauxtoken') === null) {
-            navigate('/login');
-        }
+        if (localStorage.getItem('ciseauxtoken') === null) navigate('/login');
         getCustomers();
         getItems();
     }, []);
 
     useEffect(() => {
-        setTotalPrice(products.reduce((total, product) => total + product.price, 0))
+        setTotalPrice(products.reduce((total, p) => total + p.price, 0));
     }, [products]);
+
+    useEffect(() => {
+        if (savedCustomer) fetchCustomerDetails();
+    }, [savedCustomer]);
 
     const specialCharactersRegex = /[!@#$%^&*(),.?":{}|<>]/;
 
@@ -66,7 +58,7 @@ const PlaceOrder = () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/cloth/getallcustomers`);
             setCustomers(response.data.customer);
-        } catch (error) {
+        } catch {
             toast.error('Failed to fetch customers');
         }
     };
@@ -75,8 +67,26 @@ const PlaceOrder = () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/items/getallitems`);
             setItems(response.data);
-        } catch (error) {
+        } catch {
             toast.error('Failed to fetch items');
+        }
+    };
+
+    const fetchCustomerDetails = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${savedCustomer}`);
+            if (response.data.measurements) setMeasurements(response.data.measurements);
+            if (response.data.measurementFiles?.length > 0) {
+                setUploadedFiles(response.data.measurementFiles);
+                setHasUploadedFile(true);
+            } else {
+                setHasUploadedFile(false);
+            }
+        } catch {
+            toast.error('Failed to load customer measurement data');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -85,16 +95,13 @@ const PlaceOrder = () => {
             setLoading(true);
             const customerResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/customer/add`, { customer });
             const newCustomer = customerResponse.data;
-
             if (newCustomer._id) {
                 setSavedCustomer(newCustomer._id);
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/customer/update/${newCustomer._id}`, {
-                    measurements: measurements
-                });
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/customer/update/${newCustomer._id}`, { measurements });
                 toast.success('Customer added successfully!');
                 setStep(2);
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to add customer');
             setStep(1);
         } finally {
@@ -112,7 +119,7 @@ const PlaceOrder = () => {
             });
             toast.success('Order Placed Successfully!');
             navigate('/orders');
-        } catch (error) {
+        } catch {
             toast.error('Failed to place order');
         } finally {
             setLoading(false);
@@ -127,520 +134,423 @@ const PlaceOrder = () => {
     };
 
     const handleProductChange = (index, field, value) => {
-        const updatedProducts = [...products];
-        updatedProducts[index][field] = value;
-        setProducts(updatedProducts);
+        const updated = [...products];
+        updated[index][field] = value;
+        setProducts(updated);
     };
 
     const handleOptionChange = (index, optionName, customization) => {
-        const updatedProducts = [...products];
-        const existingOptionIndex = updatedProducts[index].options.findIndex(opt => opt.name === optionName);
-        if (existingOptionIndex >= 0) {
-            updatedProducts[index].options[existingOptionIndex].customization = customization;
-        } else {
-            updatedProducts[index].options.push({ name: optionName, customization });
-        }
-        setProducts(updatedProducts);
+        const updated = [...products];
+        const existing = updated[index].options.findIndex((opt) => opt.name === optionName);
+        if (existing >= 0) updated[index].options[existing].customization = customization;
+        else updated[index].options.push({ name: optionName, customization });
+        setProducts(updated);
     };
 
-    const handleFileUpload = (isUploaded) => {
-        setIsMeasurementFileUploaded(isUploaded);
-    };
-
-    const filteredCustomers = customers.filter((customer) => {
-        return customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            customer.phone.includes(searchQuery);
-    });
-
-    const steps = [
-        { icon: User, label: "Customer" },
-        { icon: Package, label: "Items" },
-        { icon: Ruler, label: "Measurements" },
-        { icon: CreditCard, label: "Payment" }
-    ];
-
-    useEffect(() => {
-        if (savedCustomer) {
-            fetchCustomerDetails();
-        }
-    }, [savedCustomer]);
-
-    const fetchCustomerDetails = async () => {
-        setIsLoading(true);
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${savedCustomer}`);
-
-            // Update measurements state if customer has saved measurements
-            if (response.data.measurements) {
-                setMeasurements(response.data.measurements);
-            }
-
-            // Set uploaded files if customer has them
-            if (response.data.measurementFiles && response.data.measurementFiles.length > 0) {
-                setUploadedFiles(response.data.measurementFiles);
-                setHasUploadedFile(true);
-            } else {
-                setHasUploadedFile(false);
-            }
-        } catch (error) {
-            console.error('Error fetching customer details:', error);
-            toast.error('Failed to load customer measurement data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const filteredCustomers = customers.filter((c) =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery)
+    );
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-xl shadow-sm">
-                    {/* Header */}
-                    <div className="border-b border-gray-200">
-                        <div className="p-6 flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                {step > 1 && (
-                                    <button
-                                        onClick={() => setStep(step - 1)}
-                                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                    >
-                                        <ArrowLeft className="w-6 h-6 text-gray-600" />
-                                    </button>
-                                )}
-                                <h1 className="text-xl font-bold text-gray-900">Place New Order</h1>
-                            </div>
-                        </div>
+        <div className="p-8 font-body">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-8">
+                {step > 1 && (
+                    <button
+                        onClick={() => setStep(step - 1)}
+                        className="p-2 rounded-xl hover:bg-surface-container-low transition-colors text-on-surface-variant"
+                    >
+                        <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+                    </button>
+                )}
+                <div>
+                    <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">New Order</h1>
+                    <p className="text-stone-400 mt-1 text-sm">Step {step} of {steps.length} — {steps[step - 1].label}</p>
+                </div>
+            </div>
+
+            {/* Progress Steps */}
+            <div className="bg-surface-container-lowest rounded-2xl p-6 mb-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                <div className="relative">
+                    <div className="absolute top-5 left-0 w-full h-0.5 bg-outline-variant/20">
+                        <div
+                            className="h-full bg-primary transition-all duration-500"
+                            style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                        />
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="p-6 border-b border-gray-200">
-                        <div className="max-w-4xl mx-auto">
-                            <div className="relative">
-                                <div className="absolute top-5 left-0 w-full h-1 bg-gray-200">
-                                    <div
-                                        className="h-full bg-yellow-400 transition-all duration-500"
-                                        style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
-                                    />
+                    <div className="relative flex justify-between">
+                        {steps.map((s, index) => {
+                            const done = step > index + 1;
+                            const active = step === index + 1;
+                            return (
+                                <div key={index} className="flex flex-col items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                                        done ? 'bg-primary text-on-primary' :
+                                        active ? 'bg-primary text-on-primary' :
+                                        'bg-surface-container-low text-stone-400'
+                                    }`}>
+                                        <span className="material-symbols-outlined text-[18px]">
+                                            {done ? 'check' : s.icon}
+                                        </span>
+                                    </div>
+                                    <span className={`text-xs font-bold font-label ${active || done ? 'text-primary' : 'text-stone-400'}`}>
+                                        {s.label}
+                                    </span>
                                 </div>
-                                <div className="relative flex justify-between">
-                                    {steps.map((stepItem, index) => (
-                                        <div key={index} className="flex flex-col items-center">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                                                ${step > index ? 'bg-yellow-400 border-yellow-400 text-white' :
-                                                step === index + 1 ? 'bg-white border-yellow-400 text-yellow-400' :
-                                                    'bg-white border-gray-300 text-gray-400'}`}>
-                                                <stepItem.icon className="w-5 h-5" />
-                                            </div>
-                                            <span className="mt-2 text-sm font-medium text-gray-600">{stepItem.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                        {/* Step 1: Customer Selection */}
-                        {step === 1 && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-                                {/* New Customer Form */}
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                                            <User className="w-5 h-5" />
-                                            New Customer
-                                        </h2>
-                                    </div>
-                                    <div className="p-6 space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                            <input
-                                                type="text"
-                                                onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                                placeholder="Enter customer name"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                            <input
-                                                maxLength={12}
-                                                placeholder="03XX-XXXXXXX"
-                                                onInput={formatPhoneNumber}
-                                                onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                            <textarea
-                                                onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                                                className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                                rows={3}
-                                                placeholder="Enter delivery address"
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                if (!customer.name || !customer.phone || !customer.address) {
-                                                    toast.error('Please fill all fields')
-                                                } else if (specialCharactersRegex.test(customer.name)) {
-                                                    toast.error('Name should not contain special characters')
-                                                } else if (customer.phone.length !== 12) {
-                                                    toast.error('Please enter a valid phone number')
-                                                } else {
-                                                    handleAddCustomer()
-                                                }
-                                            }}
-                                            disabled={loading}
-                                            className="w-full p-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                hover:bg-yellow-500 transition-colors disabled:opacity-50"
-                                        >
-                                            {loading ? 'Adding Customer...' : 'Continue with New Customer'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Existing Customer Selection */}
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                                            <Search className="w-5 h-5" />
-                                            Select Existing Customer
-                                        </h2>
-                                    </div>
-                                    <div className="p-6">
-                                        <div className="relative mb-4">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search by name or phone..."
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg
-                                                    focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                            />
-                                        </div>
-                                        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                            {filteredCustomers.map((customer) => (
-                                                <div
-                                                    key={customer._id}
-                                                    onClick={() => {
-                                                        setSavedCustomer(customer._id);
-                                                        setStep(2);
-                                                    }}
-                                                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-200
-                                                        hover:bg-gray-50 cursor-pointer transition-colors"
-                                                >
-                                                    <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                                                        <span className="text-yellow-800 font-medium">
-                                                            {customer.name[0].toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="font-medium">{customer.name}</p>
-                                                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                                            <span className="flex items-center gap-1">
-                                                                <Phone className="w-4 h-4" />
-                                                                {customer.phone}
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <MapPin className="w-4 h-4" />
-                                                                {customer.address}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Step 2: Item Selection */}
-                        {step === 2 && (
-                            <div className="max-w-4xl mx-auto">
-                                {products.map((product, index) => (
-                                    <div key={index} className="bg-white rounded-lg border border-gray-200 mb-6">
-                                        <div className="p-6 border-b border-gray-200">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-lg font-semibold flex items-center gap-2">
-                                                    <Scissors className="w-5 h-5" />
-                                                    Item {index + 1}
-                                                </h3>
-                                                {index > 0 && (
-                                                    <button
-                                                        onClick={() => {
-                                                            const updatedProducts = [...products];
-                                                            updatedProducts.splice(index, 1);
-                                                            setProducts(updatedProducts);
-                                                        }}
-                                                        className="text-red-500 hover:text-red-600 text-sm font-medium"
-                                                    >
-                                                        Remove Item
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="p-6 space-y-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-3">Select Item Type</label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                    {items.map((item) => (
-                                                        <div
-                                                            key={item.name}
-                                                            onClick={() => {
-                                                                handleProductChange(index, 'type', item.name);
-                                                                handleProductChange(index, 'price', item.price);
-                                                            }}
-                                                            className={`p-4 text-center rounded-lg cursor-pointer transition-colors border
-                                                                ${product.type === item.name
-                                                                ? 'bg-yellow-400 border-yellow-400 text-white'
-                                                                : 'border-gray-200 hover:border-yellow-400 hover:bg-yellow-50'
-                                                            }`}
-                                                        >
-                                                            <Scissors className="w-5 h-5 mx-auto mb-2" />
-                                                            <span className="font-medium">{item.name}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {product.type && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-3">Customization Options</label>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                        {items.find(item => item.name === product.type)?.options.map((option) => (
-                                                            <div key={option.name}>
-                                                                <label className="block text-sm text-gray-600 mb-1">{option.name}</label>
-                                                                <select
-                                                                    onChange={(e) => handleOptionChange(index, option.name, e.target.value)}
-                                                                    className="w-full p-2 border border-gray-200 rounded-lg
-                                                                        focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                                                >
-                                                                    <option value="">Select {option.name}</option>
-                                                                    {option.customizations.map((customization) => (
-                                                                        <option key={customization} value={customization}>
-                                                                            {customization}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
-                                                <textarea
-                                                    placeholder="Enter any special instructions or notes"
-                                                    onChange={(e) => handleProductChange(index, 'instructions', e.target.value)}
-                                                    className="w-full p-3 border border-gray-200 rounded-lg
-                                                        focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                                    rows={3}
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                                                <span className="text-sm font-medium text-gray-600">Item Price:</span>
-                                                <span className="text-xl font-semibold">Rs. {product.price.toLocaleString()}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <button
-                                    onClick={() => setProducts([...products, {
-                                        type: '',
-                                        instructions: '',
-                                        price: 0,
-                                        options: [],
-                                    }])}
-                                    className="w-full p-4 mb-6 rounded-lg border-2 border-dashed border-gray-300
-                                        hover:border-yellow-400 hover:bg-yellow-50 transition-colors flex
-                                        items-center justify-center gap-2 text-gray-600 hover:text-yellow-600"
-                                >
-                                    <Scissors className="w-5 h-5" />
-                                    Add Another Item
-                                </button>
-
-                                <div className="flex justify-end">
-                                    <button
-                                        onClick={() => {
-                                            const incompleteProduct = products.find(p => !p.type);
-                                            if (incompleteProduct) {
-                                                toast.error('Please select type for all items');
-                                            } else {
-                                                setStep(3);
-                                            }
-                                        }}
-                                        className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                            hover:bg-yellow-500 transition-colors"
-                                    >
-                                        Continue to Measurements
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Step 3: Measurements */}
-                        {step === 3 && (
-                            <div className="max-w-4xl mx-auto">
-                                <div className="bg-white rounded-lg border border-gray-200">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                                            <Ruler className="w-5 h-5" />
-                                            Measurements
-                                        </h2>
-                                    </div>
-                                    <div className="p-6">
-                                        <MeasurementDetails
-                                            measurements={measurements}
-                                            setMeasurements={setMeasurements}
-                                            customer={savedCustomer}
-                                            onFileUpload={handleFileUpload}
-                                            setIsLoading={setIsLoading}
-                                            isLoading={isLoading}
-                                            setHasUploadedFile={setHasUploadedFile}
-                                            uploadedFiles={uploadedFiles}
-                                            isUploading={isUploading}
-                                            setIsUploading={setIsUploading}
-                                            setUploadedFiles={setUploadedFiles}
-                                            hasUploadedFile={hasUploadedFile}
-                                        />
-                                        <div className="flex justify-end gap-4 mt-6">
-                                            <button
-                                                onClick={() => setStep(2)}
-                                                className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg
-                                                    hover:bg-gray-200 transition-colors"
-                                            >
-                                                Back
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    // Skip validation if file is uploaded now or was uploaded before
-                                                    // Check if a measurement file exists for this customer
-                                                    const hasMeasurementFile = isMeasurementFileUploaded ||
-                                                        uploadedFiles.length>0 ||
-                                                        (measurements.hasExistingFile === true);
-
-                                                    if (hasMeasurementFile) {
-                                                        setStep(4);
-                                                        return;
-                                                    }
-
-                                                    const invalidMeasurements = !measurements.chest || !measurements.shoulders ||
-                                                        !measurements.neck || !measurements.sleeves || !measurements.waist ||
-                                                        !measurements.bottomLenght || !measurements.topLenght;
-
-                                                    if (invalidMeasurements) {
-                                                        toast.error('Please fill all measurements');
-                                                    } else if (Object.values(measurements).some(m => m < 1)) {
-                                                        toast.error('Measurements cannot be negative');
-                                                    } else if (measurements.chest > 100 || measurements.shoulders > 50 ||
-                                                        measurements.neck > 30 || measurements.sleeves > 50 ||
-                                                        measurements.waist > 50 || measurements.bottomLenght > 100 ||
-                                                        measurements.topLenght > 100) {
-                                                        toast.error('Invalid measurement values');
-                                                    } else {
-                                                        setStep(4);
-                                                    }
-                                                }}
-                                                className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                    hover:bg-yellow-500 transition-colors"
-                                            >
-                                                Review Order
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Step 4: Payment */}
-                        {step === 4 && (
-                            <div className="max-w-2xl mx-auto">
-                                <div className="bg-white rounded-lg border border-gray-200">
-                                    <div className="p-6 border-b border-gray-200">
-                                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                                            <CreditCard className="w-5 h-5" />
-                                            Order Summary
-                                        </h2>
-                                    </div>
-                                    <div className="p-6">
-                                        <div className="space-y-6">
-                                            {products.map((product, index) => (
-                                                <div key={index} className="flex justify-between items-start py-4 border-b">
-                                                    <div>
-                                                        <h4 className="font-medium flex items-center gap-2">
-                                                            <Scissors className="w-4 h-4" />
-                                                            {product.type}
-                                                        </h4>
-                                                        <div className="mt-2 space-y-1">
-                                                            {product.options.map((opt, idx) => (
-                                                                <p key={idx} className="text-sm text-gray-600">
-                                                                    {opt.name}: {opt.customization}
-                                                                </p>
-                                                            ))}
-                                                            {product.instructions && (
-                                                                <p className="text-sm text-gray-500 mt-2">
-                                                                    Note: {product.instructions}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <span className="font-medium">
-                                                        Rs. {product.price.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            ))}
-
-                                            <div className="pt-4">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-lg font-medium">Total Amount</span>
-                                                    <div className="space-y-1">
-                                                        <input
-                                                            type="number"
-                                                            value={totalPrice}
-                                                            onChange={(e) => setTotalPrice(Number(e.target.value))}
-                                                            className="w-40 p-2 text-right border border-gray-200 rounded-lg
-                                                                focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                                        />
-                                                        <p className="text-sm text-gray-500 text-right">
-                                                            Final price can be adjusted
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex justify-end gap-4 pt-6">
-                                                <button
-                                                    onClick={() => setStep(3)}
-                                                    className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg
-                                                        hover:bg-gray-200 transition-colors"
-                                                >
-                                                    Back
-                                                </button>
-                                                <button
-                                                    onClick={handlePlaceOrder}
-                                                    disabled={loading}
-                                                    className="px-6 py-3 bg-yellow-400 text-white font-medium rounded-lg
-                                                        hover:bg-yellow-500 transition-colors disabled:opacity-50 flex
-                                                        items-center gap-2"
-                                                >
-                                                    {loading ? 'Placing Order...' : 'Place Order'}
-                                                    {!loading && <CreditCard className="w-5 h-5" />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                            );
+                        })}
                     </div>
                 </div>
             </div>
+
+            {/* Step 1: Customer */}
+            {step === 1 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* New Customer */}
+                    <div className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5 font-headline">New Customer</h2>
+                        <div className="space-y-4">
+                            {[
+                                { label: 'Full Name', icon: 'person', key: 'name', placeholder: 'Enter customer name', type: 'text' },
+                                { label: 'Phone', icon: 'call', key: 'phone', placeholder: '03XX-XXXXXXX', type: 'text' },
+                            ].map((field) => (
+                                <div key={field.key}>
+                                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">{field.label}</label>
+                                    <div className="relative">
+                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">{field.icon}</span>
+                                        <input
+                                            type={field.type}
+                                            placeholder={field.placeholder}
+                                            maxLength={field.key === 'phone' ? 12 : undefined}
+                                            onInput={field.key === 'phone' ? formatPhoneNumber : undefined}
+                                            onChange={(e) => setCustomer({ ...customer, [field.key]: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            <div>
+                                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Address</label>
+                                <div className="relative">
+                                    <span className="material-symbols-outlined absolute left-3 top-3 text-stone-400 text-[20px]">location_on</span>
+                                    <textarea
+                                        placeholder="Enter delivery address"
+                                        onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+                                        rows={3}
+                                        className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body resize-none"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (!customer.name || !customer.phone || !customer.address) {
+                                        toast.error('Please fill all fields');
+                                    } else if (specialCharactersRegex.test(customer.name)) {
+                                        toast.error('Name should not contain special characters');
+                                    } else if (customer.phone.length !== 12) {
+                                        toast.error('Please enter a valid phone number');
+                                    } else {
+                                        handleAddCustomer();
+                                    }
+                                }}
+                                disabled={loading}
+                                className="w-full py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors disabled:opacity-60 font-label flex items-center justify-center gap-2"
+                            >
+                                {loading && <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />}
+                                {loading ? 'Adding…' : 'Continue with New Customer'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Existing Customer */}
+                    <div className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5 font-headline">Select Existing</h2>
+                        <div className="relative mb-4">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
+                            <input
+                                type="text"
+                                placeholder="Search by name or phone…"
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                            />
+                        </div>
+                        <div className="space-y-2 max-h-[360px] overflow-y-auto">
+                            {filteredCustomers.map((c) => (
+                                <div
+                                    key={c._id}
+                                    onClick={() => { setSavedCustomer(c._id); setStep(2); }}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-sm font-bold text-on-secondary-fixed flex-shrink-0">
+                                        {c.name[0].toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-on-surface text-sm">{c.name}</p>
+                                        <p className="text-xs text-stone-400 truncate">{c.phone} · {c.address}</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-[18px] text-stone-300">chevron_right</span>
+                                </div>
+                            ))}
+                            {filteredCustomers.length === 0 && (
+                                <div className="flex flex-col items-center gap-2 py-10">
+                                    <span className="material-symbols-outlined text-[32px] text-stone-300">person_search</span>
+                                    <p className="text-sm text-stone-400 font-label">No customers found</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 2: Items */}
+            {step === 2 && (
+                <div className="max-w-4xl">
+                    <div className="space-y-6">
+                        {products.map((product, index) => (
+                            <div key={index} className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 font-headline">
+                                        Item {index + 1}
+                                    </h3>
+                                    {index > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                const updated = [...products];
+                                                updated.splice(index, 1);
+                                                setProducts(updated);
+                                            }}
+                                            className="text-xs font-bold text-error hover:underline font-label flex items-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Type Selection */}
+                                <div className="mb-5">
+                                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 font-label">Select Item Type</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {items.map((item) => (
+                                            <div
+                                                key={item.name}
+                                                onClick={() => {
+                                                    handleProductChange(index, 'type', item.name);
+                                                    handleProductChange(index, 'price', item.price);
+                                                }}
+                                                className={`p-4 text-center rounded-xl cursor-pointer transition-all ${
+                                                    product.type === item.name
+                                                        ? 'bg-primary text-on-primary'
+                                                        : 'bg-surface-container-low hover:bg-surface-container text-on-surface'
+                                                }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[24px] mb-1 block">content_cut</span>
+                                                <span className="font-bold text-sm">{item.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Customization Options */}
+                                {product.type && (
+                                    <div className="mb-5">
+                                        <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 font-label">Customizations</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {items.find((item) => item.name === product.type)?.options.map((option) => (
+                                                <div key={option.name}>
+                                                    <label className="block text-xs text-stone-400 mb-1 font-label">{option.name}</label>
+                                                    <select
+                                                        onChange={(e) => handleOptionChange(index, option.name, e.target.value)}
+                                                        className="w-full px-3 py-2.5 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                                    >
+                                                        <option value="">Select {option.name}</option>
+                                                        {option.customizations.map((c) => (
+                                                            <option key={c} value={c}>{c}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Instructions */}
+                                <div className="mb-4">
+                                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Special Instructions</label>
+                                    <textarea
+                                        placeholder="Any special notes for this item…"
+                                        onChange={(e) => handleProductChange(index, 'instructions', e.target.value)}
+                                        rows={2}
+                                        className="w-full px-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end pt-3 border-t border-outline-variant/10">
+                                    <p className="text-sm text-stone-400 font-label">
+                                        Price: <span className="font-extrabold text-on-surface text-base ml-1">Rs. {product.price.toLocaleString()}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+
+                        <button
+                            onClick={() => setProducts([...products, { type: '', instructions: '', price: 0, options: [] }])}
+                            className="w-full py-4 rounded-2xl border-2 border-dashed border-outline-variant/30 hover:border-primary/30 hover:bg-primary/[0.03] transition-colors flex items-center justify-center gap-2 text-stone-400 hover:text-primary font-bold font-label text-sm"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">add</span>
+                            Add Another Item
+                        </button>
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => {
+                                    if (products.find((p) => !p.type)) {
+                                        toast.error('Please select type for all items');
+                                    } else {
+                                        setStep(3);
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
+                            >
+                                Continue to Measurements
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 3: Measurements */}
+            {step === 3 && (
+                <div className="max-w-4xl">
+                    <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6 font-headline">Measurements</h2>
+                        <MeasurementDetails
+                            measurements={measurements}
+                            setMeasurements={setMeasurements}
+                            customer={savedCustomer}
+                            onFileUpload={setIsMeasurementFileUploaded}
+                            setIsLoading={setIsLoading}
+                            isLoading={isLoading}
+                            setHasUploadedFile={setHasUploadedFile}
+                            uploadedFiles={uploadedFiles}
+                            isUploading={isUploading}
+                            setIsUploading={setIsUploading}
+                            setUploadedFiles={setUploadedFiles}
+                            hasUploadedFile={hasUploadedFile}
+                        />
+                        <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-outline-variant/10">
+                            <button
+                                onClick={() => setStep(2)}
+                                className="px-6 py-3 border border-outline-variant/30 text-on-surface-variant font-bold rounded-full text-sm hover:bg-surface-container-low transition-colors font-label"
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const hasMeasurementFile = isMeasurementFileUploaded || uploadedFiles.length > 0 || measurements.hasExistingFile === true;
+                                    if (hasMeasurementFile) { setStep(4); return; }
+                                    const invalid = !measurements.chest || !measurements.shoulders || !measurements.neck ||
+                                        !measurements.sleeves || !measurements.waist || !measurements.bottomLenght || !measurements.topLenght;
+                                    if (invalid) toast.error('Please fill all measurements');
+                                    else if (Object.values(measurements).some((m) => m < 1)) toast.error('Measurements cannot be negative');
+                                    else setStep(4);
+                                }}
+                                className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
+                            >
+                                Review Order
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Step 4: Review & Place */}
+            {step === 4 && (
+                <div className="max-w-2xl">
+                    <div className="bg-surface-container-lowest rounded-2xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                        <div className="px-8 pt-8 pb-4">
+                            <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 font-headline">Order Summary</h2>
+                        </div>
+
+                        <table className="w-full masters-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Customizations</th>
+                                    <th className="text-right">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map((product, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-primary/[0.08] flex items-center justify-center flex-shrink-0">
+                                                    <span className="material-symbols-outlined text-[16px] text-primary">content_cut</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sm text-on-surface">{product.type}</p>
+                                                    {product.instructions && (
+                                                        <p className="text-xs text-stone-400 mt-0.5">{product.instructions}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="flex flex-wrap gap-1">
+                                                {product.options.map((opt, idx) => (
+                                                    <span key={idx} className="text-xs px-2 py-0.5 bg-surface-container-low rounded-full text-on-surface-variant font-bold">
+                                                        {opt.name}: {opt.customization}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="text-right font-bold text-on-surface">Rs. {product.price.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <div className="px-8 py-6 border-t border-outline-variant/10">
+                            <div className="flex items-center justify-between mb-6">
+                                <span className="text-sm font-bold text-on-surface font-label">Final Total</span>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        value={totalPrice}
+                                        onChange={(e) => setTotalPrice(Number(e.target.value))}
+                                        className="w-36 px-4 py-2 bg-surface-container-low rounded-xl border-none text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                    />
+                                    <p className="text-xs text-stone-400 font-label">adjustable</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setStep(3)}
+                                    className="flex-1 py-3 border border-outline-variant/30 text-on-surface-variant font-bold rounded-full text-sm hover:bg-surface-container-low transition-colors font-label"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    onClick={handlePlaceOrder}
+                                    disabled={loading}
+                                    className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors disabled:opacity-60 font-label flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                                    ) : (
+                                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                    )}
+                                    {loading ? 'Placing Order…' : 'Place Order'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

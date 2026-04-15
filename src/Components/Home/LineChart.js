@@ -2,108 +2,87 @@ import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 const LineChart = ({ data = [], categories = [] }) => {
-    // Default values in case data is missing
     const chartData = data.length ? data : [0, 0, 0, 0, 0, 0];
-    // Default categories if none provided
-    const chartCategories = categories.length ?
-        categories :
-        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const chartCategories = categories.length ? categories : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
     const chartOptions = {
         chart: {
-            height: "100%",
-            type: "area",
-            fontFamily: "Inter, sans-serif",
-            toolbar: {
-                show: false,
-            },
+            height: '100%',
+            type: 'area',
+            fontFamily: 'Manrope, sans-serif',
+            toolbar: { show: false },
             animations: {
                 enabled: true,
                 easing: 'easeinout',
                 speed: 800,
-            }
+            },
         },
-        colors: ["#00A389"],
+        colors: ['#003629'],
         fill: {
-            type: "gradient",
+            type: 'gradient',
             gradient: {
                 shadeIntensity: 1,
-                opacityFrom: 0.7,
-                opacityTo: 0.3,
-                stops: [0, 90, 100]
-            }
+                opacityFrom: 0.18,
+                opacityTo: 0.02,
+                stops: [0, 90, 100],
+                colorStops: [
+                    { offset: 0, color: '#003629', opacity: 0.18 },
+                    { offset: 100, color: '#003629', opacity: 0 },
+                ],
+            },
         },
-        dataLabels: {
-            enabled: false,
-        },
+        dataLabels: { enabled: false },
         stroke: {
             curve: 'smooth',
-            width: 3,
+            width: 2.5,
         },
         grid: {
             show: true,
             strokeDashArray: 4,
-            padding: {
-                left: 0,
-                right: 0,
-                top: 0
-            },
+            borderColor: 'rgba(192, 201, 195, 0.2)',
+            padding: { left: 0, right: 0, top: 0 },
         },
         xaxis: {
             categories: chartCategories,
             labels: {
                 show: true,
                 style: {
-                    fontFamily: 'Inter, sans-serif',
-                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-                }
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '11px',
+                    colors: '#707974',
+                },
             },
-            axisBorder: {
-                show: false,
-            },
-            axisTicks: {
-                show: false,
-            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
         },
         yaxis: {
             labels: {
                 show: true,
                 style: {
-                    fontFamily: 'Inter, sans-serif',
-                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '11px',
+                    colors: '#707974',
                 },
-                formatter: function (value) {
-                    return value.toLocaleString();
-                }
-            }
+                formatter: (value) => `Rs. ${value.toLocaleString()}`,
+            },
         },
         tooltip: {
             enabled: true,
-            x: {
-                show: true,
-            },
-            y: {
-                formatter: function (value) {
-                    return 'Rs. ' + value.toLocaleString();
-                }
-            }
+            style: { fontFamily: 'Manrope, sans-serif' },
+            x: { show: true },
+            y: { formatter: (value) => `Rs. ${value.toLocaleString()}` },
+        },
+        markers: {
+            size: 0,
+            hover: { size: 5, sizeOffset: 2 },
         },
         responsive: [{
             breakpoint: 480,
-            options: {
-                chart: {
-                    height: 200
-                }
-            }
-        }]
+            options: { chart: { height: 200 } },
+        }],
     };
 
-    const series = [
-        {
-            name: 'Revenue',
-            data: chartData
-        },
-    ];
+    const series = [{ name: 'Revenue', data: chartData }];
 
     return (
         <div className="w-full h-full">

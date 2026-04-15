@@ -2,34 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import {
-    Plus,
-    Edit,
-    Trash2,
-    Eye,
-    Search,
-    UserCircle,
-    DollarSign
-} from 'lucide-react';
-import Modal from 'react-modal';
-
-const customStyles = {
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        marginRight: '-50%',
-        transform: 'translate(-50%, -50%)',
-        maxWidth: '400px',
-        width: '90%',
-        padding: '2rem',
-        borderRadius: '0.5rem',
-    },
-    overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.75)'
-    }
-};
 
 const Employees = ({ types }) => {
     const navigate = useNavigate();
@@ -152,214 +124,217 @@ const Employees = ({ types }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                        <h1 className="text-2xl font-bold text-gray-800">Employees</h1>
-                        <button
-                            onClick={() => navigate('/employees/add')}
-                            className="flex items-center gap-2 bg-yellow-400 text-white px-4 py-2 rounded-lg hover:bg-yellow-500 transition-colors"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add Employee
-                        </button>
-                    </div>
+        <div className="p-8 font-body">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">Team Management</h1>
+                    <p className="text-stone-400 mt-1 text-sm">Manage your atelier's artisans and staff.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/employees/add')}
+                    className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full text-sm font-bold hover:bg-primary/90 transition-colors font-label"
+                >
+                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    Add Employee
+                </button>
+            </div>
 
-                    {/* Search and Filter */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                        <div className="flex-1">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name or phone..."
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                />
-                            </div>
-                        </div>
-                        <select
-                            value={typeQuery}
-                            onChange={(e) => {
-                                setTypeQuery(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="w-full sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
-                        >
-                            <option value="All">All Roles</option>
-                            {types.map((type, index) => (
-                                <option key={index} value={type}>{type}</option>
-                            ))}
-                        </select>
-                    </div>
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="flex-1 relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
+                    <input
+                        type="text"
+                        placeholder="Search by name or phone…"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                        className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                    />
+                </div>
+                <select
+                    value={typeQuery}
+                    onChange={(e) => { setTypeQuery(e.target.value); setCurrentPage(1); }}
+                    className="px-4 py-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body font-medium"
+                >
+                    <option value="All">All Roles</option>
+                    {types.map((type, index) => (
+                        <option key={index} value={type}>{type}</option>
+                    ))}
+                </select>
+            </div>
 
-                    {/* Employees Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
+            {/* Table Card */}
+            <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
+                <div className="overflow-x-auto">
+                    <table className="w-full masters-table">
+                        <thead>
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Name</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Phone</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Role</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Payment Status</th>
-                                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600">Actions</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Payment Status</th>
+                                <th className="text-right">Actions</th>
                             </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
+                        </thead>
+                        <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">Loading...</td>
+                                    <td colSpan="5" className="py-16 text-center">
+                                        <div className="flex justify-center">
+                                            <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : filteredEmployees.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-4">No employees found</td>
+                                    <td colSpan="5">
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">
+                                                <span className="material-symbols-outlined text-[28px] text-stone-300">group</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-stone-400 font-headline">No employees found</p>
+                                            <p className="text-xs text-stone-300">Try a different search or role filter</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : (
                                 filteredEmployees.map((employee) => (
-                                    <tr key={employee._id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm text-gray-900">
+                                    <tr key={employee._id}>
+                                        <td>
                                             <div className="flex items-center gap-3">
-                                                <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                                                    <span className="text-yellow-600 font-medium">{employee.name[0].toUpperCase()}</span>
+                                                <div className="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-xs font-bold text-on-secondary-fixed flex-shrink-0">
+                                                    {employee.name[0].toUpperCase()}
                                                 </div>
-                                                {employee.name}
+                                                <span className="font-medium text-on-surface">{employee.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">{employee.phone}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                                                    {employee.role}
-                                                </span>
+                                        <td className="text-on-surface-variant">{employee.phone}</td>
+                                        <td>
+                                            <span className="status-badge bg-secondary-container text-on-secondary-container">
+                                                {employee.role}
+                                            </span>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                    employee.payment < 0
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {employee.payment < 0 ? 'Debit' : 'Credit'}: Rs. {Math.abs(employee.payment)}
-                                                </span>
+                                        <td>
+                                            <span className={`status-badge ${employee.payment < 0 ? 'bg-primary-fixed text-on-primary-fixed-variant' : 'bg-error-container text-on-error-container'}`}>
+                                                <span className="material-symbols-outlined text-[14px] mr-1">{employee.payment < 0 ? 'trending_down' : 'trending_up'}</span>
+                                                {employee.payment < 0 ? 'Debit' : 'Credit'}: Rs. {Math.abs(employee.payment)}
+                                            </span>
                                         </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex justify-center gap-2">
+                                        <td className="text-right">
+                                            <div className="flex justify-end gap-1">
                                                 <button
-                                                    onClick={() => {
-                                                        setSelectedEmployee(employee);
-                                                        setIsOpen(true);
-                                                    }}
-                                                    className="p-1 text-yellow-600 hover:bg-yellow-50 rounded"
+                                                    onClick={() => { setSelectedEmployee(employee); setIsOpen(true); }}
+                                                    className="p-2 rounded-lg text-stone-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                                    title="Make Payment"
                                                 >
-                                                    <DollarSign className="w-5 h-5" />
+                                                    <span className="material-symbols-outlined text-[18px]">payments</span>
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/employees/view/${employee._id}`)}
-                                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                                    className="p-2 rounded-lg text-stone-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                                    title="View"
                                                 >
-                                                    <Eye className="w-5 h-5" />
+                                                    <span className="material-symbols-outlined text-[18px]">visibility</span>
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/employees/edit/${employee._id}`)}
-                                                    className="p-1 text-green-600 hover:bg-green-50 rounded"
+                                                    className="p-2 rounded-lg text-stone-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                                    title="Edit"
                                                 >
-                                                    <Edit className="w-5 h-5" />
+                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(employee._id)}
-                                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                                    className="p-2 rounded-lg text-stone-400 hover:text-error hover:bg-error/5 transition-colors"
+                                                    title="Delete"
                                                 >
-                                                    <Trash2 className="w-5 h-5" />
+                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             )}
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
+                </div>
 
-                    {!loading && (
-                        <div className="flex items-center justify-between mt-6">
-                            <p className="text-sm text-gray-600">
-                                Page {currentPage} of {effectiveTotalPages} ({pagination.total} total employees)
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={!canGoPrev}
-                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                >
-                                    Previous
-                                </button>
-                                {getPageNumbers().map((pageNumber) => (
-                                    <button
-                                        key={pageNumber}
-                                        onClick={() => setCurrentPage(pageNumber)}
-                                        className={`px-3 py-1 rounded-lg border ${
-                                            currentPage === pageNumber
-                                                ? 'bg-yellow-400 text-white border-yellow-400'
-                                                : 'border-gray-300 hover:bg-gray-100'
-                                        }`}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                                    disabled={!canGoNext}
-                                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Payment Modal */}
-                    <Modal
-                        isOpen={modalIsOpen}
-                        onRequestClose={() => setIsOpen(false)}
-                        style={customStyles}
-                        contentLabel="Payment Modal"
-                    >
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-xl font-bold text-gray-800">Process Payment</h2>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Payment Amount (Rs.)
-                                </label>
-                                <input
-                                    type="number"
-                                    value={payment}
-                                    onChange={(e) => setPayment(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                                    placeholder="Enter amount"
-                                />
-                            </div>
+                {/* Pagination */}
+                {!loading && pagination.total > 0 && (
+                    <div className="px-8 py-5 flex items-center justify-between border-t border-outline-variant/10">
+                        <span className="text-sm text-stone-400">
+                            Showing {((currentPage - 1) * employeesPerPage) + 1}–{Math.min(currentPage * employeesPerPage, pagination.total)} of {pagination.total} employees
+                        </span>
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={handlePayment}
-                                className="w-full bg-yellow-400 text-white py-2 px-4 rounded-lg hover:bg-yellow-500 transition-colors"
+                                onClick={() => setCurrentPage(currentPage - 1)}
+                                disabled={!canGoPrev}
+                                className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
                             >
-                                Process Payment
+                                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </button>
+                            {getPageNumbers().map((number, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => typeof number === 'number' && setCurrentPage(number)}
+                                    disabled={typeof number !== 'number'}
+                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
+                                        currentPage === number
+                                            ? 'bg-primary text-on-primary'
+                                            : 'hover:bg-surface-container-low text-on-surface'
+                                    }`}
+                                >
+                                    {number}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setCurrentPage(currentPage + 1)}
+                                disabled={!canGoNext}
+                                className="p-2 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
                         </div>
-                    </Modal>
-                </div>
+                    </div>
+                )}
             </div>
+
+            {/* Payment Modal */}
+            {modalIsOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center animate-backdrop-in">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+                    <div className="relative bg-surface-container-lowest rounded-2xl p-8 w-full max-w-sm mx-4 animate-modal-in" style={{ boxShadow: '0 24px 60px rgba(25,28,27,0.15)' }}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-on-surface font-headline">Process Payment</h2>
+                            <button onClick={() => setIsOpen(false)} className="text-stone-400 hover:text-on-surface transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <p className="text-sm text-stone-500 mb-5">
+                            Recording payment for <span className="font-bold text-on-surface">{selectedEmployee?.name}</span>
+                        </p>
+                        <div className="mb-6">
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">
+                                Amount (Rs.)
+                            </label>
+                            <input
+                                type="number"
+                                value={payment}
+                                onChange={(e) => setPayment(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                placeholder="Enter amount"
+                            />
+                        </div>
+                        <button
+                            onClick={handlePayment}
+                            className="w-full py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
+                        >
+                            Confirm Payment
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
