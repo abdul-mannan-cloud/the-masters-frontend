@@ -17,6 +17,7 @@ import ViewEmployee from "./Pages/Employee/viewEmployee";
 import Items from "./Pages/Items";
 import AllOrders from "./Pages/Order";
 import Customers, { AddCustomer, EditCustomer, ViewCustomer } from "./Pages/customers";
+import { GlobalSearchProvider } from "./Components/GlobalSearch";
 
 const types = ['Cutter', 'Stitcher', 'Designer', 'Sales'];
 
@@ -37,6 +38,7 @@ function AppLayout() {
 function App() {
     return (
         <Router>
+          <GlobalSearchProvider>
             <ToastContainer
                 position="top-right"
                 autoClose={3000}
@@ -66,6 +68,7 @@ function App() {
                     <Route path="/customers/view/:id" element={<ViewCustomer />} />
                 </Route>
             </Routes>
+          </GlobalSearchProvider>
         </Router>
     );
 }

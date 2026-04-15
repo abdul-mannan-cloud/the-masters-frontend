@@ -18,6 +18,12 @@ const PlaceOrder = () => {
     const [customers, setCustomers] = useState([]);
     const [savedCustomer, setSavedCustomer] = useState();
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchBy, setSearchBy] = useState('all');
+    const [customersPage, setCustomersPage] = useState(1);
+    const [customersPagination, setCustomersPagination] = useState({
+        page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false
+    });
+    const [customersLoading, setCustomersLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isMeasurementFileUploaded, setIsMeasurementFileUploaded] = useState(false);
     const [hasUploadedFile, setHasUploadedFile] = useState(false);
@@ -40,9 +46,13 @@ const PlaceOrder = () => {
 
     useEffect(() => {
         if (localStorage.getItem('ciseauxtoken') === null) navigate('/login');
-        getCustomers();
         getItems();
     }, []);
+
+    useEffect(() => {
+        const t = setTimeout(() => { getCustomers(customersPage, searchQuery, searchBy); }, 300);
+        return () => clearTimeout(t);
+    }, [customersPage, searchQuery, searchBy]);
 
     useEffect(() => {
         setTotalPrice(products.reduce((total, p) => total + p.price, 0));
@@ -54,12 +64,29 @@ const PlaceOrder = () => {
 
     const specialCharactersRegex = /[!@#$%^&*(),.?":{}|<>]/;
 
-    const getCustomers = async () => {
+    const getCustomers = async (page = 1, query = '', field = 'all') => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/cloth/getallcustomers`);
-            setCustomers(response.data.customer);
+            setCustomersLoading(true);
+            const params = { page, limit: 10 };
+            if (query) {
+                if (field === 'all') {
+                    params.query = query;
+                } else {
+                    params.searchBy = field;
+                    params.search = query;
+                    params[field] = query;
+                }
+            }
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, { params });
+            const data = response.data;
+            setCustomers(data?.data || data?.customer || []);
+            setCustomersPagination(data?.pagination || {
+                page, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false
+            });
         } catch {
             toast.error('Failed to fetch customers');
+        } finally {
+            setCustomersLoading(false);
         }
     };
 
@@ -146,10 +173,6 @@ const PlaceOrder = () => {
         else updated[index].options.push({ name: optionName, customization });
         setProducts(updated);
     };
-
-    const filteredCustomers = customers.filter((c) =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery)
-    );
 
     return (
         <div className="p-8 font-body">
@@ -265,46 +288,92 @@ const PlaceOrder = () => {
                     {/* Existing Customer */}
                     <div className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
                         <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5 font-headline">Select Existing</h2>
-                        <div className="relative mb-4">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
-                            <input
-                                type="text"
-                                placeholder="Search by name or phone…"
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
-                            />
+                        <div className="flex gap-2 mb-4">
+                            <div className="relative flex-1">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
+                                <input
+                                    type="text"
+                                    placeholder={searchBy === 'all' ? 'Search customers…' : `Search by ${searchBy}…`}
+                                    value={searchQuery}
+                                    onChange={(e) => { setSearchQuery(e.target.value); setCustomersPage(1); }}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                                />
+                            </div>
+                            <select
+                                value={searchBy}
+                                onChange={(e) => { setSearchBy(e.target.value); setCustomersPage(1); }}
+                                className="px-3 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                            >
+                                <option value="all">All</option>
+                                <option value="orderNumber">Order #</option>
+                                <option value="name">Name</option>
+                                <option value="phone">Phone</option>
+                                <option value="address">Address</option>
+                                <option value="email">Email</option>
+                            </select>
                         </div>
                         <div className="space-y-2 max-h-[360px] overflow-y-auto">
-                            {filteredCustomers.map((c) => (
+                            {customersLoading ? (
+                                <div className="flex justify-center py-10">
+                                    <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                                </div>
+                            ) : customers.length === 0 ? (
+                                <div className="flex flex-col items-center gap-2 py-10">
+                                    <span className="material-symbols-outlined text-[32px] text-stone-300">person_search</span>
+                                    <p className="text-sm text-stone-400 font-label">No customers found</p>
+                                </div>
+                            ) : customers.map((c) => (
                                 <div
                                     key={c._id}
                                     onClick={() => { setSavedCustomer(c._id); setStep(2); }}
                                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors"
                                 >
                                     <div className="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-sm font-bold text-on-secondary-fixed flex-shrink-0">
-                                        {c.name[0].toUpperCase()}
+                                        {c.name?.[0]?.toUpperCase() || '?'}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-on-surface text-sm">{c.name}</p>
+                                        <div className="flex items-center gap-2">
+                                            {c.orderNumber && (
+                                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded font-mono">#{c.orderNumber}</span>
+                                            )}
+                                            <p className="font-bold text-on-surface text-sm truncate">{c.name}</p>
+                                        </div>
                                         <p className="text-xs text-stone-400 truncate">{c.phone} · {c.address}</p>
                                     </div>
                                     <span className="material-symbols-outlined text-[18px] text-stone-300">chevron_right</span>
                                 </div>
                             ))}
-                            {filteredCustomers.length === 0 && (
-                                <div className="flex flex-col items-center gap-2 py-10">
-                                    <span className="material-symbols-outlined text-[32px] text-stone-300">person_search</span>
-                                    <p className="text-sm text-stone-400 font-label">No customers found</p>
-                                </div>
-                            )}
                         </div>
+                        {!customersLoading && customersPagination.total > 0 && (
+                            <div className="flex items-center justify-between pt-4 mt-2 border-t border-outline-variant/10">
+                                <span className="text-xs text-stone-400">
+                                    Page {customersPagination.page} of {customersPagination.totalPages || 1} · {customersPagination.total} total
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCustomersPage(p => Math.max(p - 1, 1))}
+                                        disabled={!(customersPagination.hasPrevPage ?? customersPage > 1)}
+                                        className="p-1.5 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setCustomersPage(p => p + 1)}
+                                        disabled={!(customersPagination.hasNextPage ?? customersPage < (customersPagination.totalPages || 1))}
+                                        className="p-1.5 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low disabled:opacity-30 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
             {/* Step 2: Items */}
             {step === 2 && (
-                <div className="max-w-4xl">
+                <div>
                     <div className="space-y-6">
                         {products.map((product, index) => (
                             <div key={index} className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
@@ -385,10 +454,18 @@ const PlaceOrder = () => {
                                     />
                                 </div>
 
-                                <div className="flex justify-end pt-3 border-t border-outline-variant/10">
-                                    <p className="text-sm text-stone-400 font-label">
-                                        Price: <span className="font-extrabold text-on-surface text-base ml-1">Rs. {product.price.toLocaleString()}</span>
-                                    </p>
+                                <div className="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant/10">
+                                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-label">Price</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">Rs.</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={product.price}
+                                            onChange={(e) => handleProductChange(index, 'price', Number(e.target.value) || 0)}
+                                            className="w-36 pl-10 pr-3 py-2 bg-surface-container-low rounded-xl border-none text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -422,7 +499,7 @@ const PlaceOrder = () => {
 
             {/* Step 3: Measurements */}
             {step === 3 && (
-                <div className="max-w-4xl">
+                <div>
                     <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
                         <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6 font-headline">Measurements</h2>
                         <MeasurementDetails
@@ -468,7 +545,7 @@ const PlaceOrder = () => {
 
             {/* Step 4: Review & Place */}
             {step === 4 && (
-                <div className="max-w-2xl">
+                <div>
                     <div className="bg-surface-container-lowest rounded-2xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
                         <div className="px-8 pt-8 pb-4">
                             <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 font-headline">Order Summary</h2>
