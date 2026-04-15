@@ -8,6 +8,7 @@ const Customers = () => {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchBy, setSearchBy] = useState('all');
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -22,21 +23,27 @@ const Customers = () => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchCustomers(currentPage, searchQuery);
+            fetchCustomers(currentPage, searchQuery, searchBy);
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [currentPage, searchQuery]);
+    }, [currentPage, searchQuery, searchBy]);
 
-    const fetchCustomers = async (page = 1, query = '') => {
+    const fetchCustomers = async (page = 1, query = '', field = 'all') => {
         try {
             setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
-                params: {
-                    page,
-                    limit: customersPerPage,
-                    query
+            const params = { page, limit: customersPerPage };
+            if (query) {
+                if (field === 'all') {
+                    params.query = query;
+                } else {
+                    params.searchBy = field;
+                    params.search = query;
+                    params[field] = query;
                 }
+            }
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/getallcustomers`, {
+                params
             });
             const responseData = response.data;
             setCustomers(responseData?.data || responseData?.customer || []);
@@ -108,17 +115,29 @@ const Customers = () => {
             </div>
 
             {/* Search */}
-            <div className="mb-6">
-                <div className="relative max-w-md">
+            <div className="mb-6 flex gap-3 max-w-2xl">
+                <div className="relative flex-1">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">search</span>
                     <input
                         type="text"
-                        placeholder="Search by name or phone…"
+                        placeholder={searchBy === 'all' ? 'Search customers…' : `Search by ${searchBy}…`}
                         value={searchQuery}
                         onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                         className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
                     />
                 </div>
+                <select
+                    value={searchBy}
+                    onChange={(e) => { setSearchBy(e.target.value); setCurrentPage(1); }}
+                    className="px-4 py-2.5 bg-surface-container-low rounded-full border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body"
+                >
+                    <option value="all">All fields</option>
+                    <option value="orderNumber">Order Number</option>
+                    <option value="name">Name</option>
+                    <option value="phone">Phone</option>
+                    <option value="address">Address</option>
+                    <option value="email">Email</option>
+                </select>
             </div>
 
             {/* Table Card */}
@@ -127,6 +146,7 @@ const Customers = () => {
                     <table className="w-full masters-table">
                         <thead>
                             <tr>
+                                <th>Order #</th>
                                 <th>Name</th>
                                 <th>Phone</th>
                                 <th>Address</th>
@@ -137,7 +157,7 @@ const Customers = () => {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="5" className="py-16 text-center">
+                                    <td colSpan="6" className="py-16 text-center">
                                         <div className="flex justify-center">
                                             <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                                         </div>
@@ -145,7 +165,7 @@ const Customers = () => {
                                 </tr>
                             ) : customers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5">
+                                    <td colSpan="6">
                                         <div className="empty-state">
                                             <div className="empty-state-icon">
                                                 <span className="material-symbols-outlined text-[28px] text-stone-300">person_search</span>
@@ -160,6 +180,7 @@ const Customers = () => {
                                     const initials = customer.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
                                     return (
                                         <tr key={customer._id}>
+                                            <td className="font-mono text-sm text-on-surface-variant">{customer.orderNumber || '—'}</td>
                                             <td>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
@@ -253,24 +274,44 @@ const Customers = () => {
 const AddCustomer = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [orderNumberError, setOrderNumberError] = useState('');
     const [customer, setCustomer] = useState({
+        orderNumber: '',
         name: '',
         phone: '',
         address: '',
     });
 
-    // In AddCustomer component, update the handleSubmit function:
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/next-order-number`);
+                if (res.data?.nextOrderNumber) {
+                    setCustomer((c) => ({ ...c, orderNumber: res.data.nextOrderNumber }));
+                }
+            } catch (err) {
+                console.error('Error fetching next order number:', err);
+            }
+        })();
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setOrderNumberError('');
 
         try {
-            // Wrap customer object in another object with "customer" key
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}/customer/add`, { customer });
             toast.success('Customer added successfully');
             navigate('/customers');
         } catch (error) {
-            toast.error('Failed to add customer');
+            if (error.response?.status === 409) {
+                const msg = error.response.data?.message || 'Order number already exists';
+                setOrderNumberError(msg);
+                toast.error(msg);
+            } else {
+                toast.error('Failed to add customer');
+            }
             console.error('Error adding customer:', error);
         } finally {
             setLoading(false);
@@ -302,6 +343,23 @@ const AddCustomer = () => {
 
                 <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Order Number</label>
+                            <div className="relative">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">tag</span>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. 1248"
+                                    value={customer.orderNumber}
+                                    onChange={(e) => { setCustomer({ ...customer, orderNumber: e.target.value }); setOrderNumberError(''); }}
+                                    className={`w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 font-body ${orderNumberError ? 'ring-2 ring-error' : 'focus:ring-primary/20'}`}
+                                />
+                            </div>
+                            {orderNumberError && (
+                                <p className="mt-1 text-xs text-error font-body">{orderNumberError}</p>
+                            )}
+                        </div>
                         {[
                             { label: 'Full Name', key: 'name', type: 'text', icon: 'person' },
                             { label: 'Phone', key: 'phone', type: 'text', icon: 'call', placeholder: '03XX-XXXXXXX', onChange: formatPhoneNumber, maxLength: 12 },
@@ -365,7 +423,9 @@ const EditCustomer = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
+    const [orderNumberError, setOrderNumberError] = useState('');
     const [customer, setCustomer] = useState({
+        orderNumber: '',
         name: '',
         phone: '',
         address: '',
@@ -377,8 +437,13 @@ const EditCustomer = () => {
 
     const fetchCustomer = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/${id}`);
-            setCustomer(response.data);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/get/${id}`);
+            setCustomer({
+                orderNumber: response.data?.orderNumber || '',
+                name: response.data?.name || '',
+                phone: response.data?.phone || '',
+                address: response.data?.address || '',
+            });
         } catch (error) {
             toast.error('Failed to fetch customer details');
             console.error('Error fetching customer:', error);
@@ -387,17 +452,23 @@ const EditCustomer = () => {
         }
     };
 
-    // In EditCustomer component, update the handleSubmit function:
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setOrderNumberError('');
 
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/customer/update/${id}`, { customer });
             toast.success('Customer updated successfully');
             navigate('/customers');
         } catch (error) {
-            toast.error('Failed to update customer');
+            if (error.response?.status === 409) {
+                const msg = error.response.data?.message || 'Order number already exists';
+                setOrderNumberError(msg);
+                toast.error(msg);
+            } else {
+                toast.error('Failed to update customer');
+            }
             console.error('Error updating customer:', error);
         } finally {
             setLoading(false);
@@ -419,24 +490,57 @@ const EditCustomer = () => {
         );
     }
 
+    const initials = customer.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+
     return (
         <div className="p-8 font-body">
-            <div className="max-w-xl mx-auto">
-                <div className="flex items-center gap-4 mb-8">
-                    <button
-                        onClick={() => navigate('/customers')}
-                        className="p-2 rounded-xl hover:bg-surface-container-low transition-colors text-on-surface-variant"
-                    >
-                        <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-primary font-headline">Edit Customer</h1>
-                        <p className="text-stone-400 mt-1 text-sm">Update client information.</p>
-                    </div>
-                </div>
+            <div>
+                <button
+                    onClick={() => navigate('/customers')}
+                    className="flex items-center gap-2 text-stone-400 hover:text-primary text-sm font-medium mb-6 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Back to Customers
+                </button>
 
-                <div className="bg-surface-container-lowest rounded-2xl p-8" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-surface-container-lowest rounded-xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.06)' }}>
+                    {/* Hero */}
+                    <div className="bg-primary p-8 relative overflow-hidden">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+                        <div className="relative flex items-center gap-6">
+                            <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center text-2xl font-bold text-on-primary flex-shrink-0 font-headline">
+                                {initials}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h1 className="text-3xl font-extrabold text-on-primary font-headline">Edit Customer</h1>
+                                    {customer.orderNumber && (
+                                        <span className="px-2.5 py-0.5 bg-white/15 text-on-primary text-xs font-bold rounded-full font-mono">#{customer.orderNumber}</span>
+                                    )}
+                                </div>
+                                <p className="text-on-primary/60 text-sm mt-1">Update client information.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                        <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline">Personal Information</h2>
+                        <div>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Order Number</label>
+                            <div className="relative">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">tag</span>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. 1248"
+                                    value={customer.orderNumber || ''}
+                                    onChange={(e) => { setCustomer({ ...customer, orderNumber: e.target.value }); setOrderNumberError(''); }}
+                                    className={`w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 font-body ${orderNumberError ? 'ring-2 ring-error' : 'focus:ring-primary/20'}`}
+                                />
+                            </div>
+                            {orderNumberError && (
+                                <p className="mt-1 text-xs text-error font-body">{orderNumberError}</p>
+                            )}
+                        </div>
                         {[
                             { label: 'Full Name', key: 'name', type: 'text', icon: 'person' },
                             { label: 'Phone', key: 'phone', type: 'text', icon: 'call', placeholder: '03XX-XXXXXXX', onChange: formatPhoneNumber, maxLength: 12 },
@@ -713,7 +817,7 @@ const ViewCustomer = () => {
 
     return (
         <div className="p-8 font-body">
-            <div className="max-w-4xl">
+            <div>
                 {/* Back + title */}
                 <button
                     onClick={() => navigate('/customers')}
@@ -733,7 +837,12 @@ const ViewCustomer = () => {
                                 {customer.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                             </div>
                             <div>
-                                <h1 className="text-3xl font-extrabold text-on-primary font-headline">{customer.name}</h1>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h1 className="text-3xl font-extrabold text-on-primary font-headline">{customer.name}</h1>
+                                    {customer.orderNumber && (
+                                        <span className="px-2.5 py-0.5 bg-white/15 text-on-primary text-xs font-bold rounded-full font-mono">#{customer.orderNumber}</span>
+                                    )}
+                                </div>
                                 <p className="text-on-primary/60 text-sm mt-1">Member since {new Date(customer.createdAt).toLocaleDateString()}</p>
                                 <div className="flex gap-3 mt-3">
                                     <button
@@ -752,6 +861,7 @@ const ViewCustomer = () => {
                             <div className="space-y-4">
                                 <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline mb-4">Personal Information</h2>
                                 {[
+                                    { icon: 'tag', label: 'Order Number', value: customer.orderNumber || '—' },
                                     { icon: 'call', label: 'Phone', value: customer.phone },
                                     { icon: 'location_on', label: 'Address', value: customer.address },
                                     { icon: 'shopping_bag', label: 'Total Orders', value: customer.orders?.length || 0 },
@@ -772,19 +882,22 @@ const ViewCustomer = () => {
                             {/* Measurements */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline">Measurements</h2>
+                                    <h2 className="text-xs font-bold text-stone-400 uppercase tracking-widest font-headline flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[16px]">straighten</span>
+                                        Measurements
+                                    </h2>
                                     {editingMeasurements ? (
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => setEditingMeasurements(false)}
-                                                className="flex items-center gap-1 px-3 py-1.5 text-stone-400 hover:text-on-surface hover:bg-surface-container-low rounded-lg transition-colors text-xs font-bold font-label"
+                                                className="flex items-center gap-1 px-3 py-1.5 text-stone-400 hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors text-xs font-bold font-label"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">close</span>
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={saveMeasurements}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-lg transition-colors text-xs font-bold font-label"
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary rounded-full transition-colors text-xs font-bold font-label"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">save</span>
                                                 Save
@@ -793,7 +906,7 @@ const ViewCustomer = () => {
                                     ) : (
                                         <button
                                             onClick={() => setEditingMeasurements(true)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-surface-container-low text-primary rounded-lg text-xs font-bold hover:bg-surface-container transition-colors font-label"
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-bold hover:bg-primary/10 transition-colors font-label"
                                         >
                                             <span className="material-symbols-outlined text-[14px]">edit</span>
                                             Edit
@@ -804,26 +917,32 @@ const ViewCustomer = () => {
                                 {(editingMeasurements || hasMeasurements) ? (
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
-                                            { label: 'Chest',         key: 'chest' },
-                                            { label: 'Shoulders',     key: 'shoulders' },
-                                            { label: 'Neck',          key: 'neck' },
-                                            { label: 'Sleeves',       key: 'sleeves' },
-                                            { label: 'Top Length',    key: 'topLenght' },
-                                            { label: 'Bottom Length', key: 'bottomLenght' },
-                                            { label: 'Waist',         key: 'waist' },
-                                        ].map(({ label, key }) => (
-                                            <div key={key} className="bg-surface-container-low rounded-xl p-3">
-                                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider font-label mb-1">{label}</p>
+                                            { label: 'Chest',         key: 'chest',         icon: 'fitness_center' },
+                                            { label: 'Shoulders',     key: 'shoulders',     icon: 'accessibility_new' },
+                                            { label: 'Neck',          key: 'neck',          icon: 'face' },
+                                            { label: 'Sleeves',       key: 'sleeves',       icon: 'open_in_full' },
+                                            { label: 'Top Length',    key: 'topLenght',     icon: 'height' },
+                                            { label: 'Bottom Length', key: 'bottomLenght',  icon: 'straighten' },
+                                            { label: 'Waist',         key: 'waist',         icon: 'unfold_less' },
+                                        ].map(({ label, key, icon }) => (
+                                            <div key={key} className="bg-gradient-to-br from-surface-container-low to-surface-container-lowest rounded-xl p-3 border border-outline-variant/10 hover:border-primary/20 transition-colors">
+                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                    <span className="material-symbols-outlined text-[14px] text-primary/60">{icon}</span>
+                                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider font-label">{label}</p>
+                                                </div>
                                                 {editingMeasurements ? (
-                                                    <input
-                                                        type="number"
-                                                        value={measurements[key] || ''}
-                                                        onChange={(e) => handleMeasurementChange(key, e.target.value)}
-                                                        className="w-full bg-transparent border-none text-sm font-bold text-on-surface focus:outline-none focus:ring-0 p-0"
-                                                        placeholder="0"
-                                                    />
+                                                    <div className="flex items-baseline gap-1">
+                                                        <input
+                                                            type="number"
+                                                            value={measurements[key] || ''}
+                                                            onChange={(e) => handleMeasurementChange(key, e.target.value)}
+                                                            className="w-full bg-transparent border-none text-lg font-bold text-on-surface focus:outline-none focus:ring-0 p-0"
+                                                            placeholder="0"
+                                                        />
+                                                        <span className="text-xs font-normal text-stone-400">in</span>
+                                                    </div>
                                                 ) : (
-                                                    <p className="text-sm font-bold text-on-surface">
+                                                    <p className="text-lg font-bold text-on-surface">
                                                         {customer.measurements?.[key] || 0}
                                                         <span className="text-xs font-normal text-stone-400 ml-1">in</span>
                                                     </p>

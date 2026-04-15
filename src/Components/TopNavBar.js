@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGlobalSearch } from './GlobalSearch';
 
 const TopNavBar = () => {
     const navigate = useNavigate();
+    const { open } = useGlobalSearch();
     const [name, setName] = useState('');
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
     useEffect(() => {
         setName(localStorage.getItem('name') || 'Master');
@@ -17,16 +20,18 @@ const TopNavBar = () => {
         <header className="sticky top-0 z-30 flex items-center justify-between w-full px-6 py-3 glass-nav border-b border-outline-variant/10">
             {/* Search */}
             <div className="flex items-center flex-1 max-w-sm">
-                <div className="relative w-full">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">
-                        search
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="Search orders, clients…"
-                        className="w-full bg-surface-container-low border-none rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15 font-body text-on-surface placeholder:text-stone-400"
-                    />
-                </div>
+                <button
+                    type="button"
+                    onClick={open}
+                    className="relative w-full text-left bg-surface-container-low border-none rounded-full py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15 font-body text-stone-400 hover:bg-surface-container transition-colors flex items-center"
+                    title="Open global search"
+                >
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">search</span>
+                    <span className="flex-1">Search orders, clients…</span>
+                    <kbd className="hidden sm:inline-flex items-center gap-0.5 font-mono text-[10px] bg-surface-container-lowest border border-outline-variant/20 rounded px-1.5 py-0.5 text-on-surface-variant">
+                        {isMac ? '⌘' : 'Ctrl'}+K
+                    </kbd>
+                </button>
             </div>
 
             {/* Actions */}
