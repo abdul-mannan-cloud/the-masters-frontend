@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2UwZWY5MzZkOThkNDQyMDhhMmE4MzAxZDkyZDA4YTY5EgsSBxD6m6nOpx0YAZIBIwoKcHJvamVjdF9pZBIVQhM4NDM5MDg5MTQ3MDMwMzkwMTg3&filename=&opi=89354086\" -o /tmp/collection.html)",
+      "Bash(npx react-scripts:*)"
+    ]
+  }
+}
