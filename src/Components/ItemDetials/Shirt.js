@@ -131,7 +131,7 @@ const MeasurementDetails = ({
             </div>
 
             {/* Precision Measurement Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-5">
                 {measurementFields.map((field) => (
                     <div key={field} className="group">
                         <div className="flex justify-between items-center mb-3">
@@ -156,7 +156,7 @@ const MeasurementDetails = ({
                                 onChange={(e) => handleMeasurementChange(field, e.target.value)}
                                 placeholder="0.00"
                                 step="0.25"
-                                className="w-full bg-surface-container-low border-none rounded-xl py-6 px-6 text-3xl font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:opacity-20 font-headline"
+                                className="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 text-xl font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:opacity-20 font-headline"
                             />
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col">
                                 <button
