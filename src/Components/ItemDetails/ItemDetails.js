@@ -4,7 +4,7 @@ import icon from '../../resources/Icons/delete.png'
 import Pending from '../../resources/Icons/pending.png'
 import Process from '../../resources/Icons/process.png'
 import Complete from '../../resources/Icons/complete.png'
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const Shirt = ({item, model, setModel}) => {
 

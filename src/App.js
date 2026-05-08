@@ -1,8 +1,7 @@
 import React from 'react';
 import './App.css';
-import "react-toastify/dist/ReactToastify.css";
 import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { Toaster } from "sonner";
 
 import Login from "./Pages/Login/index";
 import Home from "./Pages/Home/index";
@@ -39,15 +38,12 @@ function App() {
     return (
         <Router>
           <GlobalSearchProvider>
-            <ToastContainer
+            <Toaster
                 position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop
-                closeOnClick
-                pauseOnHover
-                theme="colored"
-                style={{ top: '16px', right: '16px' }}
+                richColors
+                closeButton
+                expand
+                duration={3000}
             />
             <Routes>
                 <Route path="/" element={<Login />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MeasurementDetails from "../../Components/ItemDetials/Shirt";
@@ -31,7 +31,8 @@ const PlaceOrder = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
+    const [customer, setCustomer] = useState({ orderNumber: '', name: '', phone: '', address: '' });
+    const [orderNumberError, setOrderNumberError] = useState('');
 
     const [measurements, setMeasurements] = useState({
         chest: 0, neck: 0, shoulders: 0, sleeves: 0,
@@ -47,7 +48,19 @@ const PlaceOrder = () => {
     useEffect(() => {
         if (localStorage.getItem('ciseauxtoken') === null) navigate('/login');
         getItems();
+        fetchNextOrderNumber();
     }, []);
+
+    const fetchNextOrderNumber = async () => {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/customer/next-order-number`);
+            if (res.data?.nextOrderNumber) {
+                setCustomer((c) => ({ ...c, orderNumber: res.data.nextOrderNumber }));
+            }
+        } catch (err) {
+            console.error('Error fetching next order number:', err);
+        }
+    };
 
     useEffect(() => {
         const t = setTimeout(() => { getCustomers(customersPage, searchQuery, searchBy); }, 300);
@@ -120,6 +133,7 @@ const PlaceOrder = () => {
     const handleAddCustomer = async () => {
         try {
             setLoading(true);
+            setOrderNumberError('');
             const customerResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/customer/add`, { customer });
             const newCustomer = customerResponse.data;
             if (newCustomer._id) {
@@ -128,8 +142,14 @@ const PlaceOrder = () => {
                 toast.success('Customer added successfully!');
                 setStep(2);
             }
-        } catch {
-            toast.error('Failed to add customer');
+        } catch (error) {
+            if (error.response?.status === 409) {
+                const msg = error.response.data?.message || 'Order number already exists';
+                setOrderNumberError(msg);
+                toast.error(msg);
+            } else {
+                toast.error('Failed to add customer');
+            }
             setStep(1);
         } finally {
             setLoading(false);
@@ -233,6 +253,22 @@ const PlaceOrder = () => {
                     <div className="bg-surface-container-lowest rounded-2xl p-6" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
                         <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5 font-headline">New Customer</h2>
                         <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Order Number</label>
+                                <div className="relative">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[20px]">tag</span>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. 1248"
+                                        value={customer.orderNumber}
+                                        onChange={(e) => { setCustomer({ ...customer, orderNumber: e.target.value }); setOrderNumberError(''); }}
+                                        className={`w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border-none text-sm focus:outline-none focus:ring-2 font-body ${orderNumberError ? 'ring-2 ring-error' : 'focus:ring-primary/20'}`}
+                                    />
+                                </div>
+                                {orderNumberError && (
+                                    <p className="mt-1 text-xs text-error font-body">{orderNumberError}</p>
+                                )}
+                            </div>
                             {[
                                 { label: 'Full Name', icon: 'person', key: 'name', placeholder: 'Enter customer name', type: 'text' },
                                 { label: 'Phone', icon: 'call', key: 'phone', placeholder: '03XX-XXXXXXX', type: 'text' },
@@ -266,7 +302,7 @@ const PlaceOrder = () => {
                             </div>
                             <button
                                 onClick={() => {
-                                    if (!customer.name || !customer.phone || !customer.address) {
+                                    if (!customer.orderNumber || !customer.name || !customer.phone || !customer.address) {
                                         toast.error('Please fill all fields');
                                     } else if (specialCharactersRegex.test(customer.name)) {
                                         toast.error('Name should not contain special characters');

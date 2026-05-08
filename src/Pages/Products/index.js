@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import axios from 'axios';
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import plusIcon from '../../resources/Plus.png';
 import deleteIcon from '../../resources/delete.png';

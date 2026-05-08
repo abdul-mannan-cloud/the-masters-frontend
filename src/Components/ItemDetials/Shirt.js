@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 const urduLabels = {
