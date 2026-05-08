@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const statuses = ['pending', 'in progress', 'completed', 'shipped'];
 
@@ -24,6 +24,33 @@ const Orders = () => {
     const [selectedProductForAssignment, setSelectedProductForAssignment] = useState(null);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployees, setSelectedEmployees] = useState([]);
+    const [defaultRate, setDefaultRate] = useState('');
+    const [employeeRates, setEmployeeRates] = useState({});
+    const [rateErrors, setRateErrors] = useState({});
+    const [assigning, setAssigning] = useState(false);
+    const [notifying, setNotifying] = useState(false);
+    const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
+    const [notifiedMessageId, setNotifiedMessageId] = useState(null);
+
+    const closeAssignModal = () => {
+        setSelectedProductForAssignment(null);
+        setSelectedEmployees([]);
+        setDefaultRate('');
+        setEmployeeRates({});
+        setRateErrors({});
+    };
+
+    const resolveRate = (employeeId) => {
+        const override = employeeRates[employeeId];
+        if (override !== undefined && override !== '') return override;
+        return defaultRate;
+    };
+
+    const isValidRate = (value) => {
+        if (value === undefined || value === null || value === '') return false;
+        const num = Number(value);
+        return Number.isFinite(num) && num >= 0;
+    };
 
     useEffect(() => {
         fetchEmployees();
@@ -80,6 +107,26 @@ const Orders = () => {
         }
     };
 
+    const handleNotifyWhatsapp = async () => {
+        try {
+            setNotifying(true);
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/order/${id}/notify-whatsapp-update`
+            );
+            const { to, whatsappResponse } = response.data || {};
+            setNotifiedMessageId(whatsappResponse?.messages?.[0]?.id || 'sent');
+            toast.success(`WhatsApp message sent to ${to}`);
+            setNotifyConfirmOpen(false);
+        } catch (error) {
+            const data = error.response?.data || {};
+            const metaMsg = data.error?.error?.message;
+            const msg = metaMsg || data.message || 'Failed to send WhatsApp notification';
+            toast.error(msg);
+        } finally {
+            setNotifying(false);
+        }
+    };
+
     const handlePaymentUpdate = async () => {
         try {
             await axios.put(`${process.env.REACT_APP_BACKEND_URL}/order/update/payment/${id}`, {
@@ -94,17 +141,51 @@ const Orders = () => {
     };
 
     const handleAssignEmployees = async (product) => {
+        const errors = {};
+        selectedEmployees.forEach((eid) => {
+            if (!isValidRate(resolveRate(eid))) errors[eid] = 'Enter a rate (≥ 0)';
+        });
+        if (Object.keys(errors).length) {
+            setRateErrors(errors);
+            toast.error('Set a rate for every selected employee');
+            return;
+        }
+
+        const payload = {
+            productId: product._id,
+            employeeIds: selectedEmployees,
+        };
+        if (isValidRate(defaultRate)) payload.rate = Number(defaultRate);
+        const overrides = {};
+        selectedEmployees.forEach((eid) => {
+            const v = employeeRates[eid];
+            if (isValidRate(v) && v !== defaultRate) overrides[eid] = Number(v);
+        });
+        if (Object.keys(overrides).length) payload.rates = overrides;
+
         try {
-            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product/assignemployees`, {
-                employeeIds: selectedEmployees,
-                productId: product._id
-            });
-            toast.success('Employees assigned successfully');
-            setSelectedProductForAssignment(null);
-            setSelectedEmployees([]);
+            setAssigning(true);
+            setRateErrors({});
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product/assignemployees`, payload);
+            toast.success('Employees assigned — status set to In Progress');
+            closeAssignModal();
             fetchOrderDetails();
         } catch (error) {
-            toast.error('Failed to assign employees');
+            const status = error.response?.status;
+            const msg = error.response?.data?.error || error.response?.data?.message;
+            if (status === 400 && typeof msg === 'string') {
+                const match = msg.match(/employee\s+([a-f0-9]{24})/i);
+                if (match) {
+                    setRateErrors((prev) => ({ ...prev, [match[1]]: msg }));
+                }
+                toast.error(msg);
+            } else if (status === 404) {
+                toast.error(msg || 'Product or employee not found');
+            } else {
+                toast.error('Failed to assign employees');
+            }
+        } finally {
+            setAssigning(false);
         }
     };
 
@@ -217,17 +298,35 @@ const Orders = () => {
                             </button>
                         )}
                     </div>
-                    <button
-                        onClick={handlePaymentUpdate}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-colors font-label ${
-                            order.paid
-                                ? 'bg-error-container text-on-error-container hover:bg-error/10'
-                                : 'bg-primary-fixed text-on-primary-fixed-variant hover:bg-primary-fixed/80'
-                        }`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">payments</span>
-                        {order.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
-                    </button>
+                    <div className="flex gap-3">
+                        {order.status === 'completed' && customer.phone && (
+                            notifiedMessageId ? (
+                                <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-fixed text-on-primary-fixed-variant text-sm font-bold font-label">
+                                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                                    Customer Notified
+                                </span>
+                            ) : (
+                                <button
+                                    onClick={() => setNotifyConfirmOpen(true)}
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-secondary-container text-on-secondary-container text-sm font-bold hover:bg-secondary-container/80 transition-colors font-label"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">chat</span>
+                                    Notify on WhatsApp
+                                </button>
+                            )
+                        )}
+                        <button
+                            onClick={handlePaymentUpdate}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-colors font-label ${
+                                order.paid
+                                    ? 'bg-error-container text-on-error-container hover:bg-error/10'
+                                    : 'bg-primary-fixed text-on-primary-fixed-variant hover:bg-primary-fixed/80'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[16px]">payments</span>
+                            {order.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -355,46 +454,156 @@ const Orders = () => {
             {/* Assign Employees Modal */}
             {selectedProductForAssignment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center animate-backdrop-in">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setSelectedProductForAssignment(null); setSelectedEmployees([]); }} />
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeAssignModal} />
                     <div className="relative bg-surface-container-lowest rounded-2xl p-8 w-full max-w-md mx-4 animate-modal-in" style={{ boxShadow: '0 24px 60px rgba(25,28,27,0.15)' }}>
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-on-surface font-headline">Assign Employees</h2>
-                            <button onClick={() => { setSelectedProductForAssignment(null); setSelectedEmployees([]); }} className="text-stone-400 hover:text-on-surface transition-colors">
+                            <button onClick={closeAssignModal} className="text-stone-400 hover:text-on-surface transition-colors">
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
-                        <p className="text-sm text-stone-500 mb-5">
+                        <p className="text-sm text-stone-500 mb-3">
                             Assigning to <span className="font-bold text-on-surface">{selectedProductForAssignment.name || selectedProductForAssignment.type}</span>
                         </p>
-                        <div className="space-y-2 max-h-60 overflow-y-auto mb-6">
-                            {employees.map((employee) => (
-                                <label key={employee._id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedEmployees.includes(employee._id)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) setSelectedEmployees([...selectedEmployees, employee._id]);
-                                            else setSelectedEmployees(selectedEmployees.filter((eid) => eid !== employee._id));
-                                        }}
-                                        className="w-4 h-4 accent-primary"
-                                    />
-                                    <div className="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-xs font-bold text-on-secondary-fixed flex-shrink-0">
-                                        {employee.name[0].toUpperCase()}
+
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 font-label">Default Rate (Rs)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">Rs.</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="e.g. 500"
+                                    value={defaultRate}
+                                    onChange={(e) => { setDefaultRate(e.target.value); setRateErrors({}); }}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-xl border-none text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+                            <p className="mt-1 text-xs text-stone-400 font-body">Applies to all selected employees unless overridden below.</p>
+                        </div>
+
+                        <div className="px-3 py-2 mb-4 rounded-xl bg-tertiary-fixed/40 border border-outline-variant/20">
+                            <p className="text-xs text-on-surface-variant font-body">
+                                <span className="material-symbols-outlined text-[14px] align-middle mr-1">info</span>
+                                Rate applies only to newly assigned employees. Already-assigned employees are skipped and not charged again.
+                            </p>
+                        </div>
+
+                        <div className="space-y-2 max-h-60 overflow-y-auto mb-5">
+                            {employees.map((employee) => {
+                                const checked = selectedEmployees.includes(employee._id);
+                                const err = rateErrors[employee._id];
+                                return (
+                                    <div key={employee._id} className="rounded-xl">
+                                        <label className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low cursor-pointer transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedEmployees([...selectedEmployees, employee._id]);
+                                                    } else {
+                                                        setSelectedEmployees(selectedEmployees.filter((eid) => eid !== employee._id));
+                                                        setEmployeeRates((prev) => {
+                                                            const next = { ...prev };
+                                                            delete next[employee._id];
+                                                            return next;
+                                                        });
+                                                        setRateErrors((prev) => {
+                                                            const next = { ...prev };
+                                                            delete next[employee._id];
+                                                            return next;
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-4 h-4 accent-primary"
+                                            />
+                                            <div className="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-xs font-bold text-on-secondary-fixed flex-shrink-0">
+                                                {employee.name[0].toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-on-surface truncate">{employee.name}</p>
+                                                <p className="text-xs text-stone-400">{employee.role}</p>
+                                            </div>
+                                            {checked && (
+                                                <div className="relative w-28" onClick={(e) => e.preventDefault()}>
+                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-stone-400">Rs.</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder={defaultRate || 'Rate'}
+                                                        value={employeeRates[employee._id] ?? ''}
+                                                        onChange={(e) => {
+                                                            const v = e.target.value;
+                                                            setEmployeeRates((prev) => ({ ...prev, [employee._id]: v }));
+                                                            setRateErrors((prev) => {
+                                                                const next = { ...prev };
+                                                                delete next[employee._id];
+                                                                return next;
+                                                            });
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className={`w-full pl-7 pr-2 py-1.5 bg-surface-container-low rounded-lg border-none text-xs font-bold text-right font-body focus:outline-none focus:ring-2 ${err ? 'ring-2 ring-error' : 'focus:ring-primary/20'}`}
+                                                    />
+                                                </div>
+                                            )}
+                                        </label>
+                                        {checked && err && (
+                                            <p className="px-3 pb-2 text-xs text-error font-body">{err}</p>
+                                        )}
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-on-surface">{employee.name}</p>
-                                        <p className="text-xs text-stone-400">{employee.role}</p>
-                                    </div>
-                                </label>
-                            ))}
+                                );
+                            })}
                         </div>
                         <button
                             onClick={() => handleAssignEmployees(selectedProductForAssignment)}
-                            disabled={!selectedEmployees.length}
-                            className="w-full py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors font-label"
+                            disabled={!selectedEmployees.length || assigning}
+                            className="w-full py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors font-label flex items-center justify-center gap-2"
                         >
-                            Assign {selectedEmployees.length ? `(${selectedEmployees.length}) ` : ''}Employees
+                            {assigning && <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />}
+                            {assigning ? 'Assigning…' : `Assign ${selectedEmployees.length ? `(${selectedEmployees.length}) ` : ''}Employees`}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* WhatsApp Notify Confirmation Modal */}
+            {notifyConfirmOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center animate-backdrop-in">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !notifying && setNotifyConfirmOpen(false)} />
+                    <div className="relative bg-surface-container-lowest rounded-2xl p-8 w-full max-w-md mx-4 animate-modal-in" style={{ boxShadow: '0 24px 60px rgba(25,28,27,0.15)' }}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-on-surface font-headline">Send WhatsApp Update</h2>
+                            <button
+                                onClick={() => setNotifyConfirmOpen(false)}
+                                disabled={notifying}
+                                className="text-stone-400 hover:text-on-surface transition-colors disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <p className="text-sm text-on-surface-variant mb-6 font-body">
+                            Send WhatsApp order update to{' '}
+                            <span className="font-bold text-on-surface">{customer.name}</span>{' '}
+                            (<span className="font-bold text-on-surface">{customer.phone}</span>)?
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setNotifyConfirmOpen(false)}
+                                disabled={notifying}
+                                className="flex-1 py-3 rounded-full border border-outline-variant/20 text-sm font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 font-label"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleNotifyWhatsapp}
+                                disabled={notifying}
+                                className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors font-label flex items-center justify-center gap-2"
+                            >
+                                {notifying && <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />}
+                                {notifying ? 'Sending…' : 'Send Message'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
