@@ -30,7 +30,6 @@ const Orders = () => {
     const [assigning, setAssigning] = useState(false);
     const [notifying, setNotifying] = useState(false);
     const [notifyConfirmOpen, setNotifyConfirmOpen] = useState(false);
-    const [notifiedMessageId, setNotifiedMessageId] = useState(null);
 
     const closeAssignModal = () => {
         setSelectedProductForAssignment(null);
@@ -113,8 +112,13 @@ const Orders = () => {
             const response = await axios.post(
                 `${process.env.REACT_APP_BACKEND_URL}/order/${id}/notify-whatsapp-update`
             );
-            const { to, whatsappResponse } = response.data || {};
-            setNotifiedMessageId(whatsappResponse?.messages?.[0]?.id || 'sent');
+            const { to, whatsappUpdateSentAt, whatsappMessageId } = response.data || {};
+            setOrder((o) => (o ? {
+                ...o,
+                whatsappUpdateSent: true,
+                whatsappUpdateSentAt: whatsappUpdateSentAt || new Date().toISOString(),
+                whatsappMessageId: whatsappMessageId || o.whatsappMessageId || null,
+            } : o));
             toast.success(`WhatsApp message sent to ${to}`);
             setNotifyConfirmOpen(false);
         } catch (error) {
@@ -300,8 +304,11 @@ const Orders = () => {
                     </div>
                     <div className="flex gap-3">
                         {order.status === 'completed' && customer.phone && (
-                            notifiedMessageId ? (
-                                <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-fixed text-on-primary-fixed-variant text-sm font-bold font-label">
+                            order.whatsappUpdateSent ? (
+                                <span
+                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-fixed text-on-primary-fixed-variant text-sm font-bold font-label"
+                                    title={order.whatsappUpdateSentAt ? `Sent ${format(new Date(order.whatsappUpdateSentAt), 'PPp')}` : 'Sent'}
+                                >
                                     <span className="material-symbols-outlined text-[16px]">check_circle</span>
                                     Customer Notified
                                 </span>
