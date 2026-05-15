@@ -23,6 +23,15 @@ const AllOrders = () => {
     });
     const ordersPerPage = 8;
 
+    // WhatsApp bulk-notify state
+    const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+    const [bulkSending, setBulkSending] = useState(false);
+    const [notifyingRowId, setNotifyingRowId] = useState(null);
+    const [skipAlreadySent, setSkipAlreadySent] = useState(true);
+    const [failureResults, setFailureResults] = useState(null);
+    const [sendAllConfirm, setSendAllConfirm] = useState(null); // { ids: [], loading: false }
+    const [loadingSendAll, setLoadingSendAll] = useState(false);
+
     useEffect(() => {
         if (!localStorage.getItem('ciseauxtoken')) {
             navigate('/login');
@@ -56,6 +65,123 @@ const AllOrders = () => {
             toast.error("Failed to fetch orders");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const applyResultsToOrders = (results) => {
+        if (!Array.isArray(results)) return;
+        const sentMap = {};
+        results.forEach((r) => {
+            if (r.status === 'sent') {
+                sentMap[r.orderId] = {
+                    whatsappUpdateSent: true,
+                    whatsappUpdateSentAt: new Date().toISOString(),
+                    whatsappMessageId: r.whatsappMessageId || null,
+                };
+            }
+        });
+        if (Object.keys(sentMap).length === 0) return;
+        setOrders((prev) => prev.map((o) => (sentMap[o._id] ? { ...o, ...sentMap[o._id] } : o)));
+    };
+
+    const handleRowNotify = async (order) => {
+        try {
+            setNotifyingRowId(order._id);
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/order/${order._id}/notify-whatsapp-update`
+            );
+            const { to, whatsappUpdateSentAt, whatsappMessageId } = response.data || {};
+            setOrders((prev) => prev.map((o) => (o._id === order._id ? {
+                ...o,
+                whatsappUpdateSent: true,
+                whatsappUpdateSentAt: whatsappUpdateSentAt || new Date().toISOString(),
+                whatsappMessageId: whatsappMessageId || o.whatsappMessageId || null,
+            } : o)));
+            toast.success(`WhatsApp message sent to ${to || order.customer?.name || 'customer'}`);
+        } catch (error) {
+            const data = error.response?.data || {};
+            const metaMsg = data.error?.error?.message;
+            toast.error(metaMsg || data.message || 'Failed to send WhatsApp notification');
+        } finally {
+            setNotifyingRowId(null);
+        }
+    };
+
+    const sendBulk = async (ids) => {
+        if (!ids || ids.length === 0) return null;
+        try {
+            setBulkSending(true);
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/order/bulk/notify-whatsapp-update`,
+                { orderIds: ids }
+            );
+            const { sentCount = 0, failedCount = 0, results = [] } = response.data || {};
+            applyResultsToOrders(results);
+            if (failedCount > 0 && sentCount > 0) {
+                toast.success(`${sentCount} sent, ${failedCount} failed`);
+            } else if (failedCount > 0) {
+                toast.error(`${failedCount} failed to send`);
+            } else {
+                toast.success(`${sentCount} WhatsApp ${sentCount === 1 ? 'message' : 'messages'} sent`);
+            }
+            const failures = results.filter((r) => r.status !== 'sent');
+            if (failures.length > 0) setFailureResults(failures);
+            return response.data;
+        } catch (error) {
+            const data = error.response?.data || {};
+            toast.error(data.message || 'Bulk send failed');
+            return null;
+        } finally {
+            setBulkSending(false);
+        }
+    };
+
+    const handleBulkNotifySelected = async () => {
+        const ids = skipAlreadySent
+            ? selectedOrderIds.filter((id) => {
+                const o = orders.find((x) => x._id === id);
+                return o && !o.whatsappUpdateSent;
+            })
+            : selectedOrderIds;
+        if (ids.length === 0) {
+            toast.error('No eligible orders selected');
+            return;
+        }
+        const result = await sendBulk(ids);
+        if (result) setSelectedOrderIds([]);
+    };
+
+    const handleOpenSendAllUnsent = async () => {
+        try {
+            setLoadingSendAll(true);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/order/getallorders`, {
+                params: { page: 1, limit: 10000, query: '' }
+            });
+            const all = response.data?.data || response.data?.orders || [];
+            const eligible = all.filter((o) =>
+                (o.status || '').toLowerCase() === 'completed' &&
+                !o.whatsappUpdateSent &&
+                o.customer?.phone
+            );
+            if (eligible.length === 0) {
+                toast.success('No completed orders awaiting notification');
+                return;
+            }
+            setSendAllConfirm({ ids: eligible.map((o) => o._id), preview: eligible.slice(0, 5) });
+        } catch (error) {
+            toast.error('Failed to load orders');
+        } finally {
+            setLoadingSendAll(false);
+        }
+    };
+
+    const handleConfirmSendAll = async () => {
+        if (!sendAllConfirm?.ids?.length) return;
+        const result = await sendBulk(sendAllConfirm.ids);
+        if (result) {
+            setSendAllConfirm(null);
+            // Refresh current page so badges reflect server state
+            getOrders(currentPage, searchQuery);
         }
     };
 
@@ -93,6 +219,31 @@ const AllOrders = () => {
     const activePercent = orders.length > 0 ? Math.round((activeOrders / orders.length) * 100) : 0;
 
     const currentOrders = filteredOrders;
+
+    const isRowEligible = (order) => skipAlreadySent ? !order.whatsappUpdateSent : true;
+    const visibleEligibleIds = currentOrders.filter(isRowEligible).map((o) => o._id);
+    const allOnPageSelected = visibleEligibleIds.length > 0 &&
+        visibleEligibleIds.every((id) => selectedOrderIds.includes(id));
+    const someOnPageSelected = visibleEligibleIds.some((id) => selectedOrderIds.includes(id));
+
+    const toggleSelectAllOnPage = () => {
+        if (allOnPageSelected) {
+            setSelectedOrderIds((prev) => prev.filter((id) => !visibleEligibleIds.includes(id)));
+        } else {
+            setSelectedOrderIds((prev) => Array.from(new Set([...prev, ...visibleEligibleIds])));
+        }
+    };
+    const toggleRowSelected = (id) => {
+        setSelectedOrderIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    };
+
+    const eligibleSelectedCount = skipAlreadySent
+        ? selectedOrderIds.filter((id) => {
+            const o = orders.find((x) => x._id === id);
+            return o && !o.whatsappUpdateSent;
+        }).length
+        : selectedOrderIds.length;
+
     const effectiveTotalPages = pagination.totalPages || Math.max(1, Math.ceil((pagination.total || 0) / ordersPerPage));
     const canGoPrev = pagination.hasPrevPage ?? currentPage > 1;
     const canGoNext = pagination.hasNextPage ?? currentPage < effectiveTotalPages;
@@ -118,13 +269,28 @@ const AllOrders = () => {
                     <p className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-1 font-label">Production Pipeline</p>
                     <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">Order Management</h1>
                 </div>
-                <button
-                    onClick={() => navigate('/placeorder')}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
-                >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                    New Order
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleOpenSendAllUnsent}
+                        disabled={loadingSendAll || bulkSending}
+                        className="flex items-center gap-2 px-5 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-full text-sm hover:bg-secondary-container/80 disabled:opacity-50 transition-colors font-label"
+                        title="Send WhatsApp update to every completed order that hasn't been notified yet"
+                    >
+                        {loadingSendAll ? (
+                            <div className="w-4 h-4 rounded-full border-2 border-on-secondary-container/30 border-t-on-secondary-container animate-spin" />
+                        ) : (
+                            <span className="material-symbols-outlined text-[18px]">chat</span>
+                        )}
+                        Notify All Completed
+                    </button>
+                    <button
+                        onClick={() => navigate('/placeorder')}
+                        className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">add</span>
+                        New Order
+                    </button>
+                </div>
             </div>
 
             {/* Stats Bento Grid */}
@@ -222,16 +388,69 @@ const AllOrders = () => {
                 </select>
             </div>
 
+            {/* Bulk action bar */}
+            {selectedOrderIds.length > 0 && (
+                <div className="mb-4 px-5 py-3 bg-primary-fixed/40 border border-primary/20 rounded-xl flex flex-wrap items-center gap-4">
+                    <span className="text-sm font-bold text-on-surface font-label">
+                        {selectedOrderIds.length} selected
+                        {skipAlreadySent && eligibleSelectedCount !== selectedOrderIds.length && (
+                            <span className="ml-1 text-stone-500 font-medium">
+                                ({eligibleSelectedCount} eligible to send)
+                            </span>
+                        )}
+                    </span>
+                    <label className="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={skipAlreadySent}
+                            onChange={(e) => setSkipAlreadySent(e.target.checked)}
+                            className="w-4 h-4 accent-primary"
+                        />
+                        Skip already-sent
+                    </label>
+                    <div className="ml-auto flex gap-2">
+                        <button
+                            onClick={() => setSelectedOrderIds([])}
+                            disabled={bulkSending}
+                            className="px-4 py-2 rounded-full border border-outline-variant/20 text-sm font-bold text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50 transition-colors font-label"
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={handleBulkNotifySelected}
+                            disabled={bulkSending || eligibleSelectedCount === 0}
+                            className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-on-primary text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors font-label"
+                        >
+                            {bulkSending && <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />}
+                            <span className="material-symbols-outlined text-[16px]">chat</span>
+                            {bulkSending ? 'Sending…' : `Send WhatsApp Update to ${eligibleSelectedCount} ${eligibleSelectedCount === 1 ? 'order' : 'orders'}`}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Table Card */}
             <div className="bg-surface-container-lowest rounded-2xl overflow-hidden" style={{ boxShadow: '0 12px 40px rgba(25,28,27,0.04)' }}>
                 <div className="overflow-x-auto">
                     <table className="w-full masters-table">
                         <thead>
                             <tr>
+                                <th className="w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={allOnPageSelected}
+                                        ref={(el) => { if (el) el.indeterminate = !allOnPageSelected && someOnPageSelected; }}
+                                        onChange={toggleSelectAllOnPage}
+                                        disabled={visibleEligibleIds.length === 0}
+                                        className="w-4 h-4 accent-primary align-middle"
+                                        title={visibleEligibleIds.length === 0 ? 'No eligible orders on this page' : 'Select all on page'}
+                                    />
+                                </th>
                                 <th>Order ID</th>
                                 <th>Date</th>
                                 <th>Customer</th>
                                 <th>Status</th>
+                                <th>WhatsApp</th>
                                 <th>Total</th>
                                 <th className="text-right">Actions</th>
                             </tr>
@@ -239,7 +458,7 @@ const AllOrders = () => {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="py-16 text-center">
+                                    <td colSpan="8" className="py-16 text-center">
                                         <div className="flex justify-center">
                                             <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                                         </div>
@@ -247,7 +466,7 @@ const AllOrders = () => {
                                 </tr>
                             ) : currentOrders.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6">
+                                    <td colSpan="8">
                                         <div className="empty-state">
                                             <div className="empty-state-icon">
                                                 <span className="material-symbols-outlined text-[28px] text-stone-300">receipt_long</span>
@@ -258,9 +477,23 @@ const AllOrders = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                currentOrders.map((order) => (
+                                currentOrders.map((order) => {
+                                    const selected = selectedOrderIds.includes(order._id);
+                                    const checkboxDisabled = skipAlreadySent && order.whatsappUpdateSent;
+                                    const canNotify = (order.status || '').toLowerCase() === 'completed' && order.customer?.phone;
+                                    return (
                                     <React.Fragment key={order._id}>
-                                        <tr>
+                                        <tr className={selected ? 'bg-primary-fixed/20' : undefined}>
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selected}
+                                                    onChange={() => toggleRowSelected(order._id)}
+                                                    disabled={checkboxDisabled}
+                                                    title={checkboxDisabled ? 'Already notified — toggle off "Skip already-sent" to include' : ''}
+                                                    className="w-4 h-4 accent-primary align-middle"
+                                                />
+                                            </td>
                                             <td
                                                 className="font-bold text-primary cursor-pointer"
                                                 onClick={() => navigate(`/order/details/${order._id}`)}
@@ -284,24 +517,53 @@ const AllOrders = () => {
                                                     {order.status}
                                                 </span>
                                             </td>
+                                            <td>
+                                                {order.whatsappUpdateSent ? (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-bold"
+                                                        title={order.whatsappUpdateSentAt ? `Sent ${format(new Date(order.whatsappUpdateSentAt), 'PPp')}` : 'Sent'}
+                                                    >
+                                                        <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                                                        Notified
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-stone-300">—</span>
+                                                )}
+                                            </td>
                                             <td className="font-bold text-on-surface">
                                                 Rs. {order.total?.toLocaleString()}
                                             </td>
                                             <td className="text-right">
-                                                <button
-                                                    onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
-                                                    className="text-stone-400 hover:text-primary transition-colors"
-                                                >
-                                                    <span className="material-symbols-outlined text-[20px]">
-                                                        {expandedOrderId === order._id ? 'expand_less' : 'more_vert'}
-                                                    </span>
-                                                </button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {canNotify && (
+                                                        <button
+                                                            onClick={() => handleRowNotify(order)}
+                                                            disabled={notifyingRowId === order._id || bulkSending}
+                                                            className="p-1.5 rounded-lg text-stone-400 hover:text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+                                                            title={order.whatsappUpdateSent ? 'Re-send WhatsApp update' : 'Send WhatsApp update'}
+                                                        >
+                                                            {notifyingRowId === order._id ? (
+                                                                <div className="w-4 h-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                                                            ) : (
+                                                                <span className="material-symbols-outlined text-[18px]">chat</span>
+                                                            )}
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
+                                                        className="text-stone-400 hover:text-primary transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            {expandedOrderId === order._id ? 'expand_less' : 'more_vert'}
+                                                        </span>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
 
                                         {expandedOrderId === order._id && (
                                             <tr>
-                                                <td colSpan="6" className="px-8 py-6 bg-surface-container-low/40">
+                                                <td colSpan="8" className="px-8 py-6 bg-surface-container-low/40">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                         <div>
                                                             <h4 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4 font-headline">Order Details</h4>
@@ -359,7 +621,8 @@ const AllOrders = () => {
                                             </tr>
                                         )}
                                     </React.Fragment>
-                                ))
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
@@ -404,6 +667,115 @@ const AllOrders = () => {
                     </div>
                 )}
             </div>
+
+            {/* Send-all confirmation modal */}
+            {sendAllConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center animate-backdrop-in">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={() => !bulkSending && setSendAllConfirm(null)}
+                    />
+                    <div className="relative bg-surface-container-lowest rounded-2xl p-8 w-full max-w-md mx-4 animate-modal-in" style={{ boxShadow: '0 24px 60px rgba(25,28,27,0.15)' }}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-on-surface font-headline">Notify All Completed Orders</h2>
+                            <button
+                                onClick={() => setSendAllConfirm(null)}
+                                disabled={bulkSending}
+                                className="text-stone-400 hover:text-on-surface transition-colors disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <p className="text-sm text-on-surface-variant mb-4 font-body">
+                            Send WhatsApp updates to{' '}
+                            <span className="font-bold text-on-surface">{sendAllConfirm.ids.length}</span>{' '}
+                            completed {sendAllConfirm.ids.length === 1 ? 'order' : 'orders'} that haven't been notified yet?
+                        </p>
+                        {sendAllConfirm.preview?.length > 0 && (
+                            <div className="mb-5 px-3 py-2 rounded-xl bg-surface-container-low max-h-40 overflow-y-auto">
+                                {sendAllConfirm.preview.map((o) => (
+                                    <div key={o._id} className="text-xs py-1 flex justify-between gap-3">
+                                        <span className="text-stone-500">#{o._id.substring(0, 8).toUpperCase()}</span>
+                                        <span className="text-on-surface truncate">{o.customer?.name}</span>
+                                    </div>
+                                ))}
+                                {sendAllConfirm.ids.length > sendAllConfirm.preview.length && (
+                                    <p className="text-xs text-stone-400 pt-1 italic">
+                                        + {sendAllConfirm.ids.length - sendAllConfirm.preview.length} more…
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setSendAllConfirm(null)}
+                                disabled={bulkSending}
+                                className="flex-1 py-3 rounded-full border border-outline-variant/20 text-sm font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50 font-label"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmSendAll}
+                                disabled={bulkSending}
+                                className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors font-label flex items-center justify-center gap-2"
+                            >
+                                {bulkSending && <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />}
+                                {bulkSending ? 'Sending…' : 'Send All'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Failures modal */}
+            {failureResults && failureResults.length > 0 && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center animate-backdrop-in">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setFailureResults(null)} />
+                    <div className="relative bg-surface-container-lowest rounded-2xl p-8 w-full max-w-lg mx-4 animate-modal-in" style={{ boxShadow: '0 24px 60px rgba(25,28,27,0.15)' }}>
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-on-surface font-headline">Failed to send</h2>
+                                <p className="text-xs text-stone-400 mt-1">{failureResults.length} {failureResults.length === 1 ? 'order' : 'orders'} could not be notified</p>
+                            </div>
+                            <button onClick={() => setFailureResults(null)} className="text-stone-400 hover:text-on-surface transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                            {failureResults.map((r, idx) => {
+                                const o = orders.find((x) => x._id === r.orderId);
+                                return (
+                                    <div key={`${r.orderId}-${idx}`} className="px-4 py-3 rounded-xl bg-error-container/40 border border-error/20">
+                                        <div className="flex items-center justify-between gap-3 mb-1">
+                                            <span className="text-sm font-bold text-on-surface">
+                                                #{r.orderId?.substring(0, 8).toUpperCase()}
+                                                {o?.customer?.name && (
+                                                    <span className="ml-2 text-stone-500 font-medium">{o.customer.name}</span>
+                                                )}
+                                            </span>
+                                            {o && (
+                                                <button
+                                                    onClick={() => navigate(`/order/details/${r.orderId}`)}
+                                                    className="text-xs font-bold text-primary hover:underline"
+                                                >
+                                                    Open
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-on-error-container">{r.reason || 'Unknown error'}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button
+                            onClick={() => setFailureResults(null)}
+                            className="mt-5 w-full py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary/90 transition-colors font-label"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
