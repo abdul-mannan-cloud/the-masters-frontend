@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-headline: 'Inter', system-ui, sans-serif;
+  --font-newsreader: 'Newsreader', Georgia, serif;
+}
+
+body {
+  margin: 0;
+}
