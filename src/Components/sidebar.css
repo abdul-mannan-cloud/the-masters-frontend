@@ -1,0 +1,128 @@
+/* Sidebar.css - Complete styling for the sidebar component */
+
+/* Base sidebar styles */
+.sidebar-transition {
+    transition-property: width, transform;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-in-out;
+}
+
+/* Custom tooltip styles */
+[data-tooltip] {
+    position: relative;
+    cursor: pointer;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    z-index: 100;
+    margin-left: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    animation: fadeIn 0.2s ease-in-out forwards;
+}
+
+/* Only show tooltips when they are enabled */
+[data-tooltip-enabled="false"]:hover::after {
+    display: none;
+}
+
+/* Animation for tooltip appearance */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(10px, -50%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(0, -50%);
+    }
+}
+
+/* Active menu item styles */
+.menu-item-active {
+    background-color: rgba(253, 224, 71, 0.3);
+    color: #854d0e;
+    font-weight: 500;
+}
+
+.menu-item-active svg {
+    color: #854d0e;
+}
+
+/* Menu item hover effects */
+.menu-item {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Toggle button styles */
+.toggle-button {
+    transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+    transform: scale(1.05);
+    background-color: #f3f4f6;
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-backdrop {
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background-color: #f3f4f6;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af;
+}
+
+/* Logo animation for expanded state */
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo-text {
+    overflow: hidden;
+    transition: max-width 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar-collapsed .logo-text {
+    max-width: 0;
+    opacity: 0;
+}
+
+.sidebar-expanded .logo-text {
+    max-width: 150px;
+    opacity: 1;
+}
+
+/* For Firefox scrollbar */
+.sidebar-nav {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+}
