@@ -1,40 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 import scissorsImg from "../../assets/Icons/scissors.png";
 
 const Login = () => {
-  const [userName, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    localStorage.clear();
-  }, []);
+  const { login } = useAuth();
 
   const handleSubmit = async () => {
-    if (!userName || !password) {
-      toast.error("Please enter both username and password");
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
       return;
     }
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/admin/login`,
-        {
-          userName,
-          password,
-        },
-      );
-      localStorage.setItem("ciseauxtoken", res.data.token);
+      await login({ email, password });
       toast.success("Login successful");
-      navigate("/home");
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Invalid credentials or server error");
+      const message =
+        error?.response?.data?.message || "Invalid credentials or server error";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -102,17 +93,17 @@ const Login = () => {
           </p>
 
           <div className="flex flex-col gap-4">
-            {/* Username */}
+            {/* Email */}
             <div className="flex flex-col gap-[7px]">
               <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
-                Username
+                Email
               </span>
               <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="w-full font-body font-medium text-[14.5px] text-[#2a2521] px-[14px] py-3 border-[1.5px] border-[#e7e0d6] rounded-[11px] bg-[#fbf9f5] outline-none transition-all placeholder:text-[#b4ab9f] focus:border-[#c06b4a] focus:ring-[3px] focus:ring-[#c06b4a]/[.14] focus:bg-white"
               />
             </div>

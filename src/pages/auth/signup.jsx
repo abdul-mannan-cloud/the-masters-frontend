@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 import scissorsImg from "../../assets/Icons/scissors.png";
 
 const CreateAccount = () => {
@@ -13,6 +13,7 @@ const CreateAccount = () => {
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
   const handleSubmit = async () => {
     if (!email || !password || !confirmPassword || !businessName) {
@@ -30,11 +31,7 @@ const CreateAccount = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/admin/signup`, {
-        email,
-        password,
-        businessName,
-      });
+      await signup({ email, password, businessName });
       toast.success("Account created successfully");
       navigate("/login");
     } catch (error) {
@@ -52,7 +49,7 @@ const CreateAccount = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 bg-[#0f201c] font-body">
-      <div className="w-full max-w-[960px] rounded-[18px] overflow-hidden flex min-h-[560px] shadow-[0_12px_40px_-16px_rgba(0,0,0,.5),_0_2px_8px_rgba(0,0,0,.2)]">
+      <div className="w-full max-w-240 rounded-[18px] overflow-hidden flex min-h-[560px] shadow-[0_12px_40px_-16px_rgba(0,0,0,.5),_0_2px_8px_rgba(0,0,0,.2)]">
         {/* ── Brand panel (desktop only) ── */}
         <div className="hidden md:flex w-[45%] relative bg-[#0b1714] text-[#f2ece1] flex-col justify-between overflow-hidden px-[42px] py-[46px]">
           <div
