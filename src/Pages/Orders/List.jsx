@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Plus, Eye, Trash2, ReceiptText } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
-
-const productionBadge = {
-  pending: "bg-tertiary-fixed text-on-tertiary-fixed-variant",
-  in_progress: "bg-secondary-container text-on-secondary-container",
-  completed: "bg-primary-fixed text-on-primary-fixed-variant",
-  delivered: "bg-primary text-on-primary",
-  cancelled: "bg-error-container text-on-error-container",
-};
+import StatusBadge from "../../components/StatusBadge";
 
 const OrderList = () => {
   const navigate = useNavigate();
@@ -19,29 +13,27 @@ const OrderList = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [statusFilter]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
       const [ordersData, customersData] = await Promise.all([
-        orderService.getAllOrders(
-          statusFilter ? { productionStatus: statusFilter } : {},
-        ),
+        orderService.getAllOrders(statusFilter ? { productionStatus: statusFilter } : {}),
         customerService.getAllCustomers(),
       ]);
       setOrders(ordersData);
-      setCustomersById(
-        Object.fromEntries(customersData.map((c) => [c._id, c])),
-      );
-    } catch (error) {
+      setCustomersById(Object.fromEntries(customersData.map((c) => [c._id, c])));
+    } catch {
       toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      await fetchData();
+    })();
+  }, [statusFilter]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
@@ -54,27 +46,24 @@ const OrderList = () => {
     }
   };
 
-  const totalRevenue = useMemo(
-    () => orders.reduce((sum, o) => sum + (o.total || 0), 0),
-    [orders],
-  );
+  const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + (o.total || 0), 0), [orders]);
 
   return (
     <div className="p-8 font-body">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-primary tracking-tight font-headline">
+          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
             Orders
           </h1>
-          <p className="text-stone-400 mt-1 text-sm">
+          <p className="text-on-surface-variant mt-1 text-sm">
             {orders.length} orders · Rs. {totalRevenue.toLocaleString()} total
           </p>
         </div>
         <button
           onClick={() => navigate("/orders/new")}
-          className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-sm hover:bg-primary/90 transition-colors font-label"
+          className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <Plus className="w-4 h-4" />
           New Order
         </button>
       </div>
@@ -83,7 +72,7 @@ const OrderList = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-body font-medium"
+          className="px-4 py-2.5 bg-white rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
         >
           <option value="">All Production Status</option>
           <option value="pending">Pending</option>
@@ -95,8 +84,8 @@ const OrderList = () => {
       </div>
 
       <div
-        className="bg-surface-container-lowest rounded-xl overflow-hidden"
-        style={{ boxShadow: "0 12px 40px rgba(25,28,27,0.04)" }}
+        className="bg-white rounded-2xl overflow-hidden"
+        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -125,11 +114,11 @@ const OrderList = () => {
                   <td colSpan="7">
                     <div className="empty-state">
                       <div className="empty-state-icon">
-                        <span className="material-symbols-outlined text-[28px] text-stone-300">
-                          receipt_long
-                        </span>
+                        <ReceiptText className="w-7 h-7 text-slate-300" />
                       </div>
-                      <p className="text-sm font-bold text-stone-400 font-headline">No orders found</p>
+                      <p className="text-sm font-bold text-on-surface-variant font-headline">
+                        No orders found
+                      </p>
                     </div>
                   </td>
                 </tr>
@@ -152,32 +141,26 @@ const OrderList = () => {
                       Rs. {order.total?.toLocaleString()}
                     </td>
                     <td>
-                      <span
-                        className={`status-badge capitalize ${productionBadge[order.productionStatus] || ""}`}
-                      >
-                        {order.productionStatus?.replace("_", " ")}
-                      </span>
+                      <StatusBadge status={order.productionStatus} />
                     </td>
                     <td>
-                      <span className="status-badge bg-secondary-container text-on-secondary-container capitalize">
-                        {order.paymentStatus}
-                      </span>
+                      <StatusBadge status={order.paymentStatus} />
                     </td>
                     <td className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => navigate(`/orders/${order._id}`)}
-                          className="p-2 text-stone-400 hover:text-primary hover:bg-surface-container-low rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
                           title="View"
                         >
-                          <span className="material-symbols-outlined text-[18px]">visibility</span>
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(order._id)}
-                          className="p-2 text-stone-400 hover:text-error hover:bg-error-container/20 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

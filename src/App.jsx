@@ -6,12 +6,17 @@ import Layout from './components/Layout.jsx'
 import Login from './pages/auth/login.jsx'
 import CreateAccount from './pages/auth/signup.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Measurements from './pages/Measurements.jsx'
 import CustomerList from './pages/customers/List.jsx'
-import CustomerForm from './pages/customers/Form.jsx'
-import CustomerView from './pages/customers/View.jsx'
 import OrderList from './pages/orders/List.jsx'
 import OrderForm from './pages/orders/Form.jsx'
 import OrderView from './pages/orders/View.jsx'
+import ProductTypeList from './pages/productTypes/List.jsx'
+import ProductTypeForm from './pages/productTypes/Form.jsx'
+import ProductTypeView from './pages/productTypes/View.jsx'
+import EmployeeList from './pages/employees/List.jsx'
+import EmployeeForm from './pages/employees/Form.jsx'
+import EmployeeView from './pages/employees/View.jsx'
 
 function App() {
   return (
@@ -27,13 +32,23 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
 
               <Route path="/customers" element={<CustomerList />} />
-              <Route path="/customers/new" element={<CustomerForm />} />
-              <Route path="/customers/:id" element={<CustomerView />} />
-              <Route path="/customers/:id/edit" element={<CustomerForm />} />
+              <Route path="/customers/:id" element={<CustomerList />} />
 
               <Route path="/orders" element={<OrderList />} />
               <Route path="/orders/new" element={<OrderForm />} />
               <Route path="/orders/:id" element={<OrderView />} />
+
+              <Route path="/measurements" element={<Measurements />} />
+
+              <Route path="/product-types" element={<ProductTypeList />} />
+              <Route path="/product-types/new" element={<ProductTypeForm />} />
+              <Route path="/product-types/:id/edit" element={<ProductTypeForm />} />
+              <Route path="/product-types/:id" element={<ProductTypeView />} />
+
+              <Route path="/employees" element={<EmployeeList />} />
+              <Route path="/employees/new" element={<EmployeeForm />} />
+              <Route path="/employees/:id/edit" element={<EmployeeForm />} />
+              <Route path="/employees/:id" element={<EmployeeView />} />
             </Route>
           </Route>
 
