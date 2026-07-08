@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Search, Eye, Pencil, Trash2, Power, Shirt } from "lucide-react";
-import * as productTypeService from "../../services/productTypeService";
+import { Plus, Search, Eye, Pencil, Trash2, Building2, Ban } from "lucide-react";
+import * as tenantService from "../../services/tenantService";
 import StatusBadge from "../../components/StatusBadge";
 
 const LIMIT = 10;
 
-const ProductTypeList = () => {
+const TenantList = () => {
   const navigate = useNavigate();
-  const [productTypes, setProductTypes] = useState([]);
+  const [tenants, setTenants] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState(""); // '' | 'true' | 'false'
+  const [statusFilter, setStatusFilter] = useState(""); // '' | active | suspended | cancelled
   const [loading, setLoading] = useState(true);
 
   // Debounce search input so we don't hit the API on every keystroke.
@@ -27,18 +27,18 @@ const ProductTypeList = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const fetchProductTypes = async () => {
+  const fetchTenants = async () => {
     try {
       setLoading(true);
       const params = { page, limit: LIMIT };
       if (search) params.search = search;
-      if (activeFilter) params.isActive = activeFilter;
-      const data = await productTypeService.getAllProductTypes(params);
-      setProductTypes(data.data);
+      if (statusFilter) params.status = statusFilter;
+      const data = await tenantService.getAllTenants(params);
+      setTenants(data.data);
       setTotal(data.total);
       setTotalPages(data.totalPages);
     } catch {
-      toast.error("Failed to fetch product types");
+      toast.error("Failed to fetch tenants");
     } finally {
       setLoading(false);
     }
@@ -46,38 +46,47 @@ const ProductTypeList = () => {
 
   useEffect(() => {
     (async () => {
-      await fetchProductTypes();
+      await fetchTenants();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, activeFilter]);
+  }, [page, search, statusFilter]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product type?"))
+  const handleDelete = async (tenant) => {
+    if (
+      !window.confirm(
+        `Delete "${tenant.businessName}"? Their historical data is kept, but the business will no longer be accessible.`,
+      )
+    )
       return;
     try {
-      await productTypeService.deleteProductType(id);
-      toast.success("Product type deleted successfully");
-      fetchProductTypes();
+      await tenantService.deleteTenant(tenant._id);
+      toast.success("Tenant deleted successfully");
+      fetchTenants();
     } catch (error) {
-      toast.error(
-        error?.response?.data?.error || "Failed to delete product type",
-      );
+      toast.error(error?.response?.data?.error || "Failed to delete tenant");
     }
   };
 
-  const handleToggleStatus = async (productType) => {
-    const activating = !productType.isActive;
-    if (!activating && !window.confirm(`Deactivate "${productType.name}"?`))
+  const handleToggleStatus = async (tenant) => {
+    const suspending = tenant.status === "active";
+    if (
+      !window.confirm(
+        suspending
+          ? `Suspend "${tenant.businessName}"? All of its users will be blocked from logging in.`
+          : `Reactivate "${tenant.businessName}"?`,
+      )
+    )
       return;
     try {
-      await productTypeService.toggleProductTypeStatus(
-        productType._id,
-        activating,
-      );
-      toast.success(`Product type ${activating ? "activated" : "deactivated"}`);
-      fetchProductTypes();
+      if (suspending) {
+        await tenantService.suspendTenant(tenant._id);
+      } else {
+        await tenantService.activateTenant(tenant._id);
+      }
+      toast.success(`Tenant ${suspending ? "suspended" : "activated"}`);
+      fetchTenants();
     } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to update status");
+      toast.error(error?.response?.data?.error || "Failed to update tenant status");
     }
   };
 
@@ -86,19 +95,18 @@ const ProductTypeList = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
-            Product Types
+            Tenants
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
-            {total} garment template{total === 1 ? "" : "s"} configured for your
-            business.
+            {total} business{total === 1 ? "" : "es"} registered on the platform.
           </p>
         </div>
         <button
-          onClick={() => navigate("/product-types/new")}
+          onClick={() => navigate("/tenants/new")}
           className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Create Product Type
+          Create Tenant
         </button>
       </div>
 
@@ -107,23 +115,24 @@ const ProductTypeList = () => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by name…"
+            placeholder="Search by name, slug, or email…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-9 psr-4 py-2.5 bg-white rounded-full border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <select
-          value={activeFilter}
+          value={statusFilter}
           onChange={(e) => {
             setPage(1);
-            setActiveFilter(e.target.value);
+            setStatusFilter(e.target.value);
           }}
           className="px-4 py-2.5 bg-white rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
         >
           <option value="">All Statuses</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -135,83 +144,75 @@ const ProductTypeList = () => {
           <table className="w-full masters-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Base Price</th>
+                <th>Business</th>
+                <th>Owner Email</th>
+                <th>Plan</th>
                 <th>Status</th>
-                <th>Created Date</th>
+                <th>Registered</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="py-16 text-center">
+                  <td colSpan="6" className="py-16 text-center">
                     <div className="flex justify-center">
                       <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                     </div>
                   </td>
                 </tr>
-              ) : productTypes.length === 0 ? (
+              ) : tenants.length === 0 ? (
                 <tr>
-                  <td colSpan="5">
+                  <td colSpan="6">
                     <div className="empty-state">
-                      <div className="empty-state-icon">
-                        <Shirt className="w-7 h-7 text-slate-300" />
-                      </div>
+                      <Building2 className="w-7 h-7 text-slate-300" />
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
-                        No product types found
+                        No tenants found
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                productTypes.map((pt) => (
-                  <tr
-                    key={pt._id}
-                    onClick={() => navigate(`/product-types/${pt._id}`)}
-                  >
-                    <td className="font-bold text-on-surface">{pt.name}</td>
-                    <td className="text-on-surface-variant">
-                      Rs. {pt.basePrice?.toLocaleString()}
-                    </td>
+                tenants.map((tenant) => (
+                  <tr key={tenant._id} onClick={() => navigate(`/tenants/${tenant._id}`)}>
+                    <td className="font-bold text-on-surface">{tenant.businessName}</td>
+                    <td className="text-on-surface-variant">{tenant.contactEmail}</td>
+                    <td className="text-on-surface-variant capitalize">{tenant.plan}</td>
                     <td>
-                      <StatusBadge
-                        status={pt.isActive ? "active" : "inactive"}
-                      />
+                      <StatusBadge status={tenant.status} />
                     </td>
                     <td className="text-on-surface-variant">
-                      {new Date(pt.createdAt).toLocaleDateString()}
+                      {new Date(tenant.createdAt).toLocaleDateString()}
                     </td>
-                    <td
-                      className="text-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <td className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => navigate(`/product-types/${pt._id}`)}
+                          onClick={() => navigate(`/tenants/${tenant._id}`)}
                           className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() =>
-                            navigate(`/product-types/${pt._id}/edit`)
-                          }
+                          onClick={() => navigate(`/tenants/${tenant._id}/edit`)}
                           className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleToggleStatus(pt)}
+                          onClick={() => handleToggleStatus(tenant)}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                          title={pt.isActive ? "Deactivate" : "Activate"}
+                          title={tenant.status === "active" ? "Suspend" : "Activate"}
                         >
-                          <Power className="w-4 h-4" />
+                          {tenant.status === "active" ? (
+                            <Ban className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                         </button>
                         <button
-                          onClick={() => handleDelete(pt._id)}
+                          onClick={() => handleDelete(tenant)}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >
@@ -226,7 +227,7 @@ const ProductTypeList = () => {
           </table>
         </div>
 
-        {!loading && productTypes.length > 0 && (
+        {!loading && tenants.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
             <p className="text-xs text-on-surface-variant">
               Page {page} of {totalPages}
@@ -254,4 +255,4 @@ const ProductTypeList = () => {
   );
 };
 
-export default ProductTypeList;
+export default TenantList;

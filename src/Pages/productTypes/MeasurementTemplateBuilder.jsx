@@ -8,20 +8,30 @@ const emptyDraft = { id: "", label: "", required: true, unit: "inch" };
 const MeasurementTemplateBuilder = ({ value, onChange }) => {
   const [draft, setDraft] = useState(emptyDraft);
 
-  const idTaken = draft.id.trim() && value.some((f) => f.id === draft.id.trim());
+  const idTaken =
+    draft.id.trim() && value.some((f) => f.id === draft.id.trim());
   const labelTaken =
     draft.label.trim() &&
-    value.some((f) => f.label.trim().toLowerCase() === draft.label.trim().toLowerCase());
-  const canAdd = draft.id.trim() && draft.label.trim() && !idTaken && !labelTaken;
+    value.some(
+      (f) => f.label.trim().toLowerCase() === draft.label.trim().toLowerCase(),
+    );
+  const canAdd =
+    draft.id.trim() && draft.label.trim() && !idTaken && !labelTaken;
 
-  const withDisplayOrder = (fields) => fields.map((f, i) => ({ ...f, displayOrder: i }));
+  const withDisplayOrder = (fields) =>
+    fields.map((f, i) => ({ ...f, displayOrder: i }));
 
   const handleAdd = () => {
     if (!canAdd) return;
     onChange(
       withDisplayOrder([
         ...value,
-        { id: draft.id.trim(), label: draft.label.trim(), required: draft.required, unit: draft.unit },
+        {
+          id: draft.id.trim(),
+          label: draft.label.trim(),
+          required: draft.required,
+          unit: draft.unit,
+        },
       ]),
     );
     setDraft(emptyDraft);
@@ -32,7 +42,9 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
   };
 
   const handleFieldChange = (index, field, fieldValue) => {
-    const next = value.map((f, i) => (i === index ? { ...f, [field]: fieldValue } : f));
+    const next = value.map((f, i) =>
+      i === index ? { ...f, [field]: fieldValue } : f,
+    );
     onChange(next);
   };
 
@@ -47,14 +59,16 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
   return (
     <div>
       <p className="text-xs text-on-surface-variant mb-4">
-        Define the measurement fields collected for this garment. Order here controls the order
-        shown on the measurement form.
+        Define the measurement fields collected for this garment. Order here
+        controls the order shown on the measurement form.
       </p>
 
       {value.length === 0 ? (
-        <div className="empty-state !py-10 mb-4">
+        <div className="empty-state py-10! mb-4">
           <Ruler className="w-6 h-6 text-slate-300" />
-          <p className="text-sm text-on-surface-variant">No measurement fields yet.</p>
+          <p className="text-sm text-on-surface-variant">
+            No measurement fields yet.
+          </p>
         </div>
       ) : (
         <div className="space-y-2 mb-4">
@@ -91,13 +105,17 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
               <input
                 type="text"
                 value={field.label}
-                onChange={(e) => handleFieldChange(index, "label", e.target.value)}
+                onChange={(e) =>
+                  handleFieldChange(index, "label", e.target.value)
+                }
                 placeholder="Label (e.g. Chest)"
                 className="flex-1 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <select
                 value={field.unit}
-                onChange={(e) => handleFieldChange(index, "unit", e.target.value)}
+                onChange={(e) =>
+                  handleFieldChange(index, "unit", e.target.value)
+                }
                 className="px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 {UNITS.map((u) => (
@@ -110,7 +128,9 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
                 <input
                   type="checkbox"
                   checked={field.required}
-                  onChange={(e) => handleFieldChange(index, "required", e.target.checked)}
+                  onChange={(e) =>
+                    handleFieldChange(index, "required", e.target.checked)
+                  }
                   className="w-3.5 h-3.5 accent-primary"
                 />
                 Required
@@ -158,7 +178,9 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
           <input
             type="checkbox"
             checked={draft.required}
-            onChange={(e) => setDraft((d) => ({ ...d, required: e.target.checked }))}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, required: e.target.checked }))
+            }
             className="w-3.5 h-3.5 accent-primary"
           />
           Required

@@ -34,20 +34,33 @@ const MeasurementForm = ({
       ? productTypes.find((p) => p._id === initialData.productTypeId)
       : null;
 
-  const [productTypeId, setProductTypeId] = useState(initialData?.productTypeId || "");
-  const [garmentType, setGarmentType] = useState(initialData?.garmentType || "");
-  const [price, setPrice] = useState(initialData?.price != null ? String(initialData.price) : "");
+  const [productTypeId, setProductTypeId] = useState(
+    initialData?.productTypeId || "",
+  );
+  const [garmentType, setGarmentType] = useState(
+    initialData?.garmentType || "",
+  );
+  const [price, setPrice] = useState(
+    initialData?.price != null ? String(initialData.price) : "",
+  );
   const [label, setLabel] = useState(initialData?.label || "");
   const [notes, setNotes] = useState(initialData?.notes || "");
   const [fieldRows, setFieldRows] = useState(
     initialProductType
-      ? buildFieldRows(initialProductType.measurementTemplate, initialData?.values)
+      ? buildFieldRows(
+          initialProductType.measurementTemplate,
+          initialData?.values,
+        )
       : [],
   );
   const [manualValues, setManualValues] = useState(
-    !lockGarmentSelection && !initialData?.productTypeId ? initialData?.values || [] : [],
+    !lockGarmentSelection && !initialData?.productTypeId
+      ? initialData?.values || []
+      : [],
   );
-  const [lockedValues, setLockedValues] = useState(lockGarmentSelection ? initialData?.values || [] : []);
+  const [lockedValues, setLockedValues] = useState(
+    lockGarmentSelection ? initialData?.values || [] : [],
+  );
   const [error, setError] = useState("");
 
   const handleProductTypeChange = (e) => {
@@ -68,11 +81,15 @@ const MeasurementForm = ({
   };
 
   const handleFieldRowChange = (index, value) => {
-    setFieldRows((rows) => rows.map((r, i) => (i === index ? { ...r, value } : r)));
+    setFieldRows((rows) =>
+      rows.map((r, i) => (i === index ? { ...r, value } : r)),
+    );
   };
 
   const handleLockedValueChange = (index, value) => {
-    setLockedValues((rows) => rows.map((r, i) => (i === index ? { ...r, value } : r)));
+    setLockedValues((rows) =>
+      rows.map((r, i) => (i === index ? { ...r, value } : r)),
+    );
   };
 
   // Not a real <form> submit — this component renders inside a Modal that is
@@ -83,7 +100,11 @@ const MeasurementForm = ({
     setError("");
 
     if (!garmentType.trim()) {
-      setError(productTypeId || lockGarmentSelection ? "Garment type is missing." : "Enter a garment type name.");
+      setError(
+        productTypeId || lockGarmentSelection
+          ? "Garment type is missing."
+          : "Enter a garment type name.",
+      );
       return;
     }
     if (price === "" || Number(price) < 0) {
@@ -104,14 +125,21 @@ const MeasurementForm = ({
         value: Number(v.value),
       }));
     } else if (productTypeId) {
-      const missingRequired = fieldRows.some((f) => f.required && f.value === "");
+      const missingRequired = fieldRows.some(
+        (f) => f.required && f.value === "",
+      );
       if (missingRequired) {
         setError("Fill in every required measurement field.");
         return;
       }
       finalValues = fieldRows
         .filter((f) => f.value !== "")
-        .map((f) => ({ fieldId: f.fieldId, label: f.label, unit: f.unit, value: Number(f.value) }));
+        .map((f) => ({
+          fieldId: f.fieldId,
+          label: f.label,
+          unit: f.unit,
+          value: Number(f.value),
+        }));
     } else {
       if (manualValues.length === 0) {
         setError("Add at least one measurement field.");
@@ -151,7 +179,9 @@ const MeasurementForm = ({
             className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="">
-              {productTypesLoading ? "Loading product types…" : "— Manual Measurement —"}
+              {productTypesLoading
+                ? "Loading product types…"
+                : "— Manual Measurement —"}
             </option>
             {productTypes.map((pt) => (
               <option key={pt._id} value={pt._id}>
@@ -205,23 +235,35 @@ const MeasurementForm = ({
         {lockGarmentSelection ? (
           <div className="space-y-2">
             {lockedValues.map((v, index) => (
-              <div key={v.fieldId} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
-                <span className="flex-1 text-sm font-medium text-on-surface">{v.label}</span>
+              <div
+                key={v.fieldId}
+                className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+              >
+                <span className="flex-1 text-sm font-medium text-on-surface">
+                  {v.label}
+                </span>
                 <input
                   type="number"
                   step="0.1"
                   value={v.value}
-                  onChange={(e) => handleLockedValueChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleLockedValueChange(index, e.target.value)
+                  }
                   className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-                <span className="text-xs text-on-surface-variant w-8">{v.unit}</span>
+                <span className="text-xs text-on-surface-variant w-8">
+                  {v.unit}
+                </span>
               </div>
             ))}
           </div>
         ) : productTypeId ? (
           <div className="space-y-2">
             {fieldRows.map((f, index) => (
-              <div key={f.fieldId} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
+              <div
+                key={f.fieldId}
+                className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+              >
                 <span className="flex-1 text-sm font-medium text-on-surface">
                   {f.label}
                   {f.required && <span className="text-red-500"> *</span>}
@@ -233,12 +275,17 @@ const MeasurementForm = ({
                   onChange={(e) => handleFieldRowChange(index, e.target.value)}
                   className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-                <span className="text-xs text-on-surface-variant w-8">{f.unit}</span>
+                <span className="text-xs text-on-surface-variant w-8">
+                  {f.unit}
+                </span>
               </div>
             ))}
           </div>
         ) : (
-          <ManualMeasurementFieldsBuilder value={manualValues} onChange={setManualValues} />
+          <ManualMeasurementFieldsBuilder
+            value={manualValues}
+            onChange={setManualValues}
+          />
         )}
       </div>
 

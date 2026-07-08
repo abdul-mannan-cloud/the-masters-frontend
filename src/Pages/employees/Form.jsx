@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import * as employeeService from "../../services/employeeService";
+import * as roleService from "../../services/roleService";
 
 const EmployeeForm = () => {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ const EmployeeForm = () => {
   const [saving, setSaving] = useState(false);
   const [skills, setSkills] = useState([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
+  const [roles, setRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
   const [errors, setErrors] = useState({});
 
   const [name, setName] = useState("");
@@ -21,6 +24,7 @@ const EmployeeForm = () => {
   const [address, setAddress] = useState("");
   const [salary, setSalary] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [roleId, setRoleId] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +43,19 @@ const EmployeeForm = () => {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const data = await roleService.getAllRoles();
+        setRoles(data);
+      } catch {
+        toast.error("Failed to load roles list");
+      } finally {
+        setRolesLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!isEdit) return;
     (async () => {
       try {
@@ -50,6 +67,7 @@ const EmployeeForm = () => {
         setAddress(employee.address || "");
         setSalary(employee.salary != null ? String(employee.salary) : "");
         setSelectedSkills(employee.skills || []);
+        setRoleId(employee.roleId || "");
         setIsActive(employee.isActive);
       } catch {
         toast.error("Failed to load employee");
@@ -73,9 +91,11 @@ const EmployeeForm = () => {
     const nextErrors = {};
     if (!name.trim()) nextErrors.name = "Name is required.";
     if (!phone.trim()) nextErrors.phone = "Phone is required.";
-    if (salary !== "" && Number(salary) < 0) nextErrors.salary = "Salary cannot be negative.";
+    if (salary !== "" && Number(salary) < 0)
+      nextErrors.salary = "Salary cannot be negative.";
     if (!isEdit) {
-      if (!email.trim()) nextErrors.email = "Email is required to grant portal access.";
+      if (!email.trim())
+        nextErrors.email = "Email is required to grant portal access.";
       if (!password || password.length < 8) {
         nextErrors.password = "Password must be at least 8 characters.";
       }
@@ -93,6 +113,7 @@ const EmployeeForm = () => {
       address: address.trim(),
       salary: salary === "" ? 0 : Number(salary),
       skills: selectedSkills,
+      roleId: roleId || null,
       isActive,
     };
 
@@ -166,7 +187,9 @@ const EmployeeForm = () => {
                     errors.name ? "border-red-400" : "border-transparent"
                   }`}
                 />
-                {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -181,7 +204,9 @@ const EmployeeForm = () => {
                     errors.phone ? "border-red-400" : "border-transparent"
                   }`}
                 />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -207,7 +232,9 @@ const EmployeeForm = () => {
                     errors.salary ? "border-red-400" : "border-transparent"
                   }`}
                 />
-                {errors.salary && <p className="mt-1 text-xs text-red-600">{errors.salary}</p>}
+                {errors.salary && (
+                  <p className="mt-1 text-xs text-red-600">{errors.salary}</p>
+                )}
               </div>
             </div>
 
@@ -228,7 +255,9 @@ const EmployeeForm = () => {
                 Skills
               </label>
               {skillsLoading ? (
-                <p className="text-sm text-on-surface-variant">Loading skills…</p>
+                <p className="text-sm text-on-surface-variant">
+                  Loading skills…
+                </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {skills.map((skill) => (
@@ -246,6 +275,28 @@ const EmployeeForm = () => {
                     </button>
                   ))}
                 </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                Role (Permissions)
+              </label>
+              {rolesLoading ? (
+                <p className="text-sm text-on-surface-variant">Loading roles…</p>
+              ) : (
+                <select
+                  value={roleId}
+                  onChange={(e) => setRoleId(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">No role assigned</option>
+                  {roles.map((role) => (
+                    <option key={role._id} value={role._id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
 
@@ -277,7 +328,11 @@ const EmployeeForm = () => {
                         errors.email ? "border-red-400" : "border-transparent"
                       }`}
                     />
-                    {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -289,11 +344,15 @@ const EmployeeForm = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Min. 8 characters"
                       className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                        errors.password ? "border-red-400" : "border-transparent"
+                        errors.password
+                          ? "border-red-400"
+                          : "border-transparent"
                       }`}
                     />
                     {errors.password && (
-                      <p className="mt-1 text-xs text-red-600">{errors.password}</p>
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.password}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -317,7 +376,11 @@ const EmployeeForm = () => {
               {saving && (
                 <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
               )}
-              {saving ? "Saving…" : isEdit ? "Update Employee" : "Enroll Employee"}
+              {saving
+                ? "Saving…"
+                : isEdit
+                  ? "Update Employee"
+                  : "Enroll Employee"}
             </button>
           </div>
         </form>

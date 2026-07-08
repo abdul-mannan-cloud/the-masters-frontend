@@ -1,8 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap");
+
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 :root {
   --font-body: "Inter", system-ui, sans-serif;
@@ -10,59 +10,88 @@
   --font-newsreader: "Newsreader", Georgia, serif;
 }
 
-body {
-  margin: 0;
+html,
+body,
+#root {
+  height: 100%;
 }
 
-@layer base {
-  html,
-  body,
-  #root {
-    height: 100%;
-  }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: #fff;
+  color: #111827;
+}
+
+/* ──────────────────────────────────────────────
+   Scrollbar
+────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 58, 138, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 58, 138, 0.28);
 }
 
 @layer components {
+  /* Material Symbols */
+
   .material-symbols-outlined {
-    font-variation-settings:
-      "FILL" 0,
-      "wght" 400,
-      "GRAD" 0,
-      "opsz" 24;
     font-family: "Material Symbols Outlined";
     font-style: normal;
     font-weight: normal;
     line-height: 1;
     display: inline-block;
-    letter-spacing: normal;
-    text-transform: none;
     white-space: nowrap;
-    word-wrap: normal;
     direction: ltr;
+
+    font-variation-settings:
+      "FILL" 0,
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
+  }
+
+  /* Empty State */
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 4rem 0;
+    user-select: none;
   }
 }
 
 @layer utilities {
+  /* Tables */
+
   .masters-table th {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-family: "Plus Jakarta Sans", sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #b6b7b1;
-    text-align: left;
-    font-family: "Plus Jakarta Sans", sans-serif;
     letter-spacing: 0.08em;
+    color: #b6b7b1;
   }
 
   .masters-table td {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem 1.5rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
@@ -76,53 +105,23 @@ body {
   }
 
   .masters-table tbody tr:hover {
-    background-color: rgba(249, 250, 251, 1);
+    background-color: rgb(249 250 251);
   }
 
   .masters-table tbody tr:last-child {
     border-bottom: none;
   }
 
+  /* Status Badge */
+
   .status-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-  }
-}
-
-@layer components {
-  /* ── Scrollbar ───────────────────────────────────────── */
-  ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(30, 58, 138, 0.15);
-    border-radius: 99px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(30, 58, 138, 0.28);
-  }
-
-  /* ── Empty state ─────────────────────────────────────── */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding-top: 4rem;
-    padding-bottom: 4rem;
-    user-select: none;
   }
 }

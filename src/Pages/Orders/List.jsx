@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Plus, Eye, Trash2, ReceiptText } from "lucide-react";
@@ -13,27 +13,31 @@ const OrderList = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [ordersData, customersData] = await Promise.all([
-        orderService.getAllOrders(statusFilter ? { productionStatus: statusFilter } : {}),
+        orderService.getAllOrders(
+          statusFilter ? { productionStatus: statusFilter } : {},
+        ),
         customerService.getAllCustomers(),
       ]);
       setOrders(ordersData);
-      setCustomersById(Object.fromEntries(customersData.map((c) => [c._id, c])));
+      setCustomersById(
+        Object.fromEntries(customersData.map((c) => [c._id, c])),
+      );
     } catch {
       toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     (async () => {
       await fetchData();
     })();
-  }, [statusFilter]);
+  }, [fetchData]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
@@ -46,7 +50,10 @@ const OrderList = () => {
     }
   };
 
-  const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + (o.total || 0), 0), [orders]);
+  const totalRevenue = useMemo(
+    () => orders.reduce((sum, o) => sum + (o.total || 0), 0),
+    [orders],
+  );
 
   return (
     <div className="p-8 font-body">

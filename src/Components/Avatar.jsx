@@ -15,7 +15,7 @@ const Avatar = ({ name, size = "md" }) => {
 
   return (
     <div
-      className={`${SIZES[size]} rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center flex-shrink-0 font-headline`}
+      className={`${SIZES[size]} rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 font-headline`}
     >
       {initials}
     </div>

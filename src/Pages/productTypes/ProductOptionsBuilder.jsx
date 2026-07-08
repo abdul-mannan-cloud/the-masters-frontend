@@ -7,7 +7,9 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
 
   const nameTaken =
     draftName.trim() &&
-    value.some((o) => o.name.trim().toLowerCase() === draftName.trim().toLowerCase());
+    value.some(
+      (o) => o.name.trim().toLowerCase() === draftName.trim().toLowerCase(),
+    );
 
   const handleAddOption = () => {
     if (!draftName.trim() || nameTaken) return;
@@ -27,10 +29,14 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
     const text = (valueDrafts[index] || "").trim();
     if (!text) return;
     const option = value[index];
-    const exists = option.values.some((v) => v.trim().toLowerCase() === text.toLowerCase());
+    const exists = option.values.some(
+      (v) => v.trim().toLowerCase() === text.toLowerCase(),
+    );
     if (exists) return;
     onChange(
-      value.map((o, i) => (i === index ? { ...o, values: [...o.values, text] } : o)),
+      value.map((o, i) =>
+        i === index ? { ...o, values: [...o.values, text] } : o,
+      ),
     );
     setValueDrafts((d) => ({ ...d, [index]: "" }));
   };
@@ -38,7 +44,9 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
   const handleRemoveValue = (optIndex, valIndex) => {
     onChange(
       value.map((o, i) =>
-        i === optIndex ? { ...o, values: o.values.filter((_, vi) => vi !== valIndex) } : o,
+        i === optIndex
+          ? { ...o, values: o.values.filter((_, vi) => vi !== valIndex) }
+          : o,
       ),
     );
   };
@@ -46,12 +54,12 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
   return (
     <div>
       <p className="text-xs text-on-surface-variant mb-4">
-        Customization choices customers can pick from at order time, e.g. "Collar" with values
-        "Chinese", "Round", "Coat".
+        Customization choices customers can pick from at order time, e.g.
+        "Collar" with values "Chinese", "Round", "Coat".
       </p>
 
       {value.length === 0 ? (
-        <div className="empty-state !py-10 mb-4">
+        <div className="empty-state py-10! mb-4">
           <Tag className="w-6 h-6 text-slate-300" />
           <p className="text-sm text-on-surface-variant">No options yet.</p>
         </div>
@@ -61,7 +69,9 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
             const duplicateValue =
               (valueDrafts[index] || "").trim() &&
               option.values.some(
-                (v) => v.trim().toLowerCase() === (valueDrafts[index] || "").trim().toLowerCase(),
+                (v) =>
+                  v.trim().toLowerCase() ===
+                  (valueDrafts[index] || "").trim().toLowerCase(),
               );
             return (
               <div key={index} className="p-4 bg-slate-50 rounded-xl">
@@ -105,7 +115,9 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                   <input
                     type="text"
                     value={valueDrafts[index] || ""}
-                    onChange={(e) => setValueDrafts((d) => ({ ...d, [index]: e.target.value }))}
+                    onChange={(e) =>
+                      setValueDrafts((d) => ({ ...d, [index]: e.target.value }))
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -118,14 +130,18 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                   <button
                     type="button"
                     onClick={() => handleAddValue(index)}
-                    disabled={!(valueDrafts[index] || "").trim() || duplicateValue}
+                    disabled={
+                      !(valueDrafts[index] || "").trim() || duplicateValue
+                    }
                     className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-primary disabled:opacity-40 transition-colors"
                   >
                     Add
                   </button>
                 </div>
                 {duplicateValue && (
-                  <p className="mt-1 text-xs text-red-600">That value already exists.</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    That value already exists.
+                  </p>
                 )}
               </div>
             );
@@ -157,7 +173,11 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
           Add Option
         </button>
       </div>
-      {nameTaken && <p className="mt-1.5 text-xs text-red-600">That option name already exists.</p>}
+      {nameTaken && (
+        <p className="mt-1.5 text-xs text-red-600">
+          That option name already exists.
+        </p>
+      )}
     </div>
   );
 };

@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Mail, MapPin, User, Trash2, History, PenSquare, Ruler } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  User,
+  Trash2,
+  History,
+  PenSquare,
+  Ruler,
+} from "lucide-react";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 import * as orderService from "../../services/orderService";
@@ -18,7 +27,14 @@ const emptyForm = {
 // Parent mounts this with `key={customer?._id ?? mode}` so a new customer
 // (or switching into create mode) always starts from fresh local state,
 // instead of resetting state from props inside an effect.
-const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => {
+const DetailPanel = ({
+  customer,
+  mode,
+  saving,
+  onSave,
+  onDelete,
+  onCancel,
+}) => {
   const navigate = useNavigate();
   const isCreate = mode === "create";
   const [tab, setTab] = useState("details");
@@ -43,7 +59,9 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
     (async () => {
       try {
         setLoadingOrders(true);
-        const data = await orderService.getAllOrders({ customerId: customer._id });
+        const data = await orderService.getAllOrders({
+          customerId: customer._id,
+        });
         setOrders(data);
       } finally {
         setLoadingOrders(false);
@@ -67,7 +85,7 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
       <div className="px-6 pt-6 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-4 mb-4">
           {isCreate ? (
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-primary" />
             </div>
           ) : (
@@ -77,7 +95,11 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
             <h2 className="text-base font-extrabold text-on-surface font-headline truncate">
               {isCreate ? "New Client Details" : customer?.name}
             </h2>
-            {!isCreate && <p className="text-xs text-on-surface-variant">{customer?.phone}</p>}
+            {!isCreate && (
+              <p className="text-xs text-on-surface-variant">
+                {customer?.phone}
+              </p>
+            )}
           </div>
         </div>
 
@@ -228,7 +250,9 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
                   <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                 </div>
               ) : orders.length === 0 ? (
-                <p className="text-sm text-on-surface-variant text-center py-10">No orders yet.</p>
+                <p className="text-sm text-on-surface-variant text-center py-10">
+                  No orders yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {orders.map((order) => (
@@ -238,13 +262,17 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
                       className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors"
                     >
                       <div>
-                        <p className="text-sm font-bold text-primary">{order.orderNumber}</p>
+                        <p className="text-sm font-bold text-primary">
+                          {order.orderNumber}
+                        </p>
                         <p className="text-xs text-on-surface-variant">
                           {new Date(order.orderDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold">Rs. {order.total?.toLocaleString()}</p>
+                        <p className="text-sm font-bold">
+                          Rs. {order.total?.toLocaleString()}
+                        </p>
                         <StatusBadge status={order.productionStatus} />
                       </div>
                     </div>
@@ -278,7 +306,11 @@ const DetailPanel = ({ customer, mode, saving, onSave, onDelete, onCancel }) => 
             disabled={saving}
             className="flex-1 py-2.5 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60"
           >
-            {saving ? "Saving…" : isCreate ? "Save New Customer" : "Update Customer"}
+            {saving
+              ? "Saving…"
+              : isCreate
+                ? "Save New Customer"
+                : "Update Customer"}
           </button>
         </div>
       </form>

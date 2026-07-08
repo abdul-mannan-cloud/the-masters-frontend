@@ -31,3 +31,18 @@ export const deleteEmployee = async (id) => {
   const { data } = await api.delete(`/employee/${id}`);
   return data;
 };
+
+export const getMyPermissions = async () => {
+  const { data } = await api.get("/employee/me/permissions");
+  return data;
+};
+
+export const getEmployeeAssignments = async (id) => {
+  const { data } = await api.get(`/employee/${id}/assignments`);
+  return data;
+};
+
+export const getEmployeePerformance = async (id) => {
+  const { data } = await api.get(`/employee/${id}/performance`);
+  return data;
+};

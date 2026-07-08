@@ -44,7 +44,8 @@ const EmployeeList = () => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return employees;
     return employees.filter(
-      (e) => e.name?.toLowerCase().includes(q) || e.phone?.toLowerCase().includes(q),
+      (e) =>
+        e.name?.toLowerCase().includes(q) || e.phone?.toLowerCase().includes(q),
     );
   }, [employees, searchQuery]);
 
@@ -72,7 +73,8 @@ const EmployeeList = () => {
             Employees
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
-            {employees.length} employee{employees.length === 1 ? "" : "s"} on your team.
+            {employees.length} employee{employees.length === 1 ? "" : "s"} on
+            your team.
           </p>
         </div>
         <button
@@ -135,16 +137,23 @@ const EmployeeList = () => {
                 filteredEmployees.map((employee) => {
                   const linkedUser = usersByEmployeeId[employee._id];
                   return (
-                    <tr key={employee._id} onClick={() => navigate(`/employees/${employee._id}`)}>
+                    <tr
+                      key={employee._id}
+                      onClick={() => navigate(`/employees/${employee._id}`)}
+                    >
                       <td>
                         <div className="flex items-center gap-3">
                           <Avatar name={employee.name} size="sm" />
-                          <span className="font-medium text-on-surface">{employee.name}</span>
+                          <span className="font-medium text-on-surface">
+                            {employee.name}
+                          </span>
                         </div>
                       </td>
-                      <td className="text-on-surface-variant">{employee.phone}</td>
+                      <td className="text-on-surface-variant">
+                        {employee.phone}
+                      </td>
                       <td>
-                        <div className="flex flex-wrap gap-1 max-w-[220px]">
+                        <div className="flex flex-wrap gap-1 max-w-55">
                           {employee.skills?.length ? (
                             employee.skills.map((s) => (
                               <span
@@ -155,27 +164,40 @@ const EmployeeList = () => {
                               </span>
                             ))
                           ) : (
-                            <span className="text-on-surface-variant text-sm">—</span>
+                            <span className="text-on-surface-variant text-sm">
+                              —
+                            </span>
                           )}
                         </div>
                       </td>
                       <td>
-                        <StatusBadge status={employee.isActive ? "active" : "inactive"} />
+                        <StatusBadge
+                          status={employee.isActive ? "active" : "inactive"}
+                        />
                       </td>
                       <td>
-                        <StatusBadge status={linkedUser ? linkedUser.status : "no_access"} />
+                        <StatusBadge
+                          status={linkedUser ? linkedUser.status : "no_access"}
+                        />
                       </td>
-                      <td className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <td
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => navigate(`/employees/${employee._id}`)}
+                            onClick={() =>
+                              navigate(`/employees/${employee._id}`)
+                            }
                             className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => navigate(`/employees/${employee._id}/edit`)}
+                            onClick={() =>
+                              navigate(`/employees/${employee._id}/edit`)
+                            }
                             className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
                             title="Edit"
                           >

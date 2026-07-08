@@ -9,7 +9,9 @@ const KpiCard = ({ icon: Icon, label, value, onClick }) => (
     <div className="p-2.5 bg-primary/10 rounded-xl inline-flex mb-4">
       <Icon className="w-5 h-5 text-primary" />
     </div>
-    <p className="text-3xl font-extrabold text-on-surface font-headline">{value}</p>
+    <p className="text-3xl font-extrabold text-on-surface font-headline">
+      {value}
+    </p>
     <p className="text-sm text-on-surface-variant mt-1">{label}</p>
   </div>
 );

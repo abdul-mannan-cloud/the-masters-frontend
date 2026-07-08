@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Lock, Power, KeyRound } from "lucide-react";
 import * as employeeService from "../../services/employeeService";
 import * as userService from "../../services/userService";
+import * as roleService from "../../services/roleService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 
@@ -12,6 +13,7 @@ const EmployeeView = () => {
   const { id } = useParams();
   const [employee, setEmployee] = useState(null);
   const [linkedUser, setLinkedUser] = useState(null);
+  const [roleName, setRoleName] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
@@ -24,6 +26,12 @@ const EmployeeView = () => {
       setEmployee(employeeData);
       const users = await userService.getAllUsers({ employeeId: id });
       setLinkedUser(users[0] || null);
+      if (employeeData.roleId) {
+        const role = await roleService.getRoleById(employeeData.roleId);
+        setRoleName(role.name);
+      } else {
+        setRoleName(null);
+      }
     } catch {
       toast.error("Failed to fetch employee");
       navigate("/employees");
@@ -42,7 +50,11 @@ const EmployeeView = () => {
   const handleToggleAccess = async () => {
     if (!linkedUser) return;
     const activating = linkedUser.status !== "active";
-    if (!activating && !window.confirm(`Suspend portal access for "${employee.name}"?`)) return;
+    if (
+      !activating &&
+      !window.confirm(`Suspend portal access for "${employee.name}"?`)
+    )
+      return;
     setUpdatingStatus(true);
     try {
       const { user } = await userService.updateUser(linkedUser._id, {
@@ -78,7 +90,9 @@ const EmployeeView = () => {
 
   const handleDelete = async () => {
     if (
-      !window.confirm(`Delete "${employee.name}"? This will also revoke their portal access.`)
+      !window.confirm(
+        `Delete "${employee.name}"? This will also revoke their portal access.`,
+      )
     )
       return;
     try {
@@ -118,7 +132,9 @@ const EmployeeView = () => {
               </h1>
               <StatusBadge status={employee.isActive ? "active" : "inactive"} />
             </div>
-            <p className="text-on-surface-variant mt-1 text-sm">{employee.phone}</p>
+            <p className="text-on-surface-variant mt-1 text-sm">
+              {employee.phone}
+            </p>
           </div>
           <button
             onClick={() => navigate(`/employees/${id}/edit`)}
@@ -155,7 +171,13 @@ const EmployeeView = () => {
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Salary</p>
-                <p className="text-on-surface">Rs. {employee.salary?.toLocaleString() ?? 0}</p>
+                <p className="text-on-surface">
+                  Rs. {employee.salary?.toLocaleString() ?? 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant">Role (Permissions)</p>
+                <p className="text-on-surface">{roleName || "No role assigned"}</p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant mb-1">Skills</p>
@@ -199,7 +221,9 @@ const EmployeeView = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-on-surface-variant">Login Email</p>
-                  <p className="text-on-surface font-medium">{linkedUser.email}</p>
+                  <p className="text-on-surface font-medium">
+                    {linkedUser.email}
+                  </p>
                 </div>
 
                 <button
@@ -212,10 +236,15 @@ const EmployeeView = () => {
                   }`}
                 >
                   <Power className="w-4 h-4" />
-                  {linkedUser.status === "active" ? "Suspend Access" : "Restore Access"}
+                  {linkedUser.status === "active"
+                    ? "Suspend Access"
+                    : "Restore Access"}
                 </button>
 
-                <form onSubmit={handleResetPassword} className="pt-3 border-t border-slate-100">
+                <form
+                  onSubmit={handleResetPassword}
+                  className="pt-3 border-t border-slate-100"
+                >
                   <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                     Reset Password
                   </label>

@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Eye, Pencil, Copy, History, RefreshCw, Trash2, Ruler } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  Pencil,
+  Copy,
+  History,
+  RefreshCw,
+  Trash2,
+  Ruler,
+} from "lucide-react";
 import * as measurementService from "../../services/measurementService";
 import * as productTypeService from "../../services/productTypeService";
 import Modal from "../../components/Modal";
@@ -13,14 +22,25 @@ const nextDraftKey = () => `draft-${++draftKeySeq}`;
 const ReadOnlyMeasurement = ({ measurement }) => (
   <div className="space-y-3">
     <div className="flex items-center justify-between">
-      <p className="text-sm font-bold text-on-surface">{measurement.garmentType}</p>
+      <p className="text-sm font-bold text-on-surface">
+        {measurement.garmentType}
+      </p>
       <StatusBadge status={measurement.lockedForOrder ? "locked" : "active"} />
     </div>
-    <p className="text-sm text-on-surface-variant">Rs. {measurement.price?.toLocaleString()}</p>
-    {measurement.label && <p className="text-xs text-on-surface-variant">Occasion: {measurement.label}</p>}
+    <p className="text-sm text-on-surface-variant">
+      Rs. {measurement.price?.toLocaleString()}
+    </p>
+    {measurement.label && (
+      <p className="text-xs text-on-surface-variant">
+        Occasion: {measurement.label}
+      </p>
+    )}
     <div className="space-y-1.5">
       {measurement.values.map((v) => (
-        <div key={v.fieldId} className="flex justify-between text-sm px-3 py-1.5 bg-slate-50 rounded-lg">
+        <div
+          key={v.fieldId}
+          className="flex justify-between text-sm px-3 py-1.5 bg-slate-50 rounded-lg"
+        >
           <span className="text-on-surface-variant">{v.label}</span>
           <span className="font-medium text-on-surface">
             {v.value} {v.unit}
@@ -28,7 +48,11 @@ const ReadOnlyMeasurement = ({ measurement }) => (
         </div>
       ))}
     </div>
-    {measurement.notes && <p className="text-xs text-on-surface-variant">Notes: {measurement.notes}</p>}
+    {measurement.notes && (
+      <p className="text-xs text-on-surface-variant">
+        Notes: {measurement.notes}
+      </p>
+    )}
     {measurement.createdAt && (
       <p className="text-xs text-on-surface-variant">
         Captured {new Date(measurement.createdAt).toLocaleDateString()}
@@ -55,7 +79,10 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await productTypeService.getAllProductTypes({ isActive: "true", limit: 100 });
+        const data = await productTypeService.getAllProductTypes({
+          isActive: "true",
+          limit: 100,
+        });
         setProductTypes(data.data);
       } catch {
         toast.error("Failed to load product types");
@@ -103,7 +130,11 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
     if (mode === "create") {
       if (formState.action === "edit") {
         onDraftsChange(
-          drafts.map((d) => (d._localKey === formState.source._localKey ? { ...draft, _localKey: d._localKey } : d)),
+          drafts.map((d) =>
+            d._localKey === formState.source._localKey
+              ? { ...draft, _localKey: d._localKey }
+              : d,
+          ),
         );
       } else {
         onDraftsChange([...drafts, { ...draft, _localKey: nextDraftKey() }]);
@@ -139,7 +170,10 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
   };
 
   const toggleGroup = (garmentType) =>
-    setExpandedGroups((prev) => ({ ...prev, [garmentType]: !prev[garmentType] }));
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [garmentType]: !prev[garmentType],
+    }));
 
   const renderActions = (item, isLatest) => (
     <div className="flex items-center gap-1">
@@ -187,7 +221,9 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
           </button>
           {isLatest && item.lockedForOrder && (
             <button
-              onClick={() => setFormState({ action: "newVersion", source: item })}
+              onClick={() =>
+                setFormState({ action: "newVersion", source: item })
+              }
               className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
               title="Create New Version"
             >
@@ -220,9 +256,11 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
           <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
         </div>
       ) : grouped.length === 0 ? (
-        <div className="empty-state !py-8">
+        <div className="empty-state py-8!">
           <Ruler className="w-6 h-6 text-slate-300" />
-          <p className="text-sm text-on-surface-variant">No measurements added yet.</p>
+          <p className="text-sm text-on-surface-variant">
+            No measurements added yet.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -233,7 +271,9 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
               <div key={garmentType} className="p-3 bg-slate-50 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-on-surface truncate">{garmentType}</p>
+                    <p className="text-sm font-bold text-on-surface truncate">
+                      {garmentType}
+                    </p>
                     <p className="text-xs text-on-surface-variant">
                       Rs. {latest.price?.toLocaleString()}
                       {mode === "manage" && latest.lockedForOrder && (
@@ -254,7 +294,8 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
                       className="flex items-center gap-1 text-xs font-bold text-on-surface-variant hover:text-primary"
                     >
                       <History className="w-3 h-3" />
-                      {expanded ? "Hide" : "Show"} {older.length} earlier version
+                      {expanded ? "Hide" : "Show"} {older.length} earlier
+                      version
                       {older.length === 1 ? "" : "s"}
                     </button>
                     {expanded && (
@@ -300,7 +341,9 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
             productTypes={productTypes}
             productTypesLoading={productTypesLoading}
             initialData={formState.source}
-            lockGarmentSelection={formState.action === "edit" || formState.action === "newVersion"}
+            lockGarmentSelection={
+              formState.action === "edit" || formState.action === "newVersion"
+            }
             submitLabel={formState.action === "edit" ? "Save Changes" : "Save"}
             saving={saving}
             onSave={handleSave}

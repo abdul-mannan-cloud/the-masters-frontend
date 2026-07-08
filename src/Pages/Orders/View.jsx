@@ -7,7 +7,13 @@ import * as customerService from "../../services/customerService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 
-const PRODUCTION_STATUSES = ["pending", "in_progress", "completed", "delivered", "cancelled"];
+const PRODUCTION_STATUSES = [
+  "pending",
+  "in_progress",
+  "completed",
+  "delivered",
+  "cancelled",
+];
 const TERMINAL_STATUSES = ["completed", "delivered", "cancelled"];
 
 const OrderView = () => {
@@ -18,31 +24,35 @@ const OrderView = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  const fetchDetails = async () => {
-    try {
-      setLoading(true);
-      const orderData = await orderService.getOrderById(id);
-      setOrder(orderData);
-      const customerData = await customerService.getCustomerById(orderData.customerId);
-      setCustomer(customerData);
-    } catch {
-      toast.error("Failed to fetch order details");
-      navigate("/orders");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        setLoading(true);
+        const orderData = await orderService.getOrderById(id);
+        setOrder(orderData);
+        const customerData = await customerService.getCustomerById(
+          orderData.customerId,
+        );
+        setCustomer(customerData);
+      } catch {
+        toast.error("Failed to fetch order details");
+        navigate("/orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     (async () => {
       await fetchDetails();
     })();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleStatusChange = async (productionStatus) => {
     setUpdating(true);
     try {
-      const { order: updated } = await orderService.updateOrder(id, { productionStatus });
+      const { order: updated } = await orderService.updateOrder(id, {
+        productionStatus,
+      });
       setOrder(updated);
       toast.success("Order status updated");
     } catch (error) {
@@ -113,7 +123,9 @@ const OrderView = () => {
             <Avatar name={customer.name} size="lg" />
             <div>
               <p className="font-bold text-on-surface">{customer.name}</p>
-              <p className="text-sm text-on-surface-variant">{customer.phone}</p>
+              <p className="text-sm text-on-surface-variant">
+                {customer.phone}
+              </p>
             </div>
           </div>
           <button
@@ -134,7 +146,9 @@ const OrderView = () => {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
               <p className="text-xs text-on-surface-variant">Subtotal</p>
-              <p className="font-bold text-on-surface">Rs. {order.subtotal?.toLocaleString()}</p>
+              <p className="font-bold text-on-surface">
+                Rs. {order.subtotal?.toLocaleString()}
+              </p>
             </div>
             <div>
               <p className="text-xs text-on-surface-variant">Discount</p>
@@ -146,21 +160,29 @@ const OrderView = () => {
             </div>
             <div>
               <p className="text-xs text-on-surface-variant">Total</p>
-              <p className="font-bold text-primary text-lg">Rs. {order.total?.toLocaleString()}</p>
+              <p className="font-bold text-primary text-lg">
+                Rs. {order.total?.toLocaleString()}
+              </p>
             </div>
             <div>
-              <p className="text-xs text-on-surface-variant mb-1">Payment Status</p>
+              <p className="text-xs text-on-surface-variant mb-1">
+                Payment Status
+              </p>
               <StatusBadge status={order.paymentStatus} />
             </div>
           </div>
 
           <div className="pt-4 border-t border-slate-100">
-            <p className="text-xs text-on-surface-variant mb-2">Production Status</p>
+            <p className="text-xs text-on-surface-variant mb-2">
+              Production Status
+            </p>
             <div className="flex flex-wrap gap-2">
               {PRODUCTION_STATUSES.map((status) => (
                 <button
                   key={status}
-                  disabled={updating || locked || status === order.productionStatus}
+                  disabled={
+                    updating || locked || status === order.productionStatus
+                  }
                   onClick={() => handleStatusChange(status)}
                   className={`px-4 py-2 rounded-xl text-sm font-bold capitalize transition-colors disabled:opacity-40 ${
                     status === order.productionStatus
@@ -174,7 +196,8 @@ const OrderView = () => {
             </div>
             {locked && (
               <p className="mt-2 text-xs text-on-surface-variant">
-                This order is {order.productionStatus} and can no longer be modified.
+                This order is {order.productionStatus} and can no longer be
+                modified.
               </p>
             )}
           </div>

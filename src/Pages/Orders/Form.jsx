@@ -69,7 +69,9 @@ const OrderForm = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface font-headline">New Order</h1>
+            <h1 className="text-2xl font-extrabold text-on-surface font-headline">
+              New Order
+            </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
               Order items are added once the order is created.
             </p>
@@ -93,7 +95,9 @@ const OrderForm = () => {
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">
-                  {loadingCustomers ? "Loading customers…" : "Select a customer"}
+                  {loadingCustomers
+                    ? "Loading customers…"
+                    : "Select a customer"}
                 </option>
                 {customers.map((c) => (
                   <option key={c._id} value={c._id}>

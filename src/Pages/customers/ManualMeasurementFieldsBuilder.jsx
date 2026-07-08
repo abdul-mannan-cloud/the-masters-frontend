@@ -19,7 +19,9 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
 
   const labelTaken =
     draft.label.trim() &&
-    value.some((f) => f.label.trim().toLowerCase() === draft.label.trim().toLowerCase());
+    value.some(
+      (f) => f.label.trim().toLowerCase() === draft.label.trim().toLowerCase(),
+    );
   const canAdd = draft.label.trim() && draft.value !== "" && !labelTaken;
 
   const handleAdd = () => {
@@ -32,7 +34,12 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
     }
     onChange([
       ...value,
-      { fieldId, label: draft.label.trim(), value: Number(draft.value), unit: draft.unit },
+      {
+        fieldId,
+        label: draft.label.trim(),
+        value: Number(draft.value),
+        unit: draft.unit,
+      },
     ]);
     setDraft(emptyDraft);
   };
@@ -40,31 +47,44 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
   const handleRemove = (index) => onChange(value.filter((_, i) => i !== index));
 
   const handleFieldChange = (index, field, fieldValue) => {
-    onChange(value.map((f, i) => (i === index ? { ...f, [field]: fieldValue } : f)));
+    onChange(
+      value.map((f, i) => (i === index ? { ...f, [field]: fieldValue } : f)),
+    );
   };
 
   return (
     <div>
       {value.length === 0 ? (
-        <div className="empty-state !py-6 mb-3">
+        <div className="empty-state py-6! mb-3">
           <Ruler className="w-5 h-5 text-slate-300" />
-          <p className="text-sm text-on-surface-variant">No measurement fields yet.</p>
+          <p className="text-sm text-on-surface-variant">
+            No measurement fields yet.
+          </p>
         </div>
       ) : (
         <div className="space-y-2 mb-3">
           {value.map((field, index) => (
-            <div key={field.fieldId} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
-              <span className="flex-1 text-sm font-medium text-on-surface">{field.label}</span>
+            <div
+              key={field.fieldId}
+              className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+            >
+              <span className="flex-1 text-sm font-medium text-on-surface">
+                {field.label}
+              </span>
               <input
                 type="number"
                 step="0.1"
                 value={field.value}
-                onChange={(e) => handleFieldChange(index, "value", Number(e.target.value))}
+                onChange={(e) =>
+                  handleFieldChange(index, "value", Number(e.target.value))
+                }
                 className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <select
                 value={field.unit}
-                onChange={(e) => handleFieldChange(index, "unit", e.target.value)}
+                onChange={(e) =>
+                  handleFieldChange(index, "unit", e.target.value)
+                }
                 className="px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 {UNITS.map((u) => (
@@ -121,7 +141,9 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
           <Plus className="w-4 h-4" />
         </button>
       </div>
-      {labelTaken && <p className="mt-1 text-xs text-red-600">That field already exists.</p>}
+      {labelTaken && (
+        <p className="mt-1 text-xs text-red-600">That field already exists.</p>
+      )}
     </div>
   );
 };

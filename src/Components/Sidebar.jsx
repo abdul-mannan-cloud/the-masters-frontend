@@ -1,19 +1,53 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, ShoppingCart, Ruler, LogOut, Shirt, Layers, UserCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  ShoppingCart,
+  Ruler,
+  LogOut,
+  Shirt,
+  Layers,
+  UserCog,
+  Building2,
+  ShieldCheck,
+  Info,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
-const navItems = [
+// `module` gates on the logged-in user's permission grid (view access) for
+// tenant_admin/employee/manager accounts; `roles` hard-gates to specific
+// coarse account roles regardless of permissions. Items with neither are
+// always visible to any authenticated user.
+const ALL_NAV_ITEMS = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { name: "Customers", path: "/customers", icon: Users },
-  { name: "Orders", path: "/orders", icon: ShoppingCart },
-  { name: "Measurements", path: "/measurements", icon: Ruler },
-  { name: "Product Types", path: "/product-types", icon: Layers },
-  { name: "Employees", path: "/employees", icon: UserCog },
+  { name: "Tenants", path: "/tenants", icon: Building2, roles: ["super_admin"] },
+  { name: "Customers", path: "/customers", icon: Users, module: "customers" },
+  { name: "Orders", path: "/orders", icon: ShoppingCart, module: "orders" },
+  { name: "Measurements", path: "/measurements", icon: Ruler, module: "measurements" },
+  { name: "Product Types", path: "/product-types", icon: Layers, module: "productTypes" },
+  { name: "Employees", path: "/employees", icon: UserCog, module: "employees" },
+  { name: "Roles", path: "/roles", icon: ShieldCheck, roles: ["tenant_admin"] },
+  {
+    name: "Business Info",
+    path: "/business-info",
+    icon: Info,
+    roles: ["tenant_admin", "manager", "employee"],
+  },
 ];
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, permissions, logout } = useAuth();
   const navigate = useNavigate();
+
+  const navItems = ALL_NAV_ITEMS.filter((item) => {
+    if (item.roles) return item.roles.includes(user?.role);
+    if (!item.module) return true;
+    // Tenant-scoped modules (Customers/Orders/...) never apply to the
+    // platform owner — super_admin only gets Dashboard + Tenants above.
+    if (user?.role === "super_admin") return false;
+    if (user?.role === "tenant_admin") return true;
+    return permissions?.[item.module]?.view === true;
+  });
 
   const handleLogout = () => {
     logout();
@@ -21,9 +55,9 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sticky top-0 h-screen w-64 flex-shrink-0 bg-white border-r border-slate-200 overflow-y-auto flex flex-col">
+    <aside className="sticky top-0 h-screen w-64 shrink-0 bg-white border-r border-slate-200 overflow-y-auto flex flex-col">
       <div className="px-6 py-7 flex items-center gap-2.5 border-b border-slate-100">
-        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
           <Shirt className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -49,7 +83,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <item.icon className="w-[18px] h-[18px]" />
+            <item.icon className="w-4.5 h-4.5" />
             {item.name}
           </NavLink>
         ))}
@@ -57,7 +91,10 @@ const Sidebar = () => {
 
       <div className="p-4 border-t border-slate-100">
         {user?.email && (
-          <p className="px-4 pb-2 text-xs text-slate-400 truncate" title={user.email}>
+          <p
+            className="px-4 pb-2 text-xs text-slate-400 truncate"
+            title={user.email}
+          >
             {user.email}
           </p>
         )}
@@ -65,7 +102,7 @@ const Sidebar = () => {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
-          <LogOut className="w-[18px] h-[18px]" />
+          <LogOut className="w-4.5 h-4.5" />
           Logout
         </button>
       </div>
