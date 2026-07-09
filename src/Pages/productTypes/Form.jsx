@@ -182,12 +182,12 @@ const ProductTypeForm = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/product-types")}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+            <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
               {isEdit ? "Edit Product Type" : "Create Product Type"}
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
@@ -199,9 +199,9 @@ const ProductTypeForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl overflow-hidden"
-            style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
           >
-            <div className="flex flex-wrap border-b border-slate-100 px-4">
+            <div className="flex flex-wrap border-b border-stone-100 px-4">
               {TABS.map((t) => (
                 <button
                   key={t.id}
@@ -231,7 +231,7 @@ const ProductTypeForm = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Men's Kameez"
-                      className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                      className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                         errors.name ? "border-red-400" : "border-transparent"
                       }`}
                     />
@@ -245,7 +245,7 @@ const ProductTypeForm = () => {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                      className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                     />
                   </div>
                   <div>
@@ -257,7 +257,7 @@ const ProductTypeForm = () => {
                       min="0"
                       value={basePrice}
                       onChange={(e) => setBasePrice(e.target.value)}
-                      className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                      className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                         errors.basePrice ? "border-red-400" : "border-transparent"
                       }`}
                     />
@@ -303,7 +303,7 @@ const ProductTypeForm = () => {
             <button
               type="button"
               onClick={() => navigate("/product-types")}
-              className="flex-1 py-3 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+              className="flex-1 py-3 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>

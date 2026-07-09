@@ -60,7 +60,7 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
 
       {value.length === 0 ? (
         <div className="empty-state py-10! mb-4">
-          <Tag className="w-6 h-6 text-slate-300" />
+          <Tag className="w-6 h-6 text-stone-300" />
           <p className="text-sm text-on-surface-variant">No options yet.</p>
         </div>
       ) : (
@@ -74,19 +74,19 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                   (valueDrafts[index] || "").trim().toLowerCase(),
               );
             return (
-              <div key={index} className="p-4 bg-slate-50 rounded-xl">
+              <div key={index} className="p-4 bg-stone-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
                   <input
                     type="text"
                     value={option.name}
                     onChange={(e) => handleRenameOption(index, e.target.value)}
                     placeholder="Option name (e.g. Collar)"
-                    className="flex-1 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="flex-1 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveOption(index)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Remove option"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -97,13 +97,13 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                   {option.values.map((v, valIndex) => (
                     <span
                       key={valIndex}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-slate-200 text-xs font-medium text-on-surface"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-stone-200 text-xs font-medium text-on-surface"
                     >
                       {v}
                       <button
                         type="button"
                         onClick={() => handleRemoveValue(index, valIndex)}
-                        className="text-slate-400 hover:text-red-600"
+                        className="text-stone-400 hover:text-red-600"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -125,7 +125,7 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                       }
                     }}
                     placeholder="Add a value and press Enter"
-                    className="flex-1 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="flex-1 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   <button
                     type="button"
@@ -133,7 +133,7 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
                     disabled={
                       !(valueDrafts[index] || "").trim() || duplicateValue
                     }
-                    className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-primary disabled:opacity-40 transition-colors"
+                    className="px-3 py-2 bg-white border border-stone-200 rounded-lg text-sm font-bold text-primary disabled:opacity-40 transition-colors"
                   >
                     Add
                   </button>
@@ -149,7 +149,7 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-2 p-3 border border-dashed border-slate-300 rounded-xl">
+      <div className="flex items-center gap-2 p-3 border border-dashed border-stone-300 rounded-xl">
         <input
           type="text"
           value={draftName}
@@ -161,7 +161,7 @@ const ProductOptionsBuilder = ({ value, onChange }) => {
             }
           }}
           placeholder="New option name (e.g. Sleeve Style)"
-          className="flex-1 px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="flex-1 px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <button
           type="button"

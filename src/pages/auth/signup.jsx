@@ -9,11 +9,21 @@ const CreateAccount = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [logo, setLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { signup } = useAuth();
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setLogo(file);
+    setLogoPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleSubmit = async () => {
     if (!email || !password || !confirmPassword || !businessName) {
@@ -31,7 +41,7 @@ const CreateAccount = () => {
 
     setLoading(true);
     try {
-      await signup({ email, password, businessName });
+      await signup({ email, password, businessName, contactPhone, address, logo });
       toast.success("Account created successfully");
       navigate("/login");
     } catch (error) {
@@ -134,6 +144,58 @@ const CreateAccount = () => {
               />
             </div>
 
+            {/* Logo */}
+            <div className="flex flex-col gap-1.75">
+              <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
+                Business Logo (optional)
+              </span>
+              <div className="flex items-center gap-3">
+                {logoPreview && (
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="w-11 h-11 rounded-[10px] object-cover border-[1.5px] border-[#e7e0d6]"
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="flex-1 font-body font-medium text-[13px] text-[#2a2521] file:mr-3 file:py-2 file:px-3.5 file:rounded-[9px] file:border-0 file:bg-[#e7e0d6] file:text-[#2a2521] file:text-xs file:font-semibold file:cursor-pointer cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Contact Phone */}
+            <div className="flex flex-col gap-1.75">
+              <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
+                Contact Phone (optional)
+              </span>
+              <input
+                type="text"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter your business phone"
+                className="w-full font-body font-medium text-[14.5px] text-[#2a2521] px-3.5 py-3 border-[1.5px] border-[#e7e0d6] rounded-[11px] bg-[#fbf9f5] outline-none transition-all placeholder:text-[#b4ab9f] focus:border-[#c06b4a] focus:ring-[3px] focus:ring-[#c06b4a]/[.14] focus:bg-white"
+              />
+            </div>
+
+            {/* Address */}
+            <div className="flex flex-col gap-1.75">
+              <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
+                Address (optional)
+              </span>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter your business address"
+                className="w-full font-body font-medium text-[14.5px] text-[#2a2521] px-3.5 py-3 border-[1.5px] border-[#e7e0d6] rounded-[11px] bg-[#fbf9f5] outline-none transition-all placeholder:text-[#b4ab9f] focus:border-[#c06b4a] focus:ring-[3px] focus:ring-[#c06b4a]/[.14] focus:bg-white"
+              />
+            </div>
+
             {/* Password */}
             <div className="flex flex-col gap-1.75">
               <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
@@ -191,7 +253,7 @@ const CreateAccount = () => {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full mt-1 border-0 rounded-xl py-3.5 font-headline font-bold text-[15px] text-[#0c1a17] bg-[#d6a35c] cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-[1.06] active:translate-y-px"
+              className="w-full mt-1 border-0 rounded-xl py-3.5 font-headline font-bold text-[15px] text-[#0c1a17] bg-[#d6a35c] cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-[1.06] active:transtone-y-px"
             >
               {loading ? "Creating account…" : "Create account"}
             </button>

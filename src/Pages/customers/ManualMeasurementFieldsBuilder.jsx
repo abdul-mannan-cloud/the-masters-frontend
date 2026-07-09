@@ -56,7 +56,7 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
     <div>
       {value.length === 0 ? (
         <div className="empty-state py-6! mb-3">
-          <Ruler className="w-5 h-5 text-slate-300" />
+          <Ruler className="w-5 h-5 text-stone-300" />
           <p className="text-sm text-on-surface-variant">
             No measurement fields yet.
           </p>
@@ -66,7 +66,7 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
           {value.map((field, index) => (
             <div
               key={field.fieldId}
-              className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+              className="flex items-center gap-2 p-2.5 bg-stone-50 rounded-xl"
             >
               <span className="flex-1 text-sm font-medium text-on-surface">
                 {field.label}
@@ -78,14 +78,14 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
                 onChange={(e) =>
                   handleFieldChange(index, "value", Number(e.target.value))
                 }
-                className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-20 px-2 py-1.5 bg-white rounded-lg border border-stone-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <select
                 value={field.unit}
                 onChange={(e) =>
                   handleFieldChange(index, "unit", e.target.value)
                 }
-                className="px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="px-2 py-1.5 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 {UNITS.map((u) => (
                   <option key={u} value={u}>
@@ -96,7 +96,7 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -105,13 +105,13 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-2 p-2.5 border border-dashed border-slate-300 rounded-xl">
+      <div className="flex items-center gap-2 p-2.5 border border-dashed border-stone-300 rounded-xl">
         <input
           type="text"
           value={draft.label}
           onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
           placeholder="Field (e.g. Chest)"
-          className="flex-1 px-2.5 py-1.5 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="flex-1 px-2.5 py-1.5 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <input
           type="number"
@@ -119,12 +119,12 @@ const ManualMeasurementFieldsBuilder = ({ value, onChange }) => {
           value={draft.value}
           onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
           placeholder="Value"
-          className="w-20 px-2.5 py-1.5 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-20 px-2.5 py-1.5 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <select
           value={draft.unit}
           onChange={(e) => setDraft((d) => ({ ...d, unit: e.target.value }))}
-          className="px-2.5 py-1.5 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="px-2.5 py-1.5 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           {UNITS.map((u) => (
             <option key={u} value={u}>

@@ -11,7 +11,14 @@ export const getTenantById = async (id) => {
 };
 
 export const createTenant = async (tenant) => {
-  const { data } = await api.post("/tenant", tenant);
+  const formData = new FormData();
+  Object.entries(tenant).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      formData.append(key, value);
+    }
+  });
+
+  const { data } = await api.post("/tenant", formData);
   return data;
 };
 

@@ -76,9 +76,9 @@ const OwnerDashboard = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
-        <div className="px-6 py-4 border-b border-slate-100">
+        <div className="px-6 py-4 border-b border-stone-100">
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline">
             Recent Orders
           </h3>
@@ -99,7 +99,7 @@ const OwnerDashboard = () => {
                 <tr>
                   <td colSpan="5">
                     <div className="empty-state">
-                      <ShoppingCart className="w-7 h-7 text-slate-300" />
+                      <ShoppingCart className="w-7 h-7 text-stone-300" />
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
                         No orders yet
                       </p>

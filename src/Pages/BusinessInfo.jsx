@@ -80,7 +80,7 @@ const BusinessInfo = () => {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+            <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
               Business Information
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
@@ -90,7 +90,7 @@ const BusinessInfo = () => {
           {canEdit && !editing && (
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
             >
               <Pencil className="w-4 h-4" />
               Edit
@@ -102,7 +102,7 @@ const BusinessInfo = () => {
           <form onSubmit={handleSubmit}>
             <div
               className="bg-white rounded-2xl p-6 space-y-4"
-              style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+              style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -113,7 +113,7 @@ const BusinessInfo = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
@@ -124,7 +124,7 @@ const BusinessInfo = () => {
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
@@ -136,7 +136,7 @@ const BusinessInfo = () => {
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     placeholder="PKR"
-                    className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
@@ -148,7 +148,7 @@ const BusinessInfo = () => {
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
                     placeholder="Asia/Karachi"
-                    className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
@@ -160,7 +160,7 @@ const BusinessInfo = () => {
                     value={orderNumberPrefix}
                     onChange={(e) => setOrderNumberPrefix(e.target.value)}
                     placeholder="ORD"
-                    className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ const BusinessInfo = () => {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
               </div>
             </div>
@@ -182,7 +182,7 @@ const BusinessInfo = () => {
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="flex-1 py-3 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+                className="flex-1 py-3 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
               >
                 Cancel
               </button>
@@ -202,7 +202,7 @@ const BusinessInfo = () => {
           <div className="space-y-6">
             <div
               className="bg-white rounded-2xl p-6"
-              style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+              style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
             >
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
@@ -238,7 +238,7 @@ const BusinessInfo = () => {
 
             <div
               className="bg-white rounded-2xl p-6"
-              style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+              style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
             >
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline flex items-center gap-2">
                 <MessageCircle className="w-4 h-4" />

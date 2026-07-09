@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   ShoppingCart,
-  Ruler,
   LogOut,
   Shirt,
   Layers,
@@ -23,7 +22,6 @@ const ALL_NAV_ITEMS = [
   { name: "Tenants", path: "/tenants", icon: Building2, roles: ["super_admin"] },
   { name: "Customers", path: "/customers", icon: Users, module: "customers" },
   { name: "Orders", path: "/orders", icon: ShoppingCart, module: "orders" },
-  { name: "Measurements", path: "/measurements", icon: Ruler, module: "measurements" },
   { name: "Product Types", path: "/product-types", icon: Layers, module: "productTypes" },
   { name: "Employees", path: "/employees", icon: UserCog, module: "employees" },
   { name: "Roles", path: "/roles", icon: ShieldCheck, roles: ["tenant_admin"] },
@@ -36,7 +34,7 @@ const ALL_NAV_ITEMS = [
 ];
 
 const Sidebar = () => {
-  const { user, permissions, logout } = useAuth();
+  const { user, permissions, tenant, logout } = useAuth();
   const navigate = useNavigate();
 
   const navItems = ALL_NAV_ITEMS.filter((item) => {
@@ -55,8 +53,8 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sticky top-0 h-screen w-64 shrink-0 bg-white border-r border-slate-200 overflow-y-auto flex flex-col">
-      <div className="px-6 py-7 flex items-center gap-2.5 border-b border-slate-100">
+    <aside className="sticky top-0 h-screen w-64 shrink-0 bg-white border-r border-stone-200 overflow-y-auto flex flex-col">
+      <div className="px-6 py-7 flex items-center gap-2.5 border-b border-stone-100">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
           <Shirt className="w-5 h-5 text-white" />
         </div>
@@ -70,6 +68,28 @@ const Sidebar = () => {
         </div>
       </div>
 
+      {tenant && (
+        <div className="px-6 py-4 flex items-center gap-2.5 border-b border-stone-100">
+          {tenant.logo ? (
+            <img
+              src={tenant.logo}
+              alt={`${tenant.businessName} logo`}
+              className="w-8 h-8 rounded-lg object-cover shrink-0 border border-stone-200"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center shrink-0 text-xs font-bold text-stone-400">
+              {tenant.businessName?.[0]?.toUpperCase()}
+            </div>
+          )}
+          <div
+            className="text-sm font-bold text-on-surface truncate"
+            title={tenant.businessName}
+          >
+            {tenant.businessName}
+          </div>
+        </div>
+      )}
+
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navItems.map((item) => (
           <NavLink
@@ -79,7 +99,7 @@ const Sidebar = () => {
               `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-primary/10 text-primary font-bold"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-on-surface"
+                  : "text-stone-500 hover:bg-stone-50 hover:text-on-surface"
               }`
             }
           >
@@ -89,10 +109,10 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-stone-100">
         {user?.email && (
           <p
-            className="px-4 pb-2 text-xs text-slate-400 truncate"
+            className="px-4 pb-2 text-xs text-stone-400 truncate"
             title={user.email}
           >
             {user.email}

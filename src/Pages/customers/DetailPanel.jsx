@@ -9,11 +9,14 @@ import {
   History,
   PenSquare,
   Ruler,
+  ShoppingCart,
 } from "lucide-react";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 import * as orderService from "../../services/orderService";
 import MeasurementsTab from "./MeasurementsTab";
+import OrderDraftTab from "./OrderDraftTab";
+import { emptyOrderDraft } from "./orderDraft";
 
 const emptyForm = {
   name: "",
@@ -53,6 +56,7 @@ const DetailPanel = ({
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [draftMeasurements, setDraftMeasurements] = useState([]);
+  const [orderDraft, setOrderDraft] = useState(emptyOrderDraft);
 
   useEffect(() => {
     if (tab !== "history" || !customer?._id) return;
@@ -74,15 +78,48 @@ const DetailPanel = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(isCreate ? { ...form, measurements: draftMeasurements } : form);
+    if (!isCreate) {
+      onSave(form);
+      return;
+    }
+
+    const measurements = draftMeasurements.map((m) => {
+      const copy = { ...m };
+      delete copy._localKey;
+      return copy;
+    });
+
+    // Order items reference a measurement by its index in the array above —
+    // a brand-new customer has no other measurements to place an order for.
+    const includedItems = draftMeasurements
+      .map((m, index) => ({ m, index }))
+      .filter(({ m }) => m.productTypeId && orderDraft.itemsByKey[m._localKey]?.included);
+
+    const order =
+      includedItems.length === 0
+        ? undefined
+        : {
+            deliveryDate: orderDraft.deliveryDate || undefined,
+            discount: Number(orderDraft.discount) || 0,
+            discountType: orderDraft.discountType,
+            notes: orderDraft.notes || undefined,
+            items: includedItems.map(({ m, index }) => ({
+              measurementIndex: index,
+              productTypeId: m.productTypeId,
+              quantity: Number(orderDraft.itemsByKey[m._localKey]?.quantity) || 1,
+              instructions: orderDraft.itemsByKey[m._localKey]?.instructions || undefined,
+            })),
+          };
+
+    onSave({ ...form, measurements, order });
   };
 
   return (
     <div
       className="bg-white rounded-2xl overflow-hidden flex flex-col h-full"
-      style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+      style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
     >
-      <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+      <div className="px-6 pt-6 pb-4 border-b border-stone-100">
         <div className="flex items-center gap-4 mb-4">
           {isCreate ? (
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -97,7 +134,7 @@ const DetailPanel = ({
             </h2>
             {!isCreate && (
               <p className="text-xs text-on-surface-variant">
-                {customer?.phone}
+                {customer?.customerNumber} · {customer?.phone}
               </p>
             )}
           </div>
@@ -126,6 +163,19 @@ const DetailPanel = ({
             <Ruler className="w-3.5 h-3.5" />
             Measurements
           </button>
+          {isCreate && (
+            <button
+              onClick={() => setTab("order")}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold border-b-2 transition-colors ${
+                tab === "order"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              Order
+            </button>
+          )}
           {!isCreate && (
             <button
               onClick={() => setTab("history")}
@@ -151,13 +201,13 @@ const DetailPanel = ({
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
                   <input
                     type="text"
                     required
                     value={form.name}
                     onChange={handleChange("name")}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -166,14 +216,14 @@ const DetailPanel = ({
                   Phone
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
                   <input
                     type="text"
                     required
                     placeholder="03XX-XXXXXXX"
                     value={form.phone}
                     onChange={handleChange("phone")}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -182,12 +232,12 @@ const DetailPanel = ({
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
                   <input
                     type="email"
                     value={form.email}
                     onChange={handleChange("email")}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -198,7 +248,7 @@ const DetailPanel = ({
                 <select
                   value={form.gender}
                   onChange={handleChange("gender")}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">Not specified</option>
                   <option value="male">Male</option>
@@ -210,12 +260,12 @@ const DetailPanel = ({
                   Address
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <MapPin className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   <textarea
                     value={form.address}
                     onChange={handleChange("address")}
                     rows={2}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                    className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                   />
                 </div>
               </div>
@@ -228,7 +278,7 @@ const DetailPanel = ({
                   onChange={handleChange("notes")}
                   rows={3}
                   placeholder="e.g. Lace back, sweetheart neckline adjustment needed"
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
               </div>
             </div>
@@ -240,6 +290,14 @@ const DetailPanel = ({
               customerId={customer?._id}
               drafts={draftMeasurements}
               onDraftsChange={setDraftMeasurements}
+            />
+          )}
+
+          {tab === "order" && (
+            <OrderDraftTab
+              draftMeasurements={draftMeasurements}
+              orderDraft={orderDraft}
+              onChange={setOrderDraft}
             />
           )}
 
@@ -259,7 +317,7 @@ const DetailPanel = ({
                     <div
                       key={order._id}
                       onClick={() => navigate(`/orders/${order._id}`)}
-                      className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100 cursor-pointer transition-colors"
                     >
                       <div>
                         <p className="text-sm font-bold text-primary">
@@ -283,11 +341,11 @@ const DetailPanel = ({
           )}
         </div>
 
-        <div className="flex gap-2 p-6 pt-4 border-t border-slate-100">
+        <div className="flex gap-2 p-6 pt-4 border-t border-stone-100">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-2.5 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+            className="flex-1 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
           >
             Cancel
           </button>

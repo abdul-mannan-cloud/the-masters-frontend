@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Search, Eye, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import * as customerService from "../../services/customerService";
+import * as orderService from "../../services/orderService";
 import Avatar from "../../components/Avatar";
+import StatusBadge from "../../components/StatusBadge";
 import DetailPanel from "./DetailPanel";
 
 const CustomerList = () => {
@@ -15,6 +17,9 @@ const CustomerList = () => {
   const [saving, setSaving] = useState(false);
   const [mode, setMode] = useState("view"); // 'view' | 'create'
   const [checkedIds, setCheckedIds] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+  const [ordersByCustomer, setOrdersByCustomer] = useState({});
+  const [loadingOrdersFor, setLoadingOrdersFor] = useState(null);
 
   const fetchCustomers = async () => {
     try {
@@ -50,7 +55,8 @@ const CustomerList = () => {
       (c) =>
         c.name?.toLowerCase().includes(q) ||
         c.phone?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q),
+        c.email?.toLowerCase().includes(q) ||
+        c.customerNumber?.toLowerCase().includes(q),
     );
   }, [customers, searchQuery]);
 
@@ -71,8 +77,12 @@ const CustomerList = () => {
     setSaving(true);
     try {
       if (mode === "create") {
-        const { customer } = await customerService.createCustomer(formData);
-        toast.success("Customer added successfully");
+        const { customer, order } = await customerService.createCustomer(formData);
+        toast.success(
+          order
+            ? `Customer added and order ${order.orderNumber} placed successfully`
+            : "Customer added successfully",
+        );
         await fetchCustomers();
         setMode("view");
         navigate(`/customers/${customer._id}`);
@@ -153,11 +163,29 @@ const CustomerList = () => {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
 
+  const toggleExpand = async (id) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    if (ordersByCustomer[id]) return;
+    setLoadingOrdersFor(id);
+    try {
+      const data = await orderService.getAllOrders({ customerId: id });
+      setOrdersByCustomer((prev) => ({ ...prev, [id]: data }));
+    } catch {
+      toast.error("Failed to fetch order details");
+    } finally {
+      setLoadingOrdersFor(null);
+    }
+  };
+
   return (
     <div className="p-8 font-body">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
             Customer Directory
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
@@ -177,13 +205,13 @@ const CustomerList = () => {
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-50">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
               <input
                 type="text"
-                placeholder="Search by name, phone, or email…"
+                placeholder="Search by name, phone, email, or customer #…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <button
@@ -198,13 +226,15 @@ const CustomerList = () => {
 
           <div
             className="bg-white rounded-2xl overflow-hidden"
-            style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
           >
             <div className="overflow-x-auto">
               <table className="w-full masters-table">
                 <thead>
                   <tr>
                     <th className="w-10"></th>
+                    <th className="w-8"></th>
+                    <th>Customer #</th>
                     <th>Customer</th>
                     <th>Phone</th>
                     <th>Address</th>
@@ -214,7 +244,7 @@ const CustomerList = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="5" className="py-16 text-center">
+                      <td colSpan="7" className="py-16 text-center">
                         <div className="flex justify-center">
                           <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                         </div>
@@ -223,66 +253,122 @@ const CustomerList = () => {
                   ) : filteredCustomers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="5"
+                        colSpan="7"
                         className="py-16 text-center text-on-surface-variant text-sm"
                       >
                         No customers found
                       </td>
                     </tr>
                   ) : (
-                    filteredCustomers.map((customer) => (
-                      <tr
-                        key={customer._id}
-                        onClick={() => handleSelect(customer._id)}
-                        className={
-                          customer._id === selectedId ? "bg-primary/5" : ""
-                        }
-                      >
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={checkedIds.includes(customer._id)}
-                            onChange={() => toggleChecked(customer._id)}
-                            className="w-4 h-4 accent-primary"
-                          />
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-3">
-                            <Avatar name={customer.name} size="sm" />
-                            <span className="font-medium text-on-surface">
-                              {customer.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="text-on-surface-variant">
-                          {customer.phone}
-                        </td>
-                        <td className="text-on-surface-variant max-w-50 truncate">
-                          {customer.address || "—"}
-                        </td>
-                        <td
-                          className="text-right"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => handleSelect(customer._id)}
-                              className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
-                              title="View / Edit"
+                    filteredCustomers.map((customer) => {
+                      const isExpanded = expandedId === customer._id;
+                      const customerOrders = ordersByCustomer[customer._id];
+                      return (
+                        <Fragment key={customer._id}>
+                          <tr
+                            onClick={() => toggleExpand(customer._id)}
+                            className={
+                              customer._id === selectedId ? "bg-primary/5" : ""
+                            }
+                          >
+                            <td onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={checkedIds.includes(customer._id)}
+                                onChange={() => toggleChecked(customer._id)}
+                                className="w-4 h-4 accent-primary"
+                              />
+                            </td>
+                            <td className="text-stone-400">
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4" />
+                              )}
+                            </td>
+                            <td className="text-on-surface-variant font-mono text-xs">
+                              {customer.customerNumber || "—"}
+                            </td>
+                            <td>
+                              <div className="flex items-center gap-3">
+                                <Avatar name={customer.name} size="sm" />
+                                <span className="font-medium text-on-surface">
+                                  {customer.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-on-surface-variant">
+                              {customer.phone}
+                            </td>
+                            <td className="text-on-surface-variant max-w-50 truncate">
+                              {customer.address || "—"}
+                            </td>
+                            <td
+                              className="text-right"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => handleSelect(customer._id)}
+                                  className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
+                                  title="View / Edit"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
                             <button
                               onClick={() => handleDelete(customer._id)}
-                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
-                      </tr>
-                    ))
+                          </tr>
+                          {isExpanded && (
+                            <tr className="cursor-default hover:bg-transparent!">
+                              <td colSpan="7" className="bg-stone-50 py-4">
+                                {loadingOrdersFor === customer._id ? (
+                                  <div className="flex justify-center py-4">
+                                    <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                                  </div>
+                                ) : !customerOrders || customerOrders.length === 0 ? (
+                                  <p className="text-sm text-on-surface-variant text-center py-2">
+                                    No orders yet for this customer.
+                                  </p>
+                                ) : (
+                                  <div className="space-y-2 px-6">
+                                    {customerOrders.map((order) => (
+                                      <div
+                                        key={order._id}
+                                        onClick={() => navigate(`/orders/${order._id}`)}
+                                        className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-primary/5 cursor-pointer transition-colors"
+                                      >
+                                        <div>
+                                          <p className="text-sm font-bold text-primary">
+                                            {order.orderNumber}
+                                          </p>
+                                          <p className="text-xs text-on-surface-variant">
+                                            {new Date(order.orderDate).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                          <p className="text-sm font-bold">
+                                            Rs. {order.total?.toLocaleString()}
+                                          </p>
+                                          <StatusBadge status={order.productionStatus} />
+                                          <StatusBadge status={order.paymentStatus} />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -304,7 +390,7 @@ const CustomerList = () => {
           ) : (
             <div
               className="bg-white rounded-2xl p-10 text-center text-on-surface-variant text-sm"
-              style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+              style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
             >
               Select a customer to view details, or add a new one.
             </div>

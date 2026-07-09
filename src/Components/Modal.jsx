@@ -16,13 +16,13 @@ const Modal = ({ title, onClose, children, maxWidth = "max-w-lg" }) => {
         onClick={(e) => e.stopPropagation()}
         style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
           <h2 className="text-base font-extrabold text-on-surface font-headline">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-on-surface hover:bg-slate-50 rounded-lg transition-colors"
+            className="p-1.5 text-stone-400 hover:text-on-surface hover:bg-stone-50 rounded-lg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

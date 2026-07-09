@@ -66,7 +66,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
 
       {value.length === 0 ? (
         <div className="empty-state py-10! mb-4">
-          <Workflow className="w-6 h-6 text-slate-300" />
+          <Workflow className="w-6 h-6 text-stone-300" />
           <p className="text-sm text-on-surface-variant">
             No workflow steps yet.
           </p>
@@ -76,14 +76,14 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
           {value.map((step, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl"
+              className="flex items-center gap-2 p-3 bg-stone-50 rounded-xl"
             >
               <div className="flex flex-col">
                 <button
                   type="button"
                   onClick={() => handleMove(index, -1)}
                   disabled={index === 0}
-                  className="p-0.5 text-slate-400 hover:text-primary disabled:opacity-30"
+                  className="p-0.5 text-stone-400 hover:text-primary disabled:opacity-30"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                 </button>
@@ -91,7 +91,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
                   type="button"
                   onClick={() => handleMove(index, 1)}
                   disabled={index === value.length - 1}
-                  className="p-0.5 text-slate-400 hover:text-primary disabled:opacity-30"
+                  className="p-0.5 text-stone-400 hover:text-primary disabled:opacity-30"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
@@ -105,7 +105,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
                 className={`w-20 px-3 py-2 bg-white rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                   sequenceDuplicates.has(step.sequence)
                     ? "border-red-400"
-                    : "border-slate-200"
+                    : "border-stone-200"
                 }`}
               />
               <input
@@ -115,7 +115,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
                   handleFieldChange(index, "step", e.target.value)
                 }
                 placeholder="Step name (e.g. Cutting)"
-                className="flex-1 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <select
                 value={step.requiredSkill}
@@ -123,7 +123,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
                   handleFieldChange(index, "requiredSkill", e.target.value)
                 }
                 disabled={skillsLoading}
-                className="px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">Select skill</option>
                 {skills.map((skill) => (
@@ -145,12 +145,12 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
                   )
                 }
                 placeholder="Hours"
-                className="w-24 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-24 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Remove"
               >
                 <Trash2 className="w-4 h-4" />
@@ -160,13 +160,13 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-2 p-3 border border-dashed border-slate-300 rounded-xl">
+      <div className="flex items-center gap-2 p-3 border border-dashed border-stone-300 rounded-xl">
         <input
           type="text"
           value={draft.step}
           onChange={(e) => setDraft((d) => ({ ...d, step: e.target.value }))}
           placeholder="Step name (e.g. Cutting)"
-          className="flex-1 px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="flex-1 px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <select
           value={draft.requiredSkill}
@@ -174,7 +174,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
             setDraft((d) => ({ ...d, requiredSkill: e.target.value }))
           }
           disabled={skillsLoading}
-          className="px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">
             {skillsLoading ? "Loading skills…" : "Select skill"}
@@ -194,7 +194,7 @@ const WorkflowBuilder = ({ value, onChange, skills, skillsLoading }) => {
             setDraft((d) => ({ ...d, estimatedDurationHours: e.target.value }))
           }
           placeholder="Hours"
-          className="w-24 px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-24 px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <button
           type="button"

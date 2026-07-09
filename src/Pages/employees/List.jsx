@@ -69,7 +69,7 @@ const EmployeeList = () => {
     <div className="p-8 font-body">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
             Employees
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
@@ -87,19 +87,19 @@ const EmployeeList = () => {
       </div>
 
       <div className="relative mb-6 max-w-md">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
         <input
           type="text"
           placeholder="Search by name or phone…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -126,7 +126,7 @@ const EmployeeList = () => {
                 <tr>
                   <td colSpan="6">
                     <div className="empty-state">
-                      <Users className="w-7 h-7 text-slate-300" />
+                      <Users className="w-7 h-7 text-stone-300" />
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
                         No employees found
                       </p>
@@ -158,7 +158,7 @@ const EmployeeList = () => {
                             employee.skills.map((s) => (
                               <span
                                 key={s}
-                                className="px-2 py-0.5 bg-slate-50 rounded-full text-xs font-medium text-on-surface-variant"
+                                className="px-2 py-0.5 bg-stone-50 rounded-full text-xs font-medium text-on-surface-variant"
                               >
                                 {s}
                               </span>
@@ -189,7 +189,7 @@ const EmployeeList = () => {
                             onClick={() =>
                               navigate(`/employees/${employee._id}`)
                             }
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+                            className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
@@ -198,14 +198,14 @@ const EmployeeList = () => {
                             onClick={() =>
                               navigate(`/employees/${employee._id}/edit`)
                             }
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+                            className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(employee)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />

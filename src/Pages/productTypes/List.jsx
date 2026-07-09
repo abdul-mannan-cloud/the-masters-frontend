@@ -85,7 +85,7 @@ const ProductTypeList = () => {
     <div className="p-8 font-body">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
             Product Types
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
@@ -104,13 +104,13 @@ const ProductTypeList = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-50">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
           <input
             type="text"
             placeholder="Search by name…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-9 psr-4 py-2.5 bg-white rounded-full border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full pl-9 psr-4 py-2.5 bg-white rounded-full border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <select
@@ -119,7 +119,7 @@ const ProductTypeList = () => {
             setPage(1);
             setActiveFilter(e.target.value);
           }}
-          className="px-4 py-2.5 bg-white rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
+          className="px-4 py-2.5 bg-white rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
         >
           <option value="">All Statuses</option>
           <option value="true">Active</option>
@@ -129,7 +129,7 @@ const ProductTypeList = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -156,7 +156,7 @@ const ProductTypeList = () => {
                   <td colSpan="5">
                     <div className="empty-state">
                       <div className="empty-state-icon">
-                        <Shirt className="w-7 h-7 text-slate-300" />
+                        <Shirt className="w-7 h-7 text-stone-300" />
                       </div>
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
                         No product types found
@@ -189,7 +189,7 @@ const ProductTypeList = () => {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => navigate(`/product-types/${pt._id}`)}
-                          className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
@@ -198,21 +198,21 @@ const ProductTypeList = () => {
                           onClick={() =>
                             navigate(`/product-types/${pt._id}/edit`)
                           }
-                          className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleStatus(pt)}
-                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                           title={pt.isActive ? "Deactivate" : "Activate"}
                         >
                           <Power className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(pt._id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -227,7 +227,7 @@ const ProductTypeList = () => {
         </div>
 
         {!loading && productTypes.length > 0 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-stone-100">
             <p className="text-xs text-on-surface-variant">
               Page {page} of {totalPages}
             </p>
@@ -235,14 +235,14 @@ const ProductTypeList = () => {
               <button
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
                 disabled={page <= 1}
-                className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 text-on-surface-variant hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-bold border border-stone-200 text-on-surface-variant hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                 disabled={page >= totalPages}
-                className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 text-on-surface-variant hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-bold border border-stone-200 text-on-surface-variant hover:bg-stone-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
               >
                 Next
               </button>

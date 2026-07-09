@@ -38,7 +38,7 @@ const EmployeeDashboard = () => {
       <div
         onClick={() => navigate("/business-info")}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl p-5 mb-6 cursor-pointer hover:shadow-md transition-shadow"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -63,9 +63,9 @@ const EmployeeDashboard = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-on-surface-variant" />
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline">
             Today's Work
@@ -85,7 +85,7 @@ const EmployeeDashboard = () => {
                 <tr>
                   <td colSpan="3">
                     <div className="empty-state">
-                      <CalendarDays className="w-7 h-7 text-slate-300" />
+                      <CalendarDays className="w-7 h-7 text-stone-300" />
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
                         No work assigned for today
                       </p>

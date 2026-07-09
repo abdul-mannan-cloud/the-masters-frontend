@@ -94,13 +94,13 @@ const TenantView = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/tenants")}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+              <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
                 {tenant.businessName}
               </h1>
               <StatusBadge status={tenant.status} />
@@ -109,7 +109,7 @@ const TenantView = () => {
           </div>
           <button
             onClick={() => navigate(`/tenants/${id}/edit`)}
-            className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -128,7 +128,7 @@ const TenantView = () => {
           </button>
           <button
             onClick={handleDelete}
-            className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            className="p-2.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
             title="Delete"
           >
             <Trash2 className="w-5 h-5" />
@@ -144,7 +144,7 @@ const TenantView = () => {
 
         <div
           className="bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
             Profile

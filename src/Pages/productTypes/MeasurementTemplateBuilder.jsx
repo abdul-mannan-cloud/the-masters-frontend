@@ -65,7 +65,7 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
 
       {value.length === 0 ? (
         <div className="empty-state py-10! mb-4">
-          <Ruler className="w-6 h-6 text-slate-300" />
+          <Ruler className="w-6 h-6 text-stone-300" />
           <p className="text-sm text-on-surface-variant">
             No measurement fields yet.
           </p>
@@ -75,14 +75,14 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
           {value.map((field, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl"
+              className="flex items-center gap-2 p-3 bg-stone-50 rounded-xl"
             >
               <div className="flex flex-col">
                 <button
                   type="button"
                   onClick={() => handleMove(index, -1)}
                   disabled={index === 0}
-                  className="p-0.5 text-slate-400 hover:text-primary disabled:opacity-30"
+                  className="p-0.5 text-stone-400 hover:text-primary disabled:opacity-30"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                 </button>
@@ -90,7 +90,7 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
                   type="button"
                   onClick={() => handleMove(index, 1)}
                   disabled={index === value.length - 1}
-                  className="p-0.5 text-slate-400 hover:text-primary disabled:opacity-30"
+                  className="p-0.5 text-stone-400 hover:text-primary disabled:opacity-30"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
@@ -100,7 +100,7 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
                 value={field.id}
                 onChange={(e) => handleFieldChange(index, "id", e.target.value)}
                 placeholder="id (e.g. chest)"
-                className="w-32 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-32 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <input
                 type="text"
@@ -109,14 +109,14 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
                   handleFieldChange(index, "label", e.target.value)
                 }
                 placeholder="Label (e.g. Chest)"
-                className="flex-1 px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <select
                 value={field.unit}
                 onChange={(e) =>
                   handleFieldChange(index, "unit", e.target.value)
                 }
-                className="px-3 py-2 bg-white rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 {UNITS.map((u) => (
                   <option key={u} value={u}>
@@ -138,7 +138,7 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Remove"
               >
                 <Trash2 className="w-4 h-4" />
@@ -148,25 +148,25 @@ const MeasurementTemplateBuilder = ({ value, onChange }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-2 p-3 border border-dashed border-slate-300 rounded-xl">
+      <div className="flex items-center gap-2 p-3 border border-dashed border-stone-300 rounded-xl">
         <input
           type="text"
           value={draft.id}
           onChange={(e) => setDraft((d) => ({ ...d, id: e.target.value }))}
           placeholder="id (e.g. chest)"
-          className="w-32 px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-32 px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <input
           type="text"
           value={draft.label}
           onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
           placeholder="Label (e.g. Chest)"
-          className="flex-1 px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="flex-1 px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
         <select
           value={draft.unit}
           onChange={(e) => setDraft((d) => ({ ...d, unit: e.target.value }))}
-          className="px-3 py-2 bg-slate-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="px-3 py-2 bg-stone-50 rounded-lg border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           {UNITS.map((u) => (
             <option key={u} value={u}>

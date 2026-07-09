@@ -139,7 +139,7 @@ const Login = () => {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full mt-1 border-0 rounded-xl py-3.5 font-headline font-bold text-[15px] text-[#0c1a17] bg-[#d6a35c] cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-[1.06] active:translate-y-px"
+              className="w-full mt-1 border-0 rounded-xl py-3.5 font-headline font-bold text-[15px] text-[#0c1a17] bg-[#d6a35c] cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-[1.06] active:transtone-y-px"
             >
               {loading ? "Signing in…" : "Sign in"}
             </button>

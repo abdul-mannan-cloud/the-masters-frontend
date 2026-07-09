@@ -176,7 +176,7 @@ const MeasurementForm = ({
             value={productTypeId}
             onChange={handleProductTypeChange}
             disabled={productTypesLoading}
-            className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="">
               {productTypesLoading
@@ -195,7 +195,7 @@ const MeasurementForm = ({
               value={garmentType}
               onChange={(e) => setGarmentType(e.target.value)}
               placeholder="Garment type name (e.g. Custom Waistcoat)"
-              className="w-full mt-2 px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full mt-2 px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           )}
         </div>
@@ -211,7 +211,7 @@ const MeasurementForm = ({
             min="0"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div>
@@ -223,7 +223,7 @@ const MeasurementForm = ({
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Optional, e.g. Eid"
-            className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </div>
@@ -237,7 +237,7 @@ const MeasurementForm = ({
             {lockedValues.map((v, index) => (
               <div
                 key={v.fieldId}
-                className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+                className="flex items-center gap-2 p-2.5 bg-stone-50 rounded-xl"
               >
                 <span className="flex-1 text-sm font-medium text-on-surface">
                   {v.label}
@@ -249,7 +249,7 @@ const MeasurementForm = ({
                   onChange={(e) =>
                     handleLockedValueChange(index, e.target.value)
                   }
-                  className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-20 px-2 py-1.5 bg-white rounded-lg border border-stone-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 <span className="text-xs text-on-surface-variant w-8">
                   {v.unit}
@@ -262,7 +262,7 @@ const MeasurementForm = ({
             {fieldRows.map((f, index) => (
               <div
                 key={f.fieldId}
-                className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl"
+                className="flex items-center gap-2 p-2.5 bg-stone-50 rounded-xl"
               >
                 <span className="flex-1 text-sm font-medium text-on-surface">
                   {f.label}
@@ -273,7 +273,7 @@ const MeasurementForm = ({
                   step="0.1"
                   value={f.value}
                   onChange={(e) => handleFieldRowChange(index, e.target.value)}
-                  className="w-20 px-2 py-1.5 bg-white rounded-lg border border-slate-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-20 px-2 py-1.5 bg-white rounded-lg border border-stone-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 <span className="text-xs text-on-surface-variant w-8">
                   {f.unit}
@@ -297,7 +297,7 @@ const MeasurementForm = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+          className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
         />
       </div>
 
@@ -307,7 +307,7 @@ const MeasurementForm = ({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 py-2.5 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+          className="flex-1 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
         >
           Cancel
         </button>

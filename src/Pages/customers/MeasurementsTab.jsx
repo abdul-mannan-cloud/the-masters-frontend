@@ -39,7 +39,7 @@ const ReadOnlyMeasurement = ({ measurement }) => (
       {measurement.values.map((v) => (
         <div
           key={v.fieldId}
-          className="flex justify-between text-sm px-3 py-1.5 bg-slate-50 rounded-lg"
+          className="flex justify-between text-sm px-3 py-1.5 bg-stone-50 rounded-lg"
         >
           <span className="text-on-surface-variant">{v.label}</span>
           <span className="font-medium text-on-surface">
@@ -179,7 +179,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
     <div className="flex items-center gap-1">
       <button
         onClick={() => setViewing(item)}
-        className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+        className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
         title="View"
       >
         <Eye className="w-3.5 h-3.5" />
@@ -188,14 +188,14 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
         <>
           <button
             onClick={() => setFormState({ action: "edit", source: item })}
-            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+            className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
             title="Edit"
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => handleRemoveDraft(item._localKey)}
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Remove"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -206,7 +206,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
           {isLatest && !item.lockedForOrder && (
             <button
               onClick={() => setFormState({ action: "edit", source: item })}
-              className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+              className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
               title="Edit"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -214,7 +214,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
           )}
           <button
             onClick={() => setFormState({ action: "duplicate", source: item })}
-            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+            className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
             title="Duplicate"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -224,7 +224,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
               onClick={() =>
                 setFormState({ action: "newVersion", source: item })
               }
-              className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+              className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
               title="Create New Version"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
         </div>
       ) : grouped.length === 0 ? (
         <div className="empty-state py-8!">
-          <Ruler className="w-6 h-6 text-slate-300" />
+          <Ruler className="w-6 h-6 text-stone-300" />
           <p className="text-sm text-on-surface-variant">
             No measurements added yet.
           </p>
@@ -268,7 +268,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
             const [latest, ...older] = group;
             const expanded = expandedGroups[garmentType];
             return (
-              <div key={garmentType} className="p-3 bg-slate-50 rounded-xl">
+              <div key={garmentType} className="p-3 bg-stone-50 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-on-surface truncate">
@@ -287,7 +287,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
                 </div>
 
                 {older.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-200">
+                  <div className="mt-2 pt-2 border-t border-stone-200">
                     <button
                       type="button"
                       onClick={() => toggleGroup(garmentType)}

@@ -6,7 +6,6 @@ import Layout from "./components/Layout.jsx";
 import Login from "./pages/auth/login.jsx";
 import CreateAccount from "./pages/auth/signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import Measurements from "./pages/Measurements.jsx";
 import BusinessInfo from "./pages/BusinessInfo.jsx";
 import CustomerList from "./pages/customers/List.jsx";
 import OrderList from "./pages/orders/List.jsx";
@@ -43,8 +42,6 @@ function App() {
               <Route path="/orders" element={<OrderList />} />
               <Route path="/orders/new" element={<OrderForm />} />
               <Route path="/orders/:id" element={<OrderView />} />
-
-              <Route path="/measurements" element={<Measurements />} />
 
               <Route path="/product-types" element={<ProductTypeList />} />
               <Route path="/product-types/new" element={<ProductTypeForm />} />

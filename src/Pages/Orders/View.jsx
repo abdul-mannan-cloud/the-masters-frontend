@@ -90,12 +90,12 @@ const OrderView = () => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => navigate("/orders")}
-          className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+          className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
             {order.orderNumber}
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
@@ -104,7 +104,7 @@ const OrderView = () => {
         </div>
         <button
           onClick={handleDelete}
-          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           title="Delete order"
         >
           <Trash2 className="w-5 h-5" />
@@ -114,7 +114,7 @@ const OrderView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
           className="bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5 font-headline">
             Customer
@@ -124,7 +124,7 @@ const OrderView = () => {
             <div>
               <p className="font-bold text-on-surface">{customer.name}</p>
               <p className="text-sm text-on-surface-variant">
-                {customer.phone}
+                {customer.customerNumber} · {customer.phone}
               </p>
             </div>
           </div>
@@ -138,7 +138,7 @@ const OrderView = () => {
 
         <div
           className="lg:col-span-2 bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5 font-headline">
             Order Summary
@@ -172,7 +172,7 @@ const OrderView = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100">
+          <div className="pt-4 border-t border-stone-100">
             <p className="text-xs text-on-surface-variant mb-2">
               Production Status
             </p>
@@ -187,7 +187,7 @@ const OrderView = () => {
                   className={`px-4 py-2 rounded-xl text-sm font-bold capitalize transition-colors disabled:opacity-40 ${
                     status === order.productionStatus
                       ? "bg-primary text-on-primary"
-                      : "border border-slate-200 text-on-surface-variant hover:bg-slate-50"
+                      : "border border-stone-200 text-on-surface-variant hover:bg-stone-50"
                   }`}
                 >
                   {status.replace("_", " ")}
@@ -203,7 +203,7 @@ const OrderView = () => {
           </div>
 
           {order.notes && (
-            <div className="mt-6 pt-4 border-t border-slate-100">
+            <div className="mt-6 pt-4 border-t border-stone-100">
               <p className="text-xs text-on-surface-variant mb-1">Notes</p>
               <p className="text-sm text-on-surface">{order.notes}</p>
             </div>

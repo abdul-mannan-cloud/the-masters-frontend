@@ -112,12 +112,12 @@ const RoleForm = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/roles")}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+            <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
               {isEdit ? "Edit Role" : "Create Role"}
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
@@ -129,7 +129,7 @@ const RoleForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl p-6 space-y-4 mb-6"
-            style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -141,7 +141,7 @@ const RoleForm = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Receptionist"
-                  className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.name ? "border-red-400" : "border-transparent"
                   }`}
                 />
@@ -155,7 +155,7 @@ const RoleForm = () => {
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ const RoleForm = () => {
 
           <div
             className="bg-white rounded-2xl overflow-hidden mb-6"
-            style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
           >
             <div className="overflow-x-auto">
               <table className="w-full masters-table">
@@ -191,7 +191,7 @@ const RoleForm = () => {
                             className={`w-6 h-6 rounded-md border flex items-center justify-center mx-auto transition-colors ${
                               permissions[module]?.[action]
                                 ? "bg-primary border-primary text-on-primary"
-                                : "border-slate-300 text-transparent hover:border-primary/40"
+                                : "border-stone-300 text-transparent hover:border-primary/40"
                             }`}
                           >
                             <Check className="w-4 h-4" />
@@ -209,7 +209,7 @@ const RoleForm = () => {
             <button
               type="button"
               onClick={() => navigate("/roles")}
-              className="flex-1 py-3 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+              className="flex-1 py-3 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>

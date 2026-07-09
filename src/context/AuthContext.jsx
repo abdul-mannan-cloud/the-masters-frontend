@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as authService from "../services/authService";
 import * as employeeService from "../services/employeeService";
+import * as tenantService from "../services/tenantService";
 import { AuthContext } from "./authContext";
 
 const readStoredUser = () => {
@@ -17,6 +18,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(readStoredUser);
   const [permissions, setPermissions] = useState(null);
   const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [tenant, setTenant] = useState(null);
 
   const loadPermissions = async (currentUser) => {
     if (!currentUser || !isPermissionGated(currentUser.role)) {
@@ -34,9 +36,24 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // super_admin has no tenantId — the tenant branding block is only ever
+  // shown to tenant-scoped users (tenant_admin/manager/employee).
+  const loadTenant = async (currentUser) => {
+    if (!currentUser?.tenantId) {
+      setTenant(null);
+      return;
+    }
+    try {
+      const result = await tenantService.getTenantById(currentUser.tenantId);
+      setTenant(result);
+    } catch {
+      setTenant(null);
+    }
+  };
+
   useEffect(() => {
     (async () => {
-      await loadPermissions(user);
+      await Promise.all([loadPermissions(user), loadTenant(user)]);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -46,7 +63,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem("ciseauxtoken", data.token);
     localStorage.setItem("ciseauxuser", JSON.stringify(data.user));
     setUser(data.user);
-    await loadPermissions(data.user);
+    await Promise.all([loadPermissions(data.user), loadTenant(data.user)]);
     return data.user;
   };
 
@@ -59,11 +76,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("ciseauxuser");
     setUser(null);
     setPermissions(null);
+    setTenant(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, permissions, permissionsLoading, login, signup, logout }}
+      value={{ user, permissions, permissionsLoading, tenant, login, signup, logout }}
     >
       {children}
     </AuthContext.Provider>

@@ -59,7 +59,7 @@ const OrderList = () => {
     <div className="p-8 font-body">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
             Orders
           </h1>
           <p className="text-on-surface-variant mt-1 text-sm">
@@ -79,7 +79,7 @@ const OrderList = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
+          className="px-4 py-2.5 bg-white rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
         >
           <option value="">All Production Status</option>
           <option value="pending">Pending</option>
@@ -92,7 +92,7 @@ const OrderList = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -121,7 +121,7 @@ const OrderList = () => {
                   <td colSpan="7">
                     <div className="empty-state">
                       <div className="empty-state-icon">
-                        <ReceiptText className="w-7 h-7 text-slate-300" />
+                        <ReceiptText className="w-7 h-7 text-stone-300" />
                       </div>
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
                         No orders found
@@ -157,14 +157,14 @@ const OrderList = () => {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => navigate(`/orders/${order._id}`)}
-                          className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(order._id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />

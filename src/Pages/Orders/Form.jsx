@@ -64,12 +64,12 @@ const OrderForm = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/orders")}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface font-headline">
+            <h1 className="text-2xl font-semibold text-on-surface font-newsreader">
               New Order
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
@@ -80,7 +80,7 @@ const OrderForm = () => {
 
         <div
           className="bg-white rounded-2xl p-8"
-          style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -92,7 +92,7 @@ const OrderForm = () => {
                 value={form.customerId}
                 onChange={handleChange("customerId")}
                 disabled={loadingCustomers}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-3 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">
                   {loadingCustomers
@@ -101,7 +101,7 @@ const OrderForm = () => {
                 </option>
                 {customers.map((c) => (
                   <option key={c._id} value={c._id}>
-                    {c.name} · {c.phone}
+                    {c.customerNumber} · {c.name} · {c.phone}
                   </option>
                 ))}
               </select>
@@ -128,7 +128,7 @@ const OrderForm = () => {
                 type="date"
                 value={form.deliveryDate}
                 onChange={handleChange("deliveryDate")}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-3 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -142,7 +142,7 @@ const OrderForm = () => {
                   min="0"
                   value={form.discount}
                   onChange={handleChange("discount")}
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-4 py-3 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
@@ -152,7 +152,7 @@ const OrderForm = () => {
                 <select
                   value={form.discountType}
                   onChange={handleChange("discountType")}
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-4 py-3 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="fixed">Fixed (Rs.)</option>
                   <option value="percentage">Percentage (%)</option>
@@ -168,7 +168,7 @@ const OrderForm = () => {
                 value={form.notes}
                 onChange={handleChange("notes")}
                 rows={3}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full px-4 py-3 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
               />
             </div>
 
@@ -176,7 +176,7 @@ const OrderForm = () => {
               <button
                 type="button"
                 onClick={() => navigate("/orders")}
-                className="flex-1 py-3 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+                className="flex-1 py-3 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
               >
                 Cancel
               </button>

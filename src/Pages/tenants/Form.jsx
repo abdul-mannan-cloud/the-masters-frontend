@@ -21,6 +21,16 @@ const TenantForm = () => {
   const [contactPhone, setContactPhone] = useState("");
   const [address, setAddress] = useState("");
   const [plan, setPlan] = useState("free");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [logo, setLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setLogo(file);
+    setLogoPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   useEffect(() => {
     if (!isEdit) return;
@@ -51,6 +61,11 @@ const TenantForm = () => {
     if (!businessName.trim()) nextErrors.businessName = "Business name is required.";
     if (!isEdit && !slug.trim()) nextErrors.slug = "Slug is required.";
     if (!contactEmail.trim()) nextErrors.contactEmail = "Contact email is required.";
+    if (!isEdit) {
+      if (!password) nextErrors.password = "Password is required.";
+      else if (password.length < 8) nextErrors.password = "Password must be at least 8 characters.";
+      if (password !== confirmPassword) nextErrors.confirmPassword = "Passwords do not match.";
+    }
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       return;
@@ -63,7 +78,7 @@ const TenantForm = () => {
       contactPhone: contactPhone.trim(),
       address: address.trim(),
       plan,
-      ...(!isEdit && { slug: slug.trim() }),
+      ...(!isEdit && { slug: slug.trim(), password, logo }),
     };
 
     setSaving(true);
@@ -98,12 +113,12 @@ const TenantForm = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/tenants")}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-on-surface-variant"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors text-on-surface-variant"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
+            <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
               {isEdit ? "Edit Tenant" : "Create Tenant"}
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
@@ -117,7 +132,7 @@ const TenantForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(30,58,138,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -128,7 +143,7 @@ const TenantForm = () => {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.businessName ? "border-red-400" : "border-transparent"
                   }`}
                 />
@@ -145,7 +160,7 @@ const TenantForm = () => {
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   disabled={isEdit}
-                  className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 ${
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 ${
                     errors.slug ? "border-red-400" : "border-transparent"
                   }`}
                 />
@@ -159,7 +174,7 @@ const TenantForm = () => {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  className={`w-full px-3 py-2.5 bg-slate-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.contactEmail ? "border-red-400" : "border-transparent"
                   }`}
                 />
@@ -175,7 +190,7 @@ const TenantForm = () => {
                   type="text"
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
@@ -185,7 +200,7 @@ const TenantForm = () => {
                 <select
                   value={plan}
                   onChange={(e) => setPlan(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 capitalize"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 capitalize"
                 >
                   {PLANS.map((p) => (
                     <option key={p} value={p} className="capitalize">
@@ -194,7 +209,50 @@ const TenantForm = () => {
                   ))}
                 </select>
               </div>
+              {!isEdit && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Admin Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min. 8 characters"
+                      className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                        errors.password ? "border-red-400" : "border-transparent"
+                      }`}
+                    />
+                    {errors.password && (
+                      <p className="mt-1 text-xs text-red-600">{errors.password}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                        errors.confirmPassword ? "border-red-400" : "border-transparent"
+                      }`}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
+            {!isEdit && (
+              <p className="text-xs text-on-surface-variant -mt-2">
+                This creates the business's first admin login, using the contact email above.
+              </p>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -204,16 +262,39 @@ const TenantForm = () => {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2.5 bg-slate-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
               />
             </div>
+
+            {!isEdit && (
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Business Logo
+                </label>
+                <div className="flex items-center gap-3">
+                  {logoPreview && (
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-11 h-11 rounded-xl object-cover border border-stone-200"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="flex-1 text-sm file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:bg-stone-100 file:text-on-surface file:text-xs file:font-semibold file:cursor-pointer cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 mt-6">
             <button
               type="button"
               onClick={() => navigate("/tenants")}
-              className="flex-1 py-3 border border-slate-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-slate-50 transition-colors"
+              className="flex-1 py-3 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
             >
               Cancel
             </button>
