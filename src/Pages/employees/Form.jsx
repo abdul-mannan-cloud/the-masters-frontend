@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import * as employeeService from "../../services/employeeService";
 import * as roleService from "../../services/roleService";
+import PhoneInput from "../../components/PhoneInput";
+import CnicInput from "../../components/CnicInput";
+import { isValidPhone, isValidCnic } from "../../utils/formatters";
 
 const EmployeeForm = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
 
@@ -91,6 +95,10 @@ const EmployeeForm = () => {
     const nextErrors = {};
     if (!name.trim()) nextErrors.name = "Name is required.";
     if (!phone.trim()) nextErrors.phone = "Phone is required.";
+    else if (!isValidPhone(phone))
+      nextErrors.phone = "Enter a valid 11-digit mobile number starting with 03.";
+    if (cnic && !isValidCnic(cnic))
+      nextErrors.cnic = "CNIC must be exactly 13 digits.";
     if (salary !== "" && Number(salary) < 0)
       nextErrors.salary = "Salary cannot be negative.";
     if (!isEdit) {
@@ -195,11 +203,9 @@ const EmployeeForm = () => {
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   Phone
                 </label>
-                <input
-                  type="text"
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="03XX-XXXXXXX"
+                  onChange={setPhone}
                   className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.phone ? "border-red-400" : "border-transparent"
                   }`}
@@ -212,12 +218,16 @@ const EmployeeForm = () => {
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   CNIC
                 </label>
-                <input
-                  type="text"
+                <CnicInput
                   value={cnic}
-                  onChange={(e) => setCnic(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  onChange={setCnic}
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    errors.cnic ? "border-red-400" : "border-transparent"
+                  }`}
                 />
+                {errors.cnic && (
+                  <p className="mt-1 text-xs text-red-600">{errors.cnic}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">

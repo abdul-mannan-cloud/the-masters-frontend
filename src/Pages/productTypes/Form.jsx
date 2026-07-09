@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Info, Ruler, Tag, Workflow as WorkflowIcon } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
@@ -62,7 +63,7 @@ const validate = ({ name, basePrice, measurementTemplate, options, workflow }) =
 };
 
 const ProductTypeForm = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
 

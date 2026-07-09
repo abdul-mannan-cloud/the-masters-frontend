@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Search, Bell } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -6,7 +6,6 @@ const TITLES = [
   ["/dashboard", "Dashboard"],
   ["/customers", "Customers"],
   ["/orders", "Orders"],
-  ["/measurements", "Measurements"],
   ["/product-types", "Product Types"],
   ["/employees", "Employees"],
   ["/tenants", "Tenants"],
@@ -16,9 +15,15 @@ const TITLES = [
 
 const Topbar = () => {
   const location = useLocation();
+  const { tenantSlug } = useParams();
   const { user } = useAuth();
+  // Every tenant-scoped route is prefixed with "/:tenantSlug" — strip it
+  // before matching, since TITLES paths are unprefixed.
+  const pathForMatch = tenantSlug
+    ? location.pathname.replace(`/${tenantSlug}`, "")
+    : location.pathname;
   const title =
-    TITLES.find(([path]) => location.pathname.startsWith(path))?.[1] || "";
+    TITLES.find(([path]) => pathForMatch.startsWith(path))?.[1] || "";
   const initials = user?.email?.[0]?.toUpperCase() || "?";
 
   return (

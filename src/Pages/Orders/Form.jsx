@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
+import { formatPhone } from "../../utils/formatters";
 
 const OrderForm = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const [customers, setCustomers] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -101,7 +102,7 @@ const OrderForm = () => {
                 </option>
                 {customers.map((c) => (
                   <option key={c._id} value={c._id}>
-                    {c.customerNumber} · {c.name} · {c.phone}
+                    {c.customerNumber} · {c.name} · {formatPhone(c.phone)}
                   </option>
                 ))}
               </select>

@@ -19,9 +19,13 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      await login({ email, password });
+      const { user, tenant } = await login({ email, password });
       toast.success("Login successful");
-      navigate("/dashboard");
+      navigate(
+        user.role === "super_admin" || !tenant
+          ? "/dashboard"
+          : `/${tenant.slug}/dashboard`,
+      );
     } catch (error) {
       const message =
         error?.response?.data?.message || "Invalid credentials or server error";

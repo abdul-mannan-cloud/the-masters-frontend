@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { Plus, Search, Eye, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import * as customerService from "../../services/customerService";
@@ -7,10 +8,14 @@ import * as orderService from "../../services/orderService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 import DetailPanel from "./DetailPanel";
+import { formatPhone } from "../../utils/formatters";
+import { usePermission } from "../../hooks/usePermission";
 
 const CustomerList = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id: routeId } = useParams();
+  const canCreate = usePermission("customers", "create");
+  const canDelete = usePermission("customers", "delete");
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -192,13 +197,15 @@ const CustomerList = () => {
             Manage client details and view their order history.
           </p>
         </div>
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Customer
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCreateNew}
+            className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Customer
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
@@ -214,14 +221,16 @@ const CustomerList = () => {
                 className="w-full pl-9 pr-4 py-2.5 bg-white rounded-full border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
-            <button
-              onClick={handleBulkDelete}
-              disabled={checkedIds.length === 0}
-              className="px-4 py-2.5 rounded-full text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
-            >
-              Delete Selected
-              {checkedIds.length > 0 ? ` (${checkedIds.length})` : ""}
-            </button>
+            {canDelete && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={checkedIds.length === 0}
+                className="px-4 py-2.5 rounded-full text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+              >
+                Delete Selected
+                {checkedIds.length > 0 ? ` (${checkedIds.length})` : ""}
+              </button>
+            )}
           </div>
 
           <div
@@ -272,12 +281,14 @@ const CustomerList = () => {
                             }
                           >
                             <td onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={checkedIds.includes(customer._id)}
-                                onChange={() => toggleChecked(customer._id)}
-                                className="w-4 h-4 accent-primary"
-                              />
+                              {canDelete && (
+                                <input
+                                  type="checkbox"
+                                  checked={checkedIds.includes(customer._id)}
+                                  onChange={() => toggleChecked(customer._id)}
+                                  className="w-4 h-4 accent-primary"
+                                />
+                              )}
                             </td>
                             <td className="text-stone-400">
                               {isExpanded ? (
@@ -298,7 +309,7 @@ const CustomerList = () => {
                               </div>
                             </td>
                             <td className="text-on-surface-variant">
-                              {customer.phone}
+                              {formatPhone(customer.phone)}
                             </td>
                             <td className="text-on-surface-variant max-w-50 truncate">
                               {customer.address || "—"}
@@ -315,13 +326,15 @@ const CustomerList = () => {
                                 >
                                   <Eye className="w-4 h-4" />
                                 </button>
-                            <button
-                              onClick={() => handleDelete(customer._id)}
-                              className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {canDelete && (
+                              <button
+                                onClick={() => handleDelete(customer._id)}
+                                className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                           </tr>

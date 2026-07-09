@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import {
   UserCog,
@@ -16,7 +16,7 @@ import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
 
 const OwnerDashboard = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 

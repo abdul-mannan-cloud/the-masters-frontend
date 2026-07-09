@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { Plus, Search, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import * as roleService from "../../services/roleService";
 
 const RoleList = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const [roles, setRoles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);

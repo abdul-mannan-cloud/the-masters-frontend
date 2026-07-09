@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../hooks/useAuth";
 import scissorsImg from "../../assets/Icons/scissors.png";
+import PhoneInput from "../../components/PhoneInput";
+import { isValidPhone } from "../../utils/formatters";
 
 const CreateAccount = () => {
   const [email, setEmail] = useState("");
@@ -36,6 +38,10 @@ const CreateAccount = () => {
     }
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (contactPhone && !isValidPhone(contactPhone)) {
+      toast.error("Enter a valid 11-digit mobile number starting with 03");
       return;
     }
 
@@ -171,12 +177,11 @@ const CreateAccount = () => {
               <span className="font-headline font-semibold text-[11px] tracking-[.07em] uppercase text-[#9b9289]">
                 Contact Phone (optional)
               </span>
-              <input
-                type="text"
+              <PhoneInput
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
+                onChange={setContactPhone}
                 onKeyPress={handleKeyPress}
-                placeholder="Enter your business phone"
+                placeholder="03XX-XXXXXXX"
                 className="w-full font-body font-medium text-[14.5px] text-[#2a2521] px-3.5 py-3 border-[1.5px] border-[#e7e0d6] rounded-[11px] bg-[#fbf9f5] outline-none transition-all placeholder:text-[#b4ab9f] focus:border-[#c06b4a] focus:ring-[3px] focus:ring-[#c06b4a]/[.14] focus:bg-white"
               />
             </div>

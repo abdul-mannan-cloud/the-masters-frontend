@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Power } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
 import StatusBadge from "../../components/StatusBadge";
+import { usePermission } from "../../hooks/usePermission";
 
 const ProductTypeView = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id } = useParams();
+  const canUpdate = usePermission("productTypes", "update");
+  const canDelete = usePermission("productTypes", "delete");
   const [productType, setProductType] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -99,27 +103,33 @@ const ProductTypeView = () => {
               Rs. {productType.basePrice?.toLocaleString()} base price
             </p>
           </div>
-          <button
-            onClick={() => navigate(`/product-types/${id}/edit`)}
-            className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
-          >
-            <Pencil className="w-4 h-4" />
-            Edit
-          </button>
-          <button
-            onClick={handleToggleStatus}
-            className="p-2.5 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-colors"
-            title={productType.isActive ? "Deactivate" : "Activate"}
-          >
-            <Power className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="p-2.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => navigate(`/product-types/${id}/edit`)}
+              className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </button>
+          )}
+          {canUpdate && (
+            <button
+              onClick={handleToggleStatus}
+              className="p-2.5 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-colors"
+              title={productType.isActive ? "Deactivate" : "Activate"}
+            >
+              <Power className="w-5 h-5" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              className="p-2.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -45,7 +45,12 @@ const Sidebar = () => {
     if (user?.role === "super_admin") return false;
     if (user?.role === "tenant_admin") return true;
     return permissions?.[item.module]?.view === true;
-  });
+  }).map((item) => ({
+    ...item,
+    // "/tenants" is the platform-level, unprefixed route (super_admin only)
+    // — every other nav target lives under the current tenant's slug.
+    path: item.path === "/tenants" || !tenant ? item.path : `/${tenant.slug}${item.path}`,
+  }));
 
   const handleLogout = () => {
     logout();

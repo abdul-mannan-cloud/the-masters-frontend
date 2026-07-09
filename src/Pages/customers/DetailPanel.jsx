@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import {
   Phone,
   Mail,
@@ -13,10 +13,13 @@ import {
 } from "lucide-react";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
+import PhoneInput from "../../components/PhoneInput";
 import * as orderService from "../../services/orderService";
 import MeasurementsTab from "./MeasurementsTab";
 import OrderDraftTab from "./OrderDraftTab";
 import { emptyOrderDraft } from "./orderDraft";
+import { formatPhone, isValidPhone, isValidEmail } from "../../utils/formatters";
+import { usePermission } from "../../hooks/usePermission";
 
 const emptyForm = {
   name: "",
@@ -38,8 +41,12 @@ const DetailPanel = ({
   onDelete,
   onCancel,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const isCreate = mode === "create";
+  const canCreate = usePermission("customers", "create");
+  const canUpdate = usePermission("customers", "update");
+  const canDelete = usePermission("customers", "delete");
+  const canSubmit = isCreate ? canCreate : canUpdate;
   const [tab, setTab] = useState("details");
   const [form, setForm] = useState(() =>
     customer
@@ -57,6 +64,7 @@ const DetailPanel = ({
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [draftMeasurements, setDraftMeasurements] = useState([]);
   const [orderDraft, setOrderDraft] = useState(emptyOrderDraft);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (tab !== "history" || !customer?._id) return;
@@ -76,8 +84,22 @@ const DetailPanel = ({
   const handleChange = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const validate = () => {
+    const nextErrors = {};
+    if (!form.name.trim()) nextErrors.name = "Name is required.";
+    if (!form.phone.trim()) nextErrors.phone = "Phone is required.";
+    else if (!isValidPhone(form.phone))
+      nextErrors.phone = "Enter a valid 11-digit mobile number starting with 03.";
+    if (form.email && !isValidEmail(form.email))
+      nextErrors.email = "Enter a valid email address.";
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validate()) return;
+
     if (!isCreate) {
       onSave(form);
       return;
@@ -134,7 +156,7 @@ const DetailPanel = ({
             </h2>
             {!isCreate && (
               <p className="text-xs text-on-surface-variant">
-                {customer?.customerNumber} · {customer?.phone}
+                {customer?.customerNumber} · {formatPhone(customer?.phone)}
               </p>
             )}
           </div>
@@ -210,6 +232,9 @@ const DetailPanel = ({
                     className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -217,15 +242,17 @@ const DetailPanel = ({
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="03XX-XXXXXXX"
+                  <PhoneInput
                     value={form.phone}
-                    onChange={handleChange("phone")}
+                    onChange={(digits) =>
+                      setForm((f) => ({ ...f, phone: digits }))
+                    }
                     className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
+                {errors.phone && (
+                  <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -240,6 +267,9 @@ const DetailPanel = ({
                     className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -349,7 +379,7 @@ const DetailPanel = ({
           >
             Cancel
           </button>
-          {!isCreate && (
+          {!isCreate && canDelete && (
             <button
               type="button"
               onClick={() => onDelete(customer._id)}
@@ -359,17 +389,19 @@ const DetailPanel = ({
               <Trash2 className="w-4 h-4" />
             </button>
           )}
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 py-2.5 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60"
-          >
-            {saving
-              ? "Saving…"
-              : isCreate
-                ? "Save New Customer"
-                : "Update Customer"}
-          </button>
+          {canSubmit && (
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2.5 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60"
+            >
+              {saving
+                ? "Saving…"
+                : isCreate
+                  ? "Save New Customer"
+                  : "Update Customer"}
+            </button>
+          )}
         </div>
       </form>
     </div>

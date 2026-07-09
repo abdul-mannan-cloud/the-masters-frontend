@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
+import { usePermission } from "../../hooks/usePermission";
+import { formatPhone } from "../../utils/formatters";
 
 const PRODUCTION_STATUSES = [
   "pending",
@@ -17,8 +20,10 @@ const PRODUCTION_STATUSES = [
 const TERMINAL_STATUSES = ["completed", "delivered", "cancelled"];
 
 const OrderView = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id } = useParams();
+  const canUpdate = usePermission("orders", "update");
+  const canDelete = usePermission("orders", "delete");
   const [order, setOrder] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -102,13 +107,15 @@ const OrderView = () => {
             Placed on {new Date(order.orderDate).toLocaleDateString()}
           </p>
         </div>
-        <button
-          onClick={handleDelete}
-          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          title="Delete order"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
+        {canDelete && (
+          <button
+            onClick={handleDelete}
+            className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete order"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -124,7 +131,7 @@ const OrderView = () => {
             <div>
               <p className="font-bold text-on-surface">{customer.name}</p>
               <p className="text-sm text-on-surface-variant">
-                {customer.customerNumber} · {customer.phone}
+                {customer.customerNumber} · {formatPhone(customer.phone)}
               </p>
             </div>
           </div>
@@ -181,7 +188,10 @@ const OrderView = () => {
                 <button
                   key={status}
                   disabled={
-                    updating || locked || status === order.productionStatus
+                    !canUpdate ||
+                    updating ||
+                    locked ||
+                    status === order.productionStatus
                   }
                   onClick={() => handleStatusChange(status)}
                   className={`px-4 py-2 rounded-xl text-sm font-bold capitalize transition-colors disabled:opacity-40 ${

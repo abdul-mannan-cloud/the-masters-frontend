@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import * as tenantService from "../../services/tenantService";
+import PhoneInput from "../../components/PhoneInput";
+import { isValidPhone } from "../../utils/formatters";
 
 const PLANS = ["free", "basic", "pro", "enterprise"];
 
@@ -61,6 +63,8 @@ const TenantForm = () => {
     if (!businessName.trim()) nextErrors.businessName = "Business name is required.";
     if (!isEdit && !slug.trim()) nextErrors.slug = "Slug is required.";
     if (!contactEmail.trim()) nextErrors.contactEmail = "Contact email is required.";
+    if (contactPhone && !isValidPhone(contactPhone))
+      nextErrors.contactPhone = "Enter a valid 11-digit mobile number starting with 03.";
     if (!isEdit) {
       if (!password) nextErrors.password = "Password is required.";
       else if (password.length < 8) nextErrors.password = "Password must be at least 8 characters.";
@@ -186,12 +190,16 @@ const TenantForm = () => {
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   Contact Phone
                 </label>
-                <input
-                  type="text"
+                <PhoneInput
                   value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  onChange={setContactPhone}
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    errors.contactPhone ? "border-red-400" : "border-transparent"
+                  }`}
                 />
+                {errors.contactPhone && (
+                  <p className="mt-1 text-xs text-red-600">{errors.contactPhone}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">

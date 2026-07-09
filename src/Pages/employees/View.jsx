@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Lock, Power, KeyRound } from "lucide-react";
 import * as employeeService from "../../services/employeeService";
@@ -7,10 +8,14 @@ import * as userService from "../../services/userService";
 import * as roleService from "../../services/roleService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
+import { usePermission } from "../../hooks/usePermission";
+import { formatPhone, formatCnic } from "../../utils/formatters";
 
 const EmployeeView = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const { id } = useParams();
+  const canUpdate = usePermission("employees", "update");
+  const canDelete = usePermission("employees", "delete");
   const [employee, setEmployee] = useState(null);
   const [linkedUser, setLinkedUser] = useState(null);
   const [roleName, setRoleName] = useState(null);
@@ -133,23 +138,27 @@ const EmployeeView = () => {
               <StatusBadge status={employee.isActive ? "active" : "inactive"} />
             </div>
             <p className="text-on-surface-variant mt-1 text-sm">
-              {employee.phone}
+              {formatPhone(employee.phone)}
             </p>
           </div>
-          <button
-            onClick={() => navigate(`/employees/${id}/edit`)}
-            className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
-          >
-            <Pencil className="w-4 h-4" />
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            className="p-2.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => navigate(`/employees/${id}/edit`)}
+              className="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-on-surface-variant font-bold rounded-full text-sm hover:bg-stone-50 transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              className="p-2.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -163,7 +172,7 @@ const EmployeeView = () => {
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-xs text-on-surface-variant">CNIC</p>
-                <p className="text-on-surface">{employee.cnic || "—"}</p>
+                <p className="text-on-surface">{formatCnic(employee.cnic) || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Address</p>
@@ -226,46 +235,50 @@ const EmployeeView = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={handleToggleAccess}
-                  disabled={updatingStatus}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-60 ${
-                    linkedUser.status === "active"
-                      ? "border border-red-200 text-red-600 hover:bg-red-50"
-                      : "bg-primary text-on-primary hover:bg-primary-container"
-                  }`}
-                >
-                  <Power className="w-4 h-4" />
-                  {linkedUser.status === "active"
-                    ? "Suspend Access"
-                    : "Restore Access"}
-                </button>
+                {canUpdate && (
+                  <button
+                    onClick={handleToggleAccess}
+                    disabled={updatingStatus}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-60 ${
+                      linkedUser.status === "active"
+                        ? "border border-red-200 text-red-600 hover:bg-red-50"
+                        : "bg-primary text-on-primary hover:bg-primary-container"
+                    }`}
+                  >
+                    <Power className="w-4 h-4" />
+                    {linkedUser.status === "active"
+                      ? "Suspend Access"
+                      : "Restore Access"}
+                  </button>
+                )}
 
-                <form
-                  onSubmit={handleResetPassword}
-                  className="pt-3 border-t border-stone-100"
-                >
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                    Reset Password
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Min. 8 characters"
-                      className="flex-1 px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    <button
-                      type="submit"
-                      disabled={resettingPassword || newPassword.length < 8}
-                      className="flex items-center gap-1.5 px-4 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-primary disabled:opacity-40 transition-colors whitespace-nowrap"
-                    >
-                      <KeyRound className="w-4 h-4" />
-                      Reset
-                    </button>
-                  </div>
-                </form>
+                {canUpdate && (
+                  <form
+                    onSubmit={handleResetPassword}
+                    className="pt-3 border-t border-stone-100"
+                  >
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Reset Password
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Min. 8 characters"
+                        className="flex-1 px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <button
+                        type="submit"
+                        disabled={resettingPassword || newPassword.length < 8}
+                        className="flex items-center gap-1.5 px-4 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-primary disabled:opacity-40 transition-colors whitespace-nowrap"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                        Reset
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
           </div>

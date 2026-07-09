@@ -5,6 +5,8 @@ import { ArrowLeft, Pencil, Trash2, Power, UserCog, Users, ShoppingCart, Wallet 
 import * as tenantService from "../../services/tenantService";
 import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
+import BusinessInfoForm from "../../components/BusinessInfoForm";
+import { formatPhone } from "../../utils/formatters";
 
 const TenantView = () => {
   const navigate = useNavigate();
@@ -160,7 +162,7 @@ const TenantView = () => {
             </div>
             <div>
               <p className="text-xs text-on-surface-variant">Phone</p>
-              <p className="text-on-surface">{tenant.contactPhone || "—"}</p>
+              <p className="text-on-surface">{formatPhone(tenant.contactPhone) || "—"}</p>
             </div>
             <div>
               <p className="text-xs text-on-surface-variant">Registered</p>
@@ -173,6 +175,13 @@ const TenantView = () => {
               <p className="text-on-surface">{tenant.address || "—"}</p>
             </div>
           </div>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
+            Business Settings
+          </h2>
+          <BusinessInfoForm tenantId={id} />
         </div>
       </div>
     </div>

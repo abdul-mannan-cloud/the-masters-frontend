@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { Plus, Search, Eye, Pencil, Trash2, Power, Shirt } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
 import StatusBadge from "../../components/StatusBadge";
+import { usePermission } from "../../hooks/usePermission";
 
 const LIMIT = 10;
 
 const ProductTypeList = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
+  const canCreate = usePermission("productTypes", "create");
+  const canUpdate = usePermission("productTypes", "update");
+  const canDelete = usePermission("productTypes", "delete");
   const [productTypes, setProductTypes] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -93,6 +97,7 @@ const ProductTypeList = () => {
             business.
           </p>
         </div>
+        {canCreate && (
         <button
           onClick={() => navigate("/product-types/new")}
           className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
@@ -100,6 +105,7 @@ const ProductTypeList = () => {
           <Plus className="w-4 h-4" />
           Create Product Type
         </button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -194,29 +200,35 @@ const ProductTypeList = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() =>
-                            navigate(`/product-types/${pt._id}/edit`)
-                          }
-                          className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(pt)}
-                          className="p-2 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                          title={pt.isActive ? "Deactivate" : "Activate"}
-                        >
-                          <Power className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(pt._id)}
-                          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canUpdate && (
+                          <button
+                            onClick={() =>
+                              navigate(`/product-types/${pt._id}/edit`)
+                            }
+                            className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canUpdate && (
+                          <button
+                            onClick={() => handleToggleStatus(pt)}
+                            className="p-2 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            title={pt.isActive ? "Deactivate" : "Activate"}
+                          >
+                            <Power className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(pt._id)}
+                            className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

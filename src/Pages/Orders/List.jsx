@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { Plus, Eye, Trash2, ReceiptText } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
 import StatusBadge from "../../components/StatusBadge";
+import { usePermission } from "../../hooks/usePermission";
 
 const OrderList = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
+  const canCreate = usePermission("orders", "create");
+  const canDelete = usePermission("orders", "delete");
   const [orders, setOrders] = useState([]);
   const [customersById, setCustomersById] = useState({});
   const [statusFilter, setStatusFilter] = useState("");
@@ -66,13 +69,15 @@ const OrderList = () => {
             {orders.length} orders · Rs. {totalRevenue.toLocaleString()} total
           </p>
         </div>
-        <button
-          onClick={() => navigate("/orders/new")}
-          className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Order
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => navigate("/orders/new")}
+            className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Order
+          </button>
+        )}
       </div>
 
       <div className="mb-6">
@@ -162,13 +167,15 @@ const OrderList = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(order._id)}
-                          className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(order._id)}
+                            className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { Clock, Loader2, CheckCircle2, CalendarDays, Info, ShieldCheck } from "lucide-react";
 import * as dashboardService from "../../services/dashboardService";
@@ -7,7 +7,7 @@ import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
 
 const EmployeeDashboard = () => {
-  const navigate = useNavigate();
+  const navigate = useTenantNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 

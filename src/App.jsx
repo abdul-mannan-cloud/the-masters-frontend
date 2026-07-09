@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { useAuth } from "./hooks/useAuth.js";
+import { getDefaultPath } from "./utils/routing.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import TenantSlugGuard from "./components/TenantSlugGuard.jsx";
 import Layout from "./components/Layout.jsx";
 import Login from "./pages/auth/login.jsx";
 import CreateAccount from "./pages/auth/signup.jsx";
@@ -23,6 +26,18 @@ import TenantView from "./pages/tenants/View.jsx";
 import RoleList from "./pages/roles/List.jsx";
 import RoleForm from "./pages/roles/Form.jsx";
 
+// Catches anything unmatched — including a bare "/dashboard" hit by a
+// tenant-scoped user (that path only exists for super_admin now).
+const CatchAll = () => {
+  const { user, tenant, tenantLoading } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  const fallback = getDefaultPath(user, tenant);
+  if (fallback === null) {
+    return tenantLoading ? null : <Navigate to="/login" replace />;
+  }
+  return <Navigate to={fallback} replace />;
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -32,36 +47,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<CreateAccount />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-
-              <Route path="/customers" element={<CustomerList />} />
-              <Route path="/customers/:id" element={<CustomerList />} />
-
-              <Route path="/orders" element={<OrderList />} />
-              <Route path="/orders/new" element={<OrderForm />} />
-              <Route path="/orders/:id" element={<OrderView />} />
-
-              <Route path="/product-types" element={<ProductTypeList />} />
-              <Route path="/product-types/new" element={<ProductTypeForm />} />
-              <Route
-                path="/product-types/:id/edit"
-                element={<ProductTypeForm />}
-              />
-              <Route path="/product-types/:id" element={<ProductTypeView />} />
-
-              <Route path="/employees" element={<EmployeeList />} />
-              <Route path="/employees/new" element={<EmployeeForm />} />
-              <Route path="/employees/:id/edit" element={<EmployeeForm />} />
-              <Route path="/employees/:id" element={<EmployeeView />} />
-
-              <Route path="/business-info" element={<BusinessInfo />} />
-            </Route>
-          </Route>
-
+          {/* super_admin has no tenant of its own — these routes are never slug-prefixed. */}
           <Route element={<ProtectedRoute roles={["super_admin"]} />}>
             <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tenants" element={<TenantList />} />
               <Route path="/tenants/new" element={<TenantForm />} />
               <Route path="/tenants/:id/edit" element={<TenantForm />} />
@@ -69,15 +58,51 @@ function App() {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>
-            <Route element={<Layout />}>
-              <Route path="/roles" element={<RoleList />} />
-              <Route path="/roles/new" element={<RoleForm />} />
-              <Route path="/roles/:id/edit" element={<RoleForm />} />
+          {/* Every tenant-scoped role lives under "/:tenantSlug/...". */}
+          <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
+            <Route path="/:tenantSlug" element={<TenantSlugGuard />}>
+              <Route element={<Layout />}>
+                <Route path="dashboard" element={<Dashboard />} />
+
+                <Route element={<ProtectedRoute module="customers" />}>
+                  <Route path="customers" element={<CustomerList />} />
+                  <Route path="customers/:id" element={<CustomerList />} />
+                </Route>
+
+                <Route element={<ProtectedRoute module="orders" />}>
+                  <Route path="orders" element={<OrderList />} />
+                  <Route path="orders/new" element={<OrderForm />} />
+                  <Route path="orders/:id" element={<OrderView />} />
+                </Route>
+
+                <Route element={<ProtectedRoute module="productTypes" />}>
+                  <Route path="product-types" element={<ProductTypeList />} />
+                  <Route path="product-types/new" element={<ProductTypeForm />} />
+                  <Route path="product-types/:id/edit" element={<ProductTypeForm />} />
+                  <Route path="product-types/:id" element={<ProductTypeView />} />
+                </Route>
+
+                <Route element={<ProtectedRoute module="employees" />}>
+                  <Route path="employees" element={<EmployeeList />} />
+                  <Route path="employees/new" element={<EmployeeForm />} />
+                  <Route path="employees/:id/edit" element={<EmployeeForm />} />
+                  <Route path="employees/:id" element={<EmployeeView />} />
+                </Route>
+
+                <Route element={<ProtectedRoute module="settings" />}>
+                  <Route path="business-info" element={<BusinessInfo />} />
+                </Route>
+
+                <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>
+                  <Route path="roles" element={<RoleList />} />
+                  <Route path="roles/new" element={<RoleForm />} />
+                  <Route path="roles/:id/edit" element={<RoleForm />} />
+                </Route>
+              </Route>
             </Route>
           </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<CatchAll />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
