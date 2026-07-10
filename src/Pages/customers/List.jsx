@@ -83,14 +83,19 @@ const CustomerList = () => {
     try {
       if (mode === "create") {
         const { customer, order } = await customerService.createCustomer(formData);
-        toast.success(
-          order
-            ? `Customer added and order ${order.orderNumber} placed successfully`
-            : "Customer added successfully",
-        );
         await fetchCustomers();
-        setMode("view");
-        navigate(`/customers/${customer._id}`);
+        if (order) {
+          // Navigating away to a different route entirely — leave `mode` as
+          // "create" so the "land with no id → redirect to first customer"
+          // effect below doesn't fire mid-transition and clobber this
+          // navigation with its own `{ replace: true }`.
+          toast.success(`Customer added — order ${order.orderNumber} created`);
+          navigate(`/orders/${order._id}/checkout`);
+        } else {
+          setMode("view");
+          toast.success("Customer added successfully");
+          navigate(`/customers/${customer._id}`);
+        }
       } else {
         await customerService.updateCustomer(selectedId, formData);
         toast.success("Customer updated successfully");

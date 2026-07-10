@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { useState } from "react";
 import {
   Phone,
   Mail,
@@ -12,11 +11,10 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Avatar from "../../components/Avatar";
-import StatusBadge from "../../components/StatusBadge";
 import PhoneInput from "../../components/PhoneInput";
-import * as orderService from "../../services/orderService";
 import MeasurementsTab from "./MeasurementsTab";
 import OrderDraftTab from "./OrderDraftTab";
+import OrderHistoryTab from "./OrderHistoryTab";
 import { emptyOrderDraft } from "./orderDraft";
 import { formatPhone, isValidPhone, isValidEmail } from "../../utils/formatters";
 import { usePermission } from "../../hooks/usePermission";
@@ -41,7 +39,6 @@ const DetailPanel = ({
   onDelete,
   onCancel,
 }) => {
-  const navigate = useTenantNavigate();
   const isCreate = mode === "create";
   const canCreate = usePermission("customers", "create");
   const canUpdate = usePermission("customers", "update");
@@ -60,26 +57,9 @@ const DetailPanel = ({
         }
       : emptyForm,
   );
-  const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
   const [draftMeasurements, setDraftMeasurements] = useState([]);
   const [orderDraft, setOrderDraft] = useState(emptyOrderDraft);
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (tab !== "history" || !customer?._id) return;
-    (async () => {
-      try {
-        setLoadingOrders(true);
-        const data = await orderService.getAllOrders({
-          customerId: customer._id,
-        });
-        setOrders(data);
-      } finally {
-        setLoadingOrders(false);
-      }
-    })();
-  }, [tab, customer?._id]);
 
   const handleChange = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -125,12 +105,20 @@ const DetailPanel = ({
             discount: Number(orderDraft.discount) || 0,
             discountType: orderDraft.discountType,
             notes: orderDraft.notes || undefined,
-            items: includedItems.map(({ m, index }) => ({
-              measurementIndex: index,
-              productTypeId: m.productTypeId,
-              quantity: Number(orderDraft.itemsByKey[m._localKey]?.quantity) || 1,
-              instructions: orderDraft.itemsByKey[m._localKey]?.instructions || undefined,
-            })),
+            items: includedItems.map(({ m, index }) => {
+              const item = orderDraft.itemsByKey[m._localKey];
+              const selectedOptions = Object.entries(item?.selectedOptions || {})
+                .filter(([, value]) => value)
+                .map(([name, value]) => ({ name, value }));
+              return {
+                measurementIndex: index,
+                productTypeId: m.productTypeId,
+                quantity: Number(item?.quantity) || 1,
+                instructions: item?.instructions || undefined,
+                selectedOptions: selectedOptions.length > 0 ? selectedOptions : undefined,
+                unitPrice: item?.unitPrice !== undefined ? Number(item.unitPrice) : undefined,
+              };
+            }),
           };
 
     onSave({ ...form, measurements, order });
@@ -331,44 +319,7 @@ const DetailPanel = ({
             />
           )}
 
-          {tab === "history" && (
-            <div>
-              {loadingOrders ? (
-                <div className="flex justify-center py-10">
-                  <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                </div>
-              ) : orders.length === 0 ? (
-                <p className="text-sm text-on-surface-variant text-center py-10">
-                  No orders yet.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {orders.map((order) => (
-                    <div
-                      key={order._id}
-                      onClick={() => navigate(`/orders/${order._id}`)}
-                      className="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100 cursor-pointer transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-primary">
-                          {order.orderNumber}
-                        </p>
-                        <p className="text-xs text-on-surface-variant">
-                          {new Date(order.orderDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold">
-                          Rs. {order.total?.toLocaleString()}
-                        </p>
-                        <StatusBadge status={order.productionStatus} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {tab === "history" && <OrderHistoryTab customerId={customer?._id} />}
         </div>
 
         <div className="flex gap-2 p-6 pt-4 border-t border-stone-100">

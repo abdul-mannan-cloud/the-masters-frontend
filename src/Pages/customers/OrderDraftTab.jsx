@@ -1,4 +1,8 @@
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { ShoppingCart } from "lucide-react";
+import * as productTypeService from "../../services/productTypeService";
+import { usePermission } from "../../hooks/usePermission";
 
 // mode "create" only — lets the customer's very first order be assembled in
 // the same form as their Details + Measurements, instead of a separate trip
@@ -14,36 +18,71 @@ const computeTotal = (subtotal, discount, discountType) => {
 };
 
 const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
+  const canAdjustPrice = usePermission("orders", "update");
+  const [productTypes, setProductTypes] = useState([]);
   const eligible = draftMeasurements.filter((m) => m.productTypeId);
+
+  useEffect(() => {
+    if (eligible.length === 0) return;
+    (async () => {
+      try {
+        const data = await productTypeService.getAllProductTypes({
+          isActive: "true",
+          limit: 100,
+        });
+        setProductTypes(data.data);
+      } catch {
+        toast.error("Failed to load product options");
+      }
+    })();
+  }, [eligible.length]);
+
+  const productTypeFor = (id) => productTypes.find((pt) => pt._id === id);
 
   const setField = (field) => (e) =>
     onChange({ ...orderDraft, [field]: e.target.value });
 
-  const itemFor = (localKey) =>
-    orderDraft.itemsByKey[localKey] || {
-      included: false,
-      quantity: "1",
-      instructions: "",
-    };
+  const itemFor = (m) => {
+    const pt = productTypeFor(m.productTypeId);
+    return (
+      orderDraft.itemsByKey[m._localKey] || {
+        included: false,
+        quantity: "1",
+        instructions: "",
+        selectedOptions: {},
+        unitPrice: String(pt?.basePrice ?? m.price ?? ""),
+      }
+    );
+  };
 
-  const updateItem = (localKey, patch) =>
+  const updateItem = (m, patch) =>
     onChange({
       ...orderDraft,
       itemsByKey: {
         ...orderDraft.itemsByKey,
-        [localKey]: { ...itemFor(localKey), ...patch },
+        [m._localKey]: { ...itemFor(m), ...patch },
       },
     });
 
-  const subtotal = eligible.reduce((sum, m) => {
-    const item = itemFor(m._localKey);
-    if (!item.included) return sum;
+  const setOption = (m, optionName, value) => {
+    const item = itemFor(m);
+    updateItem(m, {
+      selectedOptions: { ...item.selectedOptions, [optionName]: value },
+    });
+  };
+
+  const lineTotal = (m) => {
+    const item = itemFor(m);
+    if (!item.included) return 0;
     const qty = Number(item.quantity) || 0;
-    return sum + (m.price || 0) * qty;
-  }, 0);
+    const price = Number(item.unitPrice) || 0;
+    return qty * price;
+  };
+
+  const subtotal = eligible.reduce((sum, m) => sum + lineTotal(m), 0);
   const discount = Number(orderDraft.discount) || 0;
   const total = computeTotal(subtotal, discount, orderDraft.discountType);
-  const includedCount = eligible.filter((m) => itemFor(m._localKey).included).length;
+  const includedCount = eligible.filter((m) => itemFor(m).included).length;
 
   if (eligible.length === 0) {
     return (
@@ -65,16 +104,15 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
         </p>
         <div className="space-y-2">
           {eligible.map((m) => {
-            const item = itemFor(m._localKey);
+            const item = itemFor(m);
+            const productType = productTypeFor(m.productTypeId);
             return (
               <div key={m._localKey} className="p-3 bg-stone-50 rounded-xl">
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={item.included}
-                    onChange={(e) =>
-                      updateItem(m._localKey, { included: e.target.checked })
-                    }
+                    onChange={(e) => updateItem(m, { included: e.target.checked })}
                     className="w-4 h-4 accent-primary"
                   />
                   <span className="flex-1 text-sm font-bold text-on-surface">
@@ -87,26 +125,69 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
                     )}
                   </span>
                   <span className="text-xs text-on-surface-variant">
-                    Rs. {m.price?.toLocaleString()}
+                    Rs. {(productType?.basePrice ?? m.price)?.toLocaleString()}
                   </span>
                 </label>
 
                 {item.included && (
-                  <div className="grid grid-cols-2 gap-3 mt-3 pl-6.5">
-                    <div>
-                      <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                        Quantity
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(m._localKey, { quantity: e.target.value })
-                        }
-                        className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
+                  <div className="mt-3 pl-6.5 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                          Quantity
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(m, { quantity: e.target.value })}
+                          className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                          Price (Rs.)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.unitPrice}
+                          disabled={!canAdjustPrice}
+                          onChange={(e) => updateItem(m, { unitPrice: e.target.value })}
+                          className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 disabled:bg-stone-100"
+                          title={
+                            canAdjustPrice
+                              ? "Adjust the price for this garment"
+                              : "You don't have permission to adjust prices"
+                          }
+                        />
+                      </div>
                     </div>
+
+                    {productType?.options?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {productType.options.map((option) => (
+                          <div key={option.name}>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                              {option.name}
+                            </label>
+                            <select
+                              value={item.selectedOptions[option.name] || ""}
+                              onChange={(e) => setOption(m, option.name, e.target.value)}
+                              className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="">— Select —</option>
+                              {option.values.map((v) => (
+                                <option key={v} value={v}>
+                                  {v}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                         Instructions
@@ -114,12 +195,17 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
                       <input
                         type="text"
                         value={item.instructions}
-                        onChange={(e) =>
-                          updateItem(m._localKey, { instructions: e.target.value })
-                        }
+                        onChange={(e) => updateItem(m, { instructions: e.target.value })}
                         placeholder="Optional"
                         className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
+                    </div>
+
+                    <div className="text-right text-xs text-on-surface-variant">
+                      Line total:{" "}
+                      <span className="font-bold text-on-surface">
+                        Rs. {lineTotal(m).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -179,13 +265,19 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
             />
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl">
-            <span className="text-sm font-bold text-on-surface-variant">
-              Order Total
-            </span>
-            <span className="text-lg font-bold text-primary">
-              Rs. {total.toLocaleString()}
-            </span>
+          <div className="space-y-1 p-3 bg-primary/5 rounded-xl">
+            <div className="flex items-center justify-between text-sm text-on-surface-variant">
+              <span>Subtotal</span>
+              <span>Rs. {subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-on-surface-variant">
+                Order Total
+              </span>
+              <span className="text-lg font-bold text-primary">
+                Rs. {total.toLocaleString()}
+              </span>
+            </div>
           </div>
         </>
       )}

@@ -14,6 +14,7 @@ import CustomerList from "./pages/customers/List.jsx";
 import OrderList from "./pages/orders/List.jsx";
 import OrderForm from "./pages/orders/Form.jsx";
 import OrderView from "./pages/orders/View.jsx";
+import Checkout from "./pages/orders/Checkout.jsx";
 import ProductTypeList from "./pages/productTypes/List.jsx";
 import ProductTypeForm from "./pages/productTypes/Form.jsx";
 import ProductTypeView from "./pages/productTypes/View.jsx";
@@ -72,6 +73,7 @@ function App() {
                 <Route element={<ProtectedRoute module="orders" />}>
                   <Route path="orders" element={<OrderList />} />
                   <Route path="orders/new" element={<OrderForm />} />
+                  <Route path="orders/:id/checkout" element={<Checkout />} />
                   <Route path="orders/:id" element={<OrderView />} />
                 </Route>
 
