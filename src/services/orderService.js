@@ -40,6 +40,11 @@ export const applyDiscount = async (id, discountData) => {
   return data;
 };
 
+export const confirmOrder = async (id) => {
+  const { data } = await api.patch(`/order/${id}/confirm`);
+  return data;
+};
+
 export const deleteOrder = async (id) => {
   const { data } = await api.delete(`/order/${id}`);
   return data;

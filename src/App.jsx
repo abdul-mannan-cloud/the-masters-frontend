@@ -26,6 +26,10 @@ import TenantForm from "./pages/tenants/Form.jsx";
 import TenantView from "./pages/tenants/View.jsx";
 import RoleList from "./pages/roles/List.jsx";
 import RoleForm from "./pages/roles/Form.jsx";
+import InventoryList from "./pages/inventory/List.jsx";
+import InventoryForm from "./pages/inventory/Form.jsx";
+import InventoryView from "./pages/inventory/View.jsx";
+import LowStockReport from "./pages/inventory/LowStockReport.jsx";
 
 // Catches anything unmatched — including a bare "/dashboard" hit by a
 // tenant-scoped user (that path only exists for super_admin now).
@@ -93,6 +97,14 @@ function App() {
 
                 <Route element={<ProtectedRoute module="settings" />}>
                   <Route path="business-info" element={<BusinessInfo />} />
+                </Route>
+
+                <Route element={<ProtectedRoute module="inventory" />}>
+                  <Route path="inventory" element={<InventoryList />} />
+                  <Route path="inventory/new" element={<InventoryForm />} />
+                  <Route path="inventory/low-stock" element={<LowStockReport />} />
+                  <Route path="inventory/:id/edit" element={<InventoryForm />} />
+                  <Route path="inventory/:id" element={<InventoryView />} />
                 </Route>
 
                 <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>

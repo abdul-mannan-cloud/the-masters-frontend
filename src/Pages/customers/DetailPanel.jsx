@@ -117,6 +117,11 @@ const DetailPanel = ({
                 instructions: item?.instructions || undefined,
                 selectedOptions: selectedOptions.length > 0 ? selectedOptions : undefined,
                 unitPrice: item?.unitPrice !== undefined ? Number(item.unitPrice) : undefined,
+                fabricId: item?.fabricId || undefined,
+                requiredFabricLength:
+                  item?.fabricId && item?.requiredFabricLength
+                    ? Number(item.requiredFabricLength)
+                    : undefined,
               };
             }),
           };

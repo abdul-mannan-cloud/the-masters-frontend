@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2 } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2, PackageCheck } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as paymentService from "../../services/paymentService";
 import Avatar from "../../components/Avatar";
@@ -32,6 +32,7 @@ const OrderView = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [reversingId, setReversingId] = useState(null);
@@ -70,6 +71,21 @@ const OrderView = () => {
       toast.error(error?.response?.data?.error || "Failed to update status");
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!window.confirm("Confirm this order? Fabric for any selected garments will be deducted from inventory."))
+      return;
+    setConfirming(true);
+    try {
+      await orderService.confirmOrder(id);
+      toast.success("Order confirmed — fabric deducted from inventory");
+      await fetchAll();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to confirm order");
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -251,7 +267,20 @@ const OrderView = () => {
           </div>
 
           <div className="pt-4 border-t border-stone-100 print:hidden">
-            <p className="text-xs text-on-surface-variant mb-2">Production Status</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-on-surface-variant">Production Status</p>
+              {canUpdate && !locked && (
+                <button
+                  onClick={handleConfirmOrder}
+                  disabled={confirming || !!order.confirmedAt}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary font-bold rounded-full text-xs hover:bg-primary/20 transition-colors disabled:opacity-50"
+                  title={order.confirmedAt ? "Fabric already deducted for this order" : "Deduct fabric and confirm this order"}
+                >
+                  <PackageCheck className="w-3.5 h-3.5" />
+                  {order.confirmedAt ? "Order Confirmed" : confirming ? "Confirming…" : "Confirm Order"}
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {PRODUCTION_STATUSES.map((status) => (
                 <button

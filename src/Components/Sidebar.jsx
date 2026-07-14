@@ -10,6 +10,7 @@ import {
   Building2,
   ShieldCheck,
   Info,
+  Boxes,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -23,6 +24,7 @@ const ALL_NAV_ITEMS = [
   { name: "Customers", path: "/customers", icon: Users, module: "customers" },
   { name: "Orders", path: "/orders", icon: ShoppingCart, module: "orders" },
   { name: "Product Types", path: "/product-types", icon: Layers, module: "productTypes" },
+  { name: "Inventory", path: "/inventory", icon: Boxes, module: "inventory" },
   { name: "Employees", path: "/employees", icon: UserCog, module: "employees" },
   { name: "Roles", path: "/roles", icon: ShieldCheck, roles: ["tenant_admin"] },
   {

@@ -81,6 +81,17 @@ const OrderItemCard = ({ item, defaultExpanded = false }) => {
             </div>
           )}
 
+          {item.fabricId && (
+            <div>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">
+                Fabric
+              </p>
+              <p className="text-sm text-on-surface">
+                {item.requiredFabricLength} {item.fabricUnit} required
+              </p>
+            </div>
+          )}
+
           {item.instructions && (
             <div>
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">

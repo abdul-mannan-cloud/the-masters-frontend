@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShoppingCart } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
+import * as inventoryService from "../../services/inventoryService";
 import { usePermission } from "../../hooks/usePermission";
 
 // mode "create" only — lets the customer's very first order be assembled in
@@ -19,7 +20,9 @@ const computeTotal = (subtotal, discount, discountType) => {
 
 const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
   const canAdjustPrice = usePermission("orders", "update");
+  const canPickFabric = usePermission("inventory", "view");
   const [productTypes, setProductTypes] = useState([]);
+  const [fabrics, setFabrics] = useState([]);
   const eligible = draftMeasurements.filter((m) => m.productTypeId);
 
   useEffect(() => {
@@ -37,7 +40,20 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
     })();
   }, [eligible.length]);
 
+  useEffect(() => {
+    if (eligible.length === 0 || !canPickFabric) return;
+    (async () => {
+      try {
+        const data = await inventoryService.getAllInventory({ isActive: "true", limit: 200 });
+        setFabrics(data.data);
+      } catch {
+        // fabric picker is optional — a failed fetch shouldn't block ordering
+      }
+    })();
+  }, [eligible.length, canPickFabric]);
+
   const productTypeFor = (id) => productTypes.find((pt) => pt._id === id);
+  const fabricFor = (id) => fabrics.find((f) => f._id === id);
 
   const setField = (field) => (e) =>
     onChange({ ...orderDraft, [field]: e.target.value });
@@ -51,6 +67,8 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
         instructions: "",
         selectedOptions: {},
         unitPrice: String(pt?.basePrice ?? m.price ?? ""),
+        fabricId: "",
+        requiredFabricLength: "",
       }
     );
   };
@@ -185,6 +203,64 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
                             </select>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {canPickFabric && fabrics.length > 0 && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                            Fabric (optional)
+                          </label>
+                          <select
+                            value={item.fabricId}
+                            onChange={(e) =>
+                              updateItem(m, {
+                                fabricId: e.target.value,
+                                requiredFabricLength: e.target.value ? item.requiredFabricLength : "",
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          >
+                            <option value="">— None —</option>
+                            {fabrics.map((f) => (
+                              <option key={f._id} value={f._id}>
+                                {f.fabricName}
+                                {f.color ? ` · ${f.color}` : ""} — {f.availableQuantity} {f.unit} available
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {item.fabricId && (
+                          <div>
+                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                              Required Length ({fabricFor(item.fabricId)?.unit})
+                            </label>
+                            <input
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={item.requiredFabricLength}
+                              onChange={(e) => updateItem(m, { requiredFabricLength: e.target.value })}
+                              placeholder="e.g. 2.75"
+                              className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+                        )}
+                        {item.fabricId &&
+                          item.requiredFabricLength &&
+                          (() => {
+                            const fabric = fabricFor(item.fabricId);
+                            const needed =
+                              (Number(item.requiredFabricLength) || 0) * (Number(item.quantity) || 1);
+                            if (!fabric || needed <= fabric.availableQuantity) return null;
+                            return (
+                              <p className="col-span-2 text-xs font-bold text-red-600">
+                                Insufficient inventory for selected fabric. Only {fabric.availableQuantity}{" "}
+                                {fabric.unit} available, {needed} {fabric.unit} needed.
+                              </p>
+                            );
+                          })()}
                       </div>
                     )}
 
