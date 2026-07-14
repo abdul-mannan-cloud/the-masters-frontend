@@ -104,5 +104,10 @@ export const theme = {
       },
     },
   },
+<<<<<<< HEAD
 };
 export const plugins = [];
+=======
+  plugins: [],
+}
+>>>>>>> 674a39fd98497bc4c9929132ba4f21b9dca91da5
