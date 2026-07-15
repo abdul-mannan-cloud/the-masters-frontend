@@ -4,6 +4,7 @@ import { Pencil, Building2, MessageCircle, Receipt } from "lucide-react";
 import * as settingsService from "../services/settingsService";
 import PhoneInput from "./PhoneInput";
 import { usePermission } from "../hooks/usePermission";
+import { useAuth } from "../hooks/useAuth";
 import { formatPhone, isValidPhone, isValidEmail } from "../utils/formatters";
 
 const emptyForm = {
@@ -51,6 +52,7 @@ const formFromSettings = (data) => ({
 // `tenantId` for the latter, omit it to manage the caller's own tenant.
 const BusinessInfoForm = ({ tenantId }) => {
   const canEdit = usePermission("settings", "update");
+  const { refreshTenant } = useAuth();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -144,6 +146,11 @@ const BusinessInfoForm = ({ tenantId }) => {
       setLogoPreview(null);
       toast.success("Business information updated successfully.");
       setEditing(false);
+      // Backend mirrors business.name/logo/email/phone/address onto Tenant —
+      // refresh AuthContext so the Sidebar picks it up without a re-login.
+      // Only relevant when editing your own tenant (no tenantId prop); the
+      // super_admin editing another tenant here has no tenant of their own.
+      if (!tenantId) refreshTenant();
     } catch (err) {
       toast.error(err?.response?.data?.error || "Failed to update business information");
     } finally {

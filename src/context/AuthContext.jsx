@@ -88,6 +88,12 @@ export function AuthProvider({ children }) {
     return authService.signup(payload);
   };
 
+  // Re-fetches the Tenant document into context — call this after any save
+  // that changes Tenant fields (e.g. Business Info updating businessName/logo,
+  // which the backend mirrors onto Tenant) so the Sidebar reflects it
+  // immediately instead of only after the next login.
+  const refreshTenant = () => loadTenant(user);
+
   const logout = () => {
     localStorage.removeItem("ciseauxtoken");
     localStorage.removeItem("ciseauxuser");
@@ -107,6 +113,7 @@ export function AuthProvider({ children }) {
         login,
         signup,
         logout,
+        refreshTenant,
       }}
     >
       {children}

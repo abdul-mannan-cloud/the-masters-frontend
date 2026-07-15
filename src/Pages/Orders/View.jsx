@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2, PackageCheck } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as paymentService from "../../services/paymentService";
+import * as settingsService from "../../services/settingsService";
 import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 import AddPaymentDialog from "./AddPaymentDialog";
@@ -30,6 +31,7 @@ const OrderView = () => {
 
   const [data, setData] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [letterhead, setLetterhead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -60,6 +62,22 @@ const OrderView = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Separate, best-effort fetch — GET /settings requires settings.view,
+  // which plain employees/tailors don't have. A 403 here must not block the
+  // order page itself, so failures are swallowed and the logo is just omitted.
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await settingsService.getSettings();
+        if (settings.invoice?.showLogo && settings.business?.logo) {
+          setLetterhead({ logo: settings.business.logo, name: settings.business.name });
+        }
+      } catch {
+        // no permission or not yet configured — invoice just renders without a logo
+      }
+    })();
+  }, []);
 
   const handleStatusChange = async (productionStatus) => {
     setUpdating(true);
@@ -149,6 +167,21 @@ const OrderView = () => {
 
   return (
     <div className="p-8 font-body print:p-0">
+      {letterhead && (
+        <div className="flex items-center gap-3 mb-6 print:mb-8">
+          <img
+            src={letterhead.logo}
+            alt={`${letterhead.name || "Business"} logo`}
+            className="w-10 h-10 rounded-lg object-cover border border-stone-200"
+          />
+          {letterhead.name && (
+            <span className="text-sm font-bold text-on-surface font-headline">
+              {letterhead.name}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-4 mb-8 print:hidden">
         <button
           onClick={() => navigate("/orders")}

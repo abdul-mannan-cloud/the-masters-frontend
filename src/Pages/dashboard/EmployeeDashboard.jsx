@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
-import { Clock, Loader2, CheckCircle2, CalendarDays, Info, ShieldCheck } from "lucide-react";
+import { Clock, Loader2, CheckCircle2, CalendarDays, Info, ShieldCheck, AlertTriangle } from "lucide-react";
 import * as dashboardService from "../../services/dashboardService";
 import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
@@ -10,15 +10,18 @@ const EmployeeDashboard = () => {
   const navigate = useTenantNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
+        setFailed(false);
         const data = await dashboardService.getEmployeeDashboard();
         setStats(data);
       } catch {
         toast.error("Failed to load dashboard data");
+        setFailed(true);
       } finally {
         setLoading(false);
       }
@@ -29,6 +32,26 @@ const EmployeeDashboard = () => {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // A failed fetch (missing dashboard.view permission, network error, etc.)
+  // leaves stats null — render an explicit error state instead of crashing
+  // on stats.roleName below.
+  if (failed || !stats) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="empty-state">
+          <AlertTriangle className="w-7 h-7 text-stone-300" />
+          <p className="text-sm font-bold text-on-surface-variant font-headline">
+            Couldn't load your dashboard
+          </p>
+          <p className="text-xs text-on-surface-variant text-center max-w-xs">
+            You may not have permission to view this, or something went wrong. Contact your
+            business owner if this keeps happening.
+          </p>
+        </div>
       </div>
     );
   }
