@@ -109,6 +109,7 @@ const OrderList = () => {
               <tr>
                 <th>Order #</th>
                 <th>Customer</th>
+                <th>Items</th>
                 <th>Date</th>
                 <th>Total</th>
                 <th>Production</th>
@@ -118,10 +119,10 @@ const OrderList = () => {
             </thead>
             <tbody>
               {loading ? (
-                <SkeletonTableRows rows={6} columns={7} />
+                <SkeletonTableRows rows={6} columns={8} />
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <ReceiptText className="w-7 h-7 text-stone-300" />
@@ -143,6 +144,24 @@ const OrderList = () => {
                     </td>
                     <td className="text-on-surface">
                       {customersById[order.customerId]?.name || "—"}
+                    </td>
+                    <td className="text-on-surface-variant max-w-56">
+                      {order.items?.length > 0 ? (
+                        <span className="text-xs">
+                          {order.items
+                            .slice(0, 2)
+                            .map((i) => i.garmentType)
+                            .join(", ")}
+                          {order.items.length > 2 && (
+                            <span className="text-on-surface-variant/70">
+                              {" "}
+                              +{order.items.length - 2} more
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="text-on-surface-variant">
                       {new Date(order.orderDate).toLocaleDateString()}

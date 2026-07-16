@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft, User, CreditCard } from "lucide-react";
+import { ArrowLeft, User, CreditCard, Ruler, Scissors } from "lucide-react";
 import * as orderService from "../../services/orderService";
+import * as paymentService from "../../services/paymentService";
 import StatusBadge from "../../components/StatusBadge";
+import AddPaymentDialog from "./AddPaymentDialog";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
 import Spinner from "../../components/Spinner";
@@ -20,6 +23,9 @@ const Checkout = () => {
   const [discount, setDiscount] = useState("0");
   const [discountType, setDiscountType] = useState("fixed");
   const [savingDiscount, setSavingDiscount] = useState(false);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const canRecordPayment = usePermission("payments", "create");
 
   const fetchCheckout = async () => {
     try {
@@ -42,6 +48,20 @@ const Checkout = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handleAddPayment = async (paymentData) => {
+    setSavingPayment(true);
+    try {
+      await paymentService.addPayment({ ...paymentData, orderId: id });
+      toast.success("Payment recorded successfully.");
+      setShowAddPayment(false);
+      await fetchCheckout();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to record payment");
+    } finally {
+      setSavingPayment(false);
+    }
+  };
 
   const handleSaveDiscount = async () => {
     setSavingDiscount(true);
@@ -112,22 +132,46 @@ const Checkout = () => {
               Items
             </h3>
             {items.map((item) => (
-              <div key={item._id} className="flex items-center justify-between py-2 border-b border-stone-50 last:border-0">
-                <div>
-                  <p className="text-sm font-bold text-on-surface">{item.garmentType}</p>
-                  <p className="text-xs text-on-surface-variant">
-                    Qty: {item.quantity} · Price: Rs. {item.unitPrice.toLocaleString()}
-                    {item.selectedOptions?.length > 0 && (
-                      <>
-                        {" · "}
-                        {item.selectedOptions.map((o) => `${o.name}: ${o.value}`).join(", ")}
-                      </>
-                    )}
+              <div key={item._id} className="py-2.5 border-b border-stone-50 last:border-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">{item.garmentType}</p>
+                    <p className="text-xs text-on-surface-variant">
+                      Qty: {item.quantity} · Price: Rs. {item.unitPrice.toLocaleString()}
+                      {item.selectedOptions?.length > 0 && (
+                        <>
+                          {" · "}
+                          {item.selectedOptions.map((o) => `${o.name}: ${o.value}`).join(", ")}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <p className="text-sm font-bold text-on-surface shrink-0">
+                    Rs. {item.subtotal.toLocaleString()}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-on-surface">
-                  Rs. {item.subtotal.toLocaleString()}
-                </p>
+
+                {(item.fabric || item.measurement) && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-on-surface-variant">
+                    {item.fabric && (
+                      <span className="flex items-center gap-1">
+                        <Scissors className="w-3 h-3" />
+                        {item.fabric.fabricName || "Fabric"}
+                        {item.fabric.color && ` · ${item.fabric.color}`}
+                        {item.requiredFabricLength &&
+                          ` — ${item.requiredFabricLength} ${item.fabricUnit} used`}
+                      </span>
+                    )}
+                    {item.measurement?.values?.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Ruler className="w-3 h-3" />
+                        {item.measurement.values
+                          .map((v) => `${v.label} ${v.value}${v.unit}`)
+                          .join(", ")}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -216,14 +260,39 @@ const Checkout = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => navigate(`/orders/${id}`)}
-          className="w-full py-3.5 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors flex items-center justify-center gap-2"
-        >
-          <CreditCard className="w-4 h-4" />
-          Proceed to Payment
-        </button>
+        <div className="flex gap-3">
+          {canRecordPayment && data.remainingBalance > 0 && (
+            <button
+              onClick={() => setShowAddPayment(true)}
+              className="flex-1 py-3.5 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors flex items-center justify-center gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              Record Advance Payment
+            </button>
+          )}
+          <button
+            onClick={() => navigate(`/orders/${id}`)}
+            className={`py-3.5 font-bold rounded-full text-sm transition-colors flex items-center justify-center gap-2 ${
+              canRecordPayment && data.remainingBalance > 0
+                ? "flex-1 border border-stone-200 text-on-surface-variant hover:bg-stone-50"
+                : "w-full bg-primary text-on-primary hover:bg-primary-container"
+            }`}
+          >
+            View Full Order
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showAddPayment && (
+          <AddPaymentDialog
+            remainingBalance={data.remainingBalance}
+            saving={savingPayment}
+            onSave={handleAddPayment}
+            onCancel={() => setShowAddPayment(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -87,6 +87,9 @@ const OrderItemCard = ({ item, defaultExpanded = false }) => {
                 Fabric
               </p>
               <p className="text-sm text-on-surface">
+                {item.fabric?.fabricName || "Fabric"}
+                {item.fabric?.color && ` · ${item.fabric.color}`}
+                {" — "}
                 {item.requiredFabricLength} {item.fabricUnit} required
               </p>
             </div>

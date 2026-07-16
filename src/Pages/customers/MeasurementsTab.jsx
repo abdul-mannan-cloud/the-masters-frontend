@@ -5,7 +5,6 @@ import {
   Plus,
   Eye,
   Pencil,
-  Copy,
   History,
   RefreshCw,
   Trash2,
@@ -175,6 +174,24 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
     onDraftsChange(drafts.filter((d) => d._localKey !== localKey));
   };
 
+  // Manage mode only — deleting a draft (create mode) is handleRemoveDraft
+  // above, purely local state. This hits the API, and the backend itself
+  // enforces the same "locked measurements can't be deleted" rule this
+  // button already respects by only rendering for an unlocked, latest version.
+  const handleDeleteMeasurement = async (measurement) => {
+    if (!window.confirm(`Delete this ${measurement.garmentType} measurement?`)) return;
+    setSaving(true);
+    try {
+      await measurementService.deleteMeasurement(measurement._id);
+      toast.success("Measurement deleted successfully.");
+      await fetchMeasurements();
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to delete measurement");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggleGroup = (garmentType) =>
     setExpandedGroups((prev) => ({
       ...prev,
@@ -210,21 +227,23 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
       ) : (
         <>
           {isLatest && !item.lockedForOrder && (
-            <button
-              onClick={() => setFormState({ action: "edit", source: item })}
-              className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
+            <>
+              <button
+                onClick={() => setFormState({ action: "edit", source: item })}
+                className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
+                title="Edit"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => handleDeleteMeasurement(item)}
+                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setFormState({ action: "duplicate", source: item })}
-            className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
-            title="Duplicate"
-          >
-            <Copy className="w-3.5 h-3.5" />
-          </button>
           {isLatest && item.lockedForOrder && (
             <button
               onClick={() =>
@@ -247,14 +266,16 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
         <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
           Garment Measurements
         </p>
-        <button
-          type="button"
-          onClick={() => setFormState({ action: "add" })}
-          className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add Garment
-        </button>
+        {mode === "create" && (
+          <button
+            type="button"
+            onClick={() => setFormState({ action: "add" })}
+            className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Garment
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -265,7 +286,9 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
         <div className="empty-state py-8!">
           <Ruler className="w-6 h-6 text-stone-300" />
           <p className="text-sm text-on-surface-variant">
-            No measurements added yet.
+            {mode === "create"
+              ? "No measurements added yet."
+              : "No measurements on file yet — measurements are taken when an order is placed."}
           </p>
         </div>
       ) : (
