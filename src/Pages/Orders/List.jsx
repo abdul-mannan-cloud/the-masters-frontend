@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Plus, Eye, Trash2, ReceiptText } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
+import { SkeletonTableRows } from "../../components/Skeleton";
 
 const OrderList = () => {
   const navigate = useTenantNavigate();
@@ -70,13 +72,15 @@ const OrderList = () => {
           </p>
         </div>
         {canCreate && (
-          <button
+          <motion.button
             onClick={() => navigate("/orders/new")}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.97 }}
             className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Order
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -97,7 +101,7 @@ const OrderList = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -114,13 +118,7 @@ const OrderList = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="7" className="py-16 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonTableRows rows={6} columns={7} />
               ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan="7">

@@ -3,6 +3,7 @@ import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import * as inventoryService from "../../services/inventoryService";
+import { SkeletonTableRows } from "../../components/Skeleton";
 
 const LowStockReport = () => {
   const navigate = useTenantNavigate();
@@ -44,7 +45,7 @@ const LowStockReport = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -59,13 +60,7 @@ const LowStockReport = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="5" className="py-16 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonTableRows rows={6} columns={5} />
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan="5">

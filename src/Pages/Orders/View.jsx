@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2, PackageCheck } from "lucide-react";
 import * as orderService from "../../services/orderService";
@@ -12,6 +13,7 @@ import AddPaymentDialog from "./AddPaymentDialog";
 import OrderItemCard from "./OrderItemCard";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
+import Spinner from "../../components/Spinner";
 
 const PRODUCTION_STATUSES = [
   "pending",
@@ -154,7 +156,7 @@ const OrderView = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -225,7 +227,7 @@ const OrderView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
           className="bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5 font-headline">
             Customer
@@ -265,7 +267,7 @@ const OrderView = () => {
 
         <div
           className="lg:col-span-2 bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5 font-headline">
             Itemized Bill
@@ -348,7 +350,7 @@ const OrderView = () => {
 
       <div
         className="bg-white rounded-2xl p-6 mt-6"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline">
@@ -444,14 +446,16 @@ const OrderView = () => {
         )}
       </div>
 
-      {showAddPayment && (
-        <AddPaymentDialog
-          remainingBalance={remainingBalance}
-          saving={savingPayment}
-          onSave={handleAddPayment}
-          onCancel={() => setShowAddPayment(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showAddPayment && (
+          <AddPaymentDialog
+            remainingBalance={remainingBalance}
+            saving={savingPayment}
+            onSave={handleAddPayment}
+            onCancel={() => setShowAddPayment(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

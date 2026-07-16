@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import * as tenantService from "../../services/tenantService";
 import PhoneInput from "../../components/PhoneInput";
 import { isValidPhone } from "../../utils/formatters";
+import Spinner from "../../components/Spinner";
 
 const PLANS = ["free", "basic", "pro", "enterprise"];
 
@@ -106,7 +107,7 @@ const TenantForm = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -136,7 +137,7 @@ const TenantForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -312,7 +313,7 @@ const TenantForm = () => {
               className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving && (
-                <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                <Spinner size="sm" tone="on-primary" />
               )}
               {saving ? "Saving…" : isEdit ? "Update Tenant" : "Create Tenant"}
             </button>

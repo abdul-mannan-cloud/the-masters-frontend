@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, SlidersHorizontal, Package } from "lucide-react";
 import * as inventoryService from "../../services/inventoryService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import AdjustStockDialog from "./AdjustStockDialog";
+import Spinner from "../../components/Spinner";
 
 const TX_LIMIT = 15;
 
@@ -85,7 +87,7 @@ const InventoryView = () => {
   if (loading || !item) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -134,7 +136,7 @@ const InventoryView = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}>
+          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}>
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">
               Available Stock
             </p>
@@ -142,7 +144,7 @@ const InventoryView = () => {
               {item.availableQuantity} <span className="text-base font-medium">{item.unit}</span>
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}>
+          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}>
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">
               Minimum Stock Level
             </p>
@@ -150,7 +152,7 @@ const InventoryView = () => {
               {item.minimumStockLevel} <span className="text-base font-medium">{item.unit}</span>
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}>
+          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}>
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Status</p>
             <StatusBadge status={item.isActive ? "active" : "inactive"} />
           </div>
@@ -158,7 +160,7 @@ const InventoryView = () => {
 
         <div
           className="bg-white rounded-2xl p-6 mb-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <h2 className="text-sm font-extrabold text-on-surface font-headline mb-4">Basic Information</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
@@ -201,7 +203,7 @@ const InventoryView = () => {
 
         <div
           className="bg-white rounded-2xl overflow-hidden mb-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <div className="px-6 py-4 border-b border-stone-100">
             <h2 className="text-sm font-extrabold text-on-surface font-headline">
@@ -224,7 +226,7 @@ const InventoryView = () => {
                   <tr>
                     <td colSpan="5" className="py-10 text-center">
                       <div className="flex justify-center">
-                        <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                        <Spinner size="md" />
                       </div>
                     </td>
                   </tr>
@@ -289,7 +291,7 @@ const InventoryView = () => {
 
         <div
           className="bg-white rounded-2xl overflow-hidden"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <div className="px-6 py-4 border-b border-stone-100">
             <h2 className="text-sm font-extrabold text-on-surface font-headline">
@@ -321,16 +323,18 @@ const InventoryView = () => {
         </div>
       </div>
 
-      {showAdjust && (
-        <AdjustStockDialog
-          item={item}
-          onClose={() => setShowAdjust(false)}
-          onAdjusted={() => {
-            fetchItem();
-            fetchTransactions();
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showAdjust && (
+          <AdjustStockDialog
+            item={item}
+            onClose={() => setShowAdjust(false)}
+            onAdjusted={() => {
+              fetchItem();
+              fetchTransactions();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Upload } from "lucide-react";
 import * as inventoryService from "../../services/inventoryService";
+import Spinner from "../../components/Spinner";
 
 const UNITS = ["meter", "yard", "piece", "roll"];
 
@@ -128,7 +129,7 @@ const InventoryForm = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -158,7 +159,7 @@ const InventoryForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl bg-stone-50 border border-stone-200 overflow-hidden flex items-center justify-center shrink-0">
@@ -342,7 +343,7 @@ const InventoryForm = () => {
               className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving && (
-                <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                <Spinner size="sm" tone="on-primary" />
               )}
               {saving ? "Saving…" : isEdit ? "Update Fabric" : "Save Fabric"}
             </button>

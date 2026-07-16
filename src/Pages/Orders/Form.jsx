@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
 import { formatPhone } from "../../utils/formatters";
+import Spinner from "../../components/Spinner";
 
 const OrderForm = () => {
   const navigate = useTenantNavigate();
@@ -81,7 +82,7 @@ const OrderForm = () => {
 
         <div
           className="bg-white rounded-2xl p-8"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -187,7 +188,7 @@ const OrderForm = () => {
                 className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving && (
-                  <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                  <Spinner size="sm" tone="on-primary" />
                 )}
                 {saving ? "Creating…" : "Create Order"}
               </button>

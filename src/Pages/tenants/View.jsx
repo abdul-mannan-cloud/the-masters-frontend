@@ -7,6 +7,7 @@ import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
 import BusinessInfoForm from "../../components/BusinessInfoForm";
 import { formatPhone } from "../../utils/formatters";
+import Spinner from "../../components/Spinner";
 
 const TenantView = () => {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ const TenantView = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -146,7 +147,7 @@ const TenantView = () => {
 
         <div
           className="bg-white rounded-2xl p-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
             Profile

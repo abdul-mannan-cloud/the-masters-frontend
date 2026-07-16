@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Plus,
@@ -15,6 +16,7 @@ import * as productTypeService from "../../services/productTypeService";
 import Modal from "../../components/Modal";
 import StatusBadge from "../../components/StatusBadge";
 import MeasurementForm from "./MeasurementForm";
+import Spinner from "../../components/Spinner";
 
 let draftKeySeq = 0;
 const nextDraftKey = () => `draft-${++draftKeySeq}`;
@@ -257,7 +259,7 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
 
       {loading ? (
         <div className="flex justify-center py-8">
-          <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <Spinner size="md" />
         </div>
       ) : grouped.length === 0 ? (
         <div className="empty-state py-8!">
@@ -328,39 +330,43 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
         </div>
       )}
 
-      {formState && (
-        <Modal
-          title={
-            formState.action === "edit"
-              ? "Edit Measurement"
-              : formState.action === "duplicate"
-                ? "Duplicate Measurement"
-                : formState.action === "newVersion"
-                  ? "Create New Version"
-                  : "Add Garment Measurement"
-          }
-          onClose={closeForm}
-        >
-          <MeasurementForm
-            productTypes={productTypes}
-            productTypesLoading={productTypesLoading}
-            initialData={formState.source}
-            lockGarmentSelection={
-              formState.action === "edit" || formState.action === "newVersion"
+      <AnimatePresence>
+        {formState && (
+          <Modal
+            title={
+              formState.action === "edit"
+                ? "Edit Measurement"
+                : formState.action === "duplicate"
+                  ? "Duplicate Measurement"
+                  : formState.action === "newVersion"
+                    ? "Create New Version"
+                    : "Add Garment Measurement"
             }
-            submitLabel={formState.action === "edit" ? "Save Changes" : "Save"}
-            saving={saving}
-            onSave={handleSave}
-            onCancel={closeForm}
-          />
-        </Modal>
-      )}
+            onClose={closeForm}
+          >
+            <MeasurementForm
+              productTypes={productTypes}
+              productTypesLoading={productTypesLoading}
+              initialData={formState.source}
+              lockGarmentSelection={
+                formState.action === "edit" || formState.action === "newVersion"
+              }
+              submitLabel={formState.action === "edit" ? "Save Changes" : "Save"}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={closeForm}
+            />
+          </Modal>
+        )}
+      </AnimatePresence>
 
-      {viewing && (
-        <Modal title={viewing.garmentType} onClose={() => setViewing(null)}>
-          <ReadOnlyMeasurement measurement={viewing} />
-        </Modal>
-      )}
+      <AnimatePresence>
+        {viewing && (
+          <Modal title={viewing.garmentType} onClose={() => setViewing(null)}>
+            <ReadOnlyMeasurement measurement={viewing} />
+          </Modal>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

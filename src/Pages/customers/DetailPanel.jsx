@@ -133,7 +133,7 @@ const DetailPanel = ({
   return (
     <div
       className="bg-white rounded-2xl overflow-hidden flex flex-col h-full"
-      style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+      style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
     >
       <div className="px-6 pt-6 pb-4 border-b border-stone-100">
         <div className="flex items-center gap-4 mb-4">

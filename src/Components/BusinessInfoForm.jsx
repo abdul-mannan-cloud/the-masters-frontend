@@ -6,6 +6,7 @@ import PhoneInput from "./PhoneInput";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../hooks/useAuth";
 import { formatPhone, isValidPhone, isValidEmail } from "../utils/formatters";
+import Spinner from "./Spinner";
 
 const emptyForm = {
   name: "",
@@ -161,7 +162,7 @@ const BusinessInfoForm = ({ tenantId }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -190,7 +191,7 @@ const BusinessInfoForm = ({ tenantId }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <div className="flex items-center gap-3">
               {logoUrl ? (
@@ -320,7 +321,7 @@ const BusinessInfoForm = ({ tenantId }) => {
 
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
               <Receipt className="w-4 h-4" />
@@ -375,7 +376,7 @@ const BusinessInfoForm = ({ tenantId }) => {
 
           <div
             className="bg-white rounded-2xl p-6 space-y-4"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
@@ -448,7 +449,7 @@ const BusinessInfoForm = ({ tenantId }) => {
               className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving && (
-                <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                <Spinner size="sm" tone="on-primary" />
               )}
               {saving ? "Saving…" : "Save Changes"}
             </button>
@@ -458,7 +459,7 @@ const BusinessInfoForm = ({ tenantId }) => {
         <div className="space-y-6">
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <div className="flex items-center gap-4 mb-4">
               {settings.business?.logo && (
@@ -511,7 +512,7 @@ const BusinessInfoForm = ({ tenantId }) => {
 
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline flex items-center gap-2">
               <Receipt className="w-4 h-4" />
@@ -531,7 +532,7 @@ const BusinessInfoForm = ({ tenantId }) => {
 
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />

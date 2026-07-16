@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Building2, CheckCircle2, Ban, Users, UserCog, UsersRound, ShoppingCart } from "lucide-react";
 import * as dashboardService from "../../services/dashboardService";
 import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
+import Spinner from "../../components/Spinner";
+import { staggerContainer } from "../../utils/motion";
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -28,14 +31,19 @@ const SuperAdminDashboard = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
 
   return (
     <div className="p-8 font-body">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"
+      >
         <KpiCard icon={Building2} label="Total Tenants" value={stats.totalTenants} onClick={() => navigate("/tenants")} />
         <KpiCard icon={CheckCircle2} label="Active Tenants" value={stats.activeTenants} onClick={() => navigate("/tenants")} />
         <KpiCard icon={Ban} label="Suspended Tenants" value={stats.suspendedTenants} onClick={() => navigate("/tenants")} />
@@ -43,11 +51,11 @@ const SuperAdminDashboard = () => {
         <KpiCard icon={UserCog} label="Total Employees" value={stats.totalEmployees} />
         <KpiCard icon={Users} label="Total Customers" value={stats.totalCustomers} />
         <KpiCard icon={ShoppingCart} label="Total Orders" value={stats.totalOrders} />
-      </div>
+      </motion.div>
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="px-6 py-4 border-b border-stone-100">
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline">

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Clock, Loader2, CheckCircle2, CalendarDays, Info, ShieldCheck, AlertTriangle } from "lucide-react";
 import * as dashboardService from "../../services/dashboardService";
 import KpiCard from "../../components/KpiCard";
 import StatusBadge from "../../components/StatusBadge";
+import Spinner from "../../components/Spinner";
+import { staggerContainer } from "../../utils/motion";
 
 const EmployeeDashboard = () => {
   const navigate = useTenantNavigate();
@@ -31,7 +34,7 @@ const EmployeeDashboard = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -61,7 +64,7 @@ const EmployeeDashboard = () => {
       <div
         onClick={() => navigate("/business-info")}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl p-5 mb-6 cursor-pointer hover:shadow-md transition-shadow"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -78,15 +81,20 @@ const EmployeeDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8"
+      >
         <KpiCard icon={Clock} label="Pending Tasks" value={stats.pendingCount} />
         <KpiCard icon={Loader2} label="In Progress" value={stats.inProgressCount} />
         <KpiCard icon={CheckCircle2} label="Completed Tasks" value={stats.completedCount} />
-      </div>
+      </motion.div>
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-on-surface-variant" />

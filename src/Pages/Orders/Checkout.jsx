@@ -7,6 +7,7 @@ import * as orderService from "../../services/orderService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
+import Spinner from "../../components/Spinner";
 
 const Checkout = () => {
   const navigate = useTenantNavigate();
@@ -62,7 +63,7 @@ const Checkout = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -93,7 +94,7 @@ const Checkout = () => {
 
         <div
           className="bg-white rounded-2xl overflow-hidden mb-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
         >
           <div className="p-6 border-b border-stone-100">
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3 font-headline flex items-center gap-2">
@@ -190,7 +191,7 @@ const Checkout = () => {
 
         <div
           className="bg-white rounded-2xl p-6 mb-6"
-          style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+          style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
         >
           <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3 font-headline">
             Payment Summary

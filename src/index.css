@@ -5,8 +5,8 @@
 @config "../tailwind.config.js";
 
 :root {
-  --font-body: "Inter", system-ui, sans-serif;
-  --font-headline: "Inter", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+  --font-headline: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-newsreader: "Newsreader", Georgia, serif;
 }
 
@@ -19,8 +19,37 @@ body,
 body {
   margin: 0;
   font-family: var(--font-body);
-  background-color: #fff;
-  color: #111827;
+  background-color: #fbf9f6;
+  color: #1a1a1a;
+}
+
+/* Every text input/select/textarea in the app already gets a focus ring or
+   border-color change from its own Tailwind classes (`focus:ring-2
+   focus:ring-primary/20` etc, ~40 files) — none of them declared a
+   `transition`, so that change was instant. One rule here makes all of them
+   animate consistently instead of editing each call site individually. */
+input,
+select,
+textarea {
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+/* Respect the user's OS-level motion preference globally — belt-and-braces
+   alongside MotionConfig's reducedMotion="user" in App.jsx, since this also
+   catches the plain CSS animations below (fade-up, shimmer) that Framer
+   Motion doesn't touch. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ──────────────────────────────────────────────
@@ -37,12 +66,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(31, 58, 50, 0.15);
+  background: rgba(26, 26, 26, 0.14);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(31, 58, 50, 0.28);
+  background: rgba(26, 26, 26, 0.26);
 }
 
 @layer components {
@@ -73,6 +102,27 @@ body {
     gap: 0.75rem;
     padding: 4rem 0;
     user-select: none;
+    animation: fade-up 0.3s ease-out;
+  }
+
+  /* Skeleton loader — see components/Skeleton.jsx. Gradient + the `shimmer`
+     keyframe (tailwind.config.js) instead of a plain pulsing opacity, since a
+     moving highlight reads as "content is arriving" rather than "something
+     is broken and blinking". */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #eae6e1 25%,
+      #f3efea 37%,
+      #eae6e1 63%
+    );
+    background-size: 400% 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton {
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
   }
 }
 
@@ -87,7 +137,7 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #a89e8f;
+    color: #8c8175;
   }
 
   .masters-table td {
@@ -101,19 +151,35 @@ body {
     transition:
       background-color 0.2s ease,
       color 0.2s ease;
-    border-bottom: 1px solid rgba(192, 201, 195, 0.12);
+    border-bottom: 1px solid rgba(26, 26, 26, 0.07);
+    /* `backwards` holds the 0%-keyframe state (opacity 0) during the delay
+       below, so staggered rows don't flash visible before their turn. Doubles
+       as the "pagination transition" — a page change re-mounts these <tr>
+       nodes, so the same fade-up replays with no extra code. */
+    animation: fade-up 0.3s ease-out backwards;
   }
 
+  .masters-table tbody tr:nth-child(1) { animation-delay: 0ms; }
+  .masters-table tbody tr:nth-child(2) { animation-delay: 30ms; }
+  .masters-table tbody tr:nth-child(3) { animation-delay: 60ms; }
+  .masters-table tbody tr:nth-child(4) { animation-delay: 90ms; }
+  .masters-table tbody tr:nth-child(5) { animation-delay: 120ms; }
+  .masters-table tbody tr:nth-child(6) { animation-delay: 150ms; }
+  .masters-table tbody tr:nth-child(7) { animation-delay: 180ms; }
+  .masters-table tbody tr:nth-child(n + 8) { animation-delay: 210ms; }
+
   .masters-table tbody tr:hover {
-    background-color: #fbf9f5;
+    background-color: #f6f3ee;
   }
 
   .masters-table tbody tr:last-child {
     border-bottom: none;
   }
 
-  /* Status Badge */
-
+  /* Status Badge — plain CSS mount animation rather than a Framer Motion
+     component, since badges render by the dozen inside table rows; a
+     per-mount CSS keyframe costs nothing extra on re-render, a mounted
+     motion component per badge would. */
   .status-badge {
     display: inline-flex;
     align-items: center;
@@ -123,5 +189,6 @@ body {
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
+    animation: fade-up 0.25s ease-out;
   }
 }

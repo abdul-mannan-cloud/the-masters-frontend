@@ -1,5 +1,5 @@
 import { useLocation, useParams } from "react-router-dom";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const TITLES = [
@@ -13,7 +13,7 @@ const TITLES = [
   ["/business-info", "Business Info"],
 ];
 
-const Topbar = () => {
+const Topbar = ({ onOpenMobileNav }) => {
   const location = useLocation();
   const { tenantSlug } = useParams();
   const { user } = useAuth();
@@ -27,17 +27,26 @@ const Topbar = () => {
   const initials = user?.email?.[0]?.toUpperCase() || "?";
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-stone-200">
-      <h1 className="text-lg font-bold text-on-surface font-headline">
-        {title}
-      </h1>
+    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 px-4 sm:px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-stone-200">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onOpenMobileNav}
+          className="lg:hidden p-2 -ml-2 rounded-full hover:bg-stone-100 transition-colors text-on-surface-variant"
+          title="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <h1 className="text-lg font-bold text-on-surface font-headline">
+          {title}
+        </h1>
+      </div>
       <div className="flex items-center gap-4">
         <div className="relative hidden sm:block">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search…"
-            className="pl-9 pr-4 py-2 w-56 bg-stone-100 rounded-full text-sm border-none outline-none focus:ring-2 focus:ring-primary/20"
+            className="pl-9 pr-4 py-2 w-56 bg-stone-100 rounded-full text-sm border-none outline-none transition-shadow focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <button
@@ -47,7 +56,7 @@ const Topbar = () => {
           <Bell className="w-5 h-5 text-stone-500" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
+          <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold shrink-0">
             {initials}
           </div>
           <span className="hidden md:block text-sm font-medium text-on-surface truncate max-w-40">

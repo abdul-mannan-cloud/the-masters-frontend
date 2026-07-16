@@ -1,9 +1,10 @@
 import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import Spinner from "./Spinner";
 
-const Spinner = () => (
+const FullPageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-surface">
-    <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+    <Spinner size="xl" />
   </div>
 );
 
@@ -18,7 +19,7 @@ const TenantSlugGuard = () => {
   const { tenant, tenantLoading } = useAuth();
   const location = useLocation();
 
-  if (tenantLoading) return <Spinner />;
+  if (tenantLoading) return <FullPageLoader />;
   if (!tenant) return <Navigate to="/login" replace />;
 
   if (tenant.slug !== tenantSlug) {

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Plus, Search, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import * as roleService from "../../services/roleService";
+import { SkeletonTableRows } from "../../components/Skeleton";
 
 const RoleList = () => {
   const navigate = useTenantNavigate();
@@ -60,13 +62,15 @@ const RoleList = () => {
             {roles.length} role{roles.length === 1 ? "" : "s"} defined for your business.
           </p>
         </div>
-        <button
+        <motion.button
           onClick={() => navigate("/roles/new")}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.97 }}
           className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Role
-        </button>
+        </motion.button>
       </div>
 
       <div className="relative mb-6 max-w-md">
@@ -82,7 +86,7 @@ const RoleList = () => {
 
       <div
         className="bg-white rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full masters-table">
@@ -96,13 +100,7 @@ const RoleList = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="4" className="py-16 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonTableRows rows={6} columns={4} />
               ) : filteredRoles.length === 0 ? (
                 <tr>
                   <td colSpan="4">

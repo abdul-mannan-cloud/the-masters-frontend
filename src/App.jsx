@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { useAuth } from "./hooks/useAuth.js";
@@ -45,10 +46,29 @@ const CatchAll = () => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Toaster richColors position="top-right" />
-      <AuthProvider>
-        <Routes>
+    // Every Framer Motion animation added anywhere in the app inherits this
+    // once — reducedMotion="user" checks the OS prefers-reduced-motion
+    // setting live (not just at mount), so animations shrink to instant
+    // opacity swaps for anyone who has that preference on, with zero
+    // per-component work required going forward.
+    <MotionConfig reducedMotion="user">
+      <BrowserRouter>
+        <Toaster
+          richColors
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#FFFFFF",
+              border: "1px solid #D8D1C7",
+              color: "#1A1A1A",
+              borderRadius: "1rem",
+              boxShadow: "0 4px 20px rgba(26,26,26,0.08)",
+              fontFamily: "var(--font-body)",
+            },
+          }}
+        />
+        <AuthProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<CreateAccount />} />
 
@@ -116,10 +136,11 @@ function App() {
             </Route>
           </Route>
 
-          <Route path="*" element={<CatchAll />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+            <Route path="*" element={<CatchAll />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </MotionConfig>
   );
 }
 

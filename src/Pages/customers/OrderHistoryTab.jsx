@@ -4,6 +4,7 @@ import { History } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import StatusBadge from "../../components/StatusBadge";
 import OrderItemCard from "../orders/OrderItemCard";
+import Spinner from "../../components/Spinner";
 
 // The customer's complete order history, embedded directly in their profile —
 // select any past order to see exactly what was billed, measured, and
@@ -54,7 +55,7 @@ const OrderHistoryTab = ({ customerId }) => {
   if (loading) {
     return (
       <div className="flex justify-center py-10">
-        <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -111,7 +112,7 @@ const OrderHistoryTab = ({ customerId }) => {
         <div className="p-4 bg-stone-50 rounded-xl space-y-4">
           {loadingDetails ? (
             <div className="flex justify-center py-6">
-              <div className="w-6 h-6 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <Spinner size="md" />
             </div>
           ) : details ? (
             <>

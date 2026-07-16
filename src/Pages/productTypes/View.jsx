@@ -6,6 +6,7 @@ import { ArrowLeft, Pencil, Trash2, Power } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
+import Spinner from "../../components/Spinner";
 
 const ProductTypeView = () => {
   const navigate = useTenantNavigate();
@@ -66,7 +67,7 @@ const ProductTypeView = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -140,7 +141,7 @@ const ProductTypeView = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
               Basic Information
@@ -163,7 +164,7 @@ const ProductTypeView = () => {
 
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
               Measurement Template
@@ -198,7 +199,7 @@ const ProductTypeView = () => {
 
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
               Product Options
@@ -232,7 +233,7 @@ const ProductTypeView = () => {
 
           <div
             className="bg-white rounded-2xl p-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline">
               Production Workflow

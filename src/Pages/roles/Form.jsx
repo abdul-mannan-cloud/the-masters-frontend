@@ -4,6 +4,7 @@ import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Check } from "lucide-react";
 import * as roleService from "../../services/roleService";
+import Spinner from "../../components/Spinner";
 
 const MODULE_LABELS = {
   dashboard: "Dashboard",
@@ -102,7 +103,7 @@ const RoleForm = () => {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -130,7 +131,7 @@ const RoleForm = () => {
         <form onSubmit={handleSubmit}>
           <div
             className="bg-white rounded-2xl p-6 space-y-4 mb-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.06)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -164,7 +165,7 @@ const RoleForm = () => {
 
           <div
             className="bg-white rounded-2xl overflow-hidden mb-6"
-            style={{ boxShadow: "0 4px 20px rgba(31,58,50,0.05)" }}
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
           >
             <div className="overflow-x-auto">
               <table className="w-full masters-table">
@@ -220,7 +221,7 @@ const RoleForm = () => {
               className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving && (
-                <div className="w-4 h-4 rounded-full border-2 border-on-primary/30 border-t-on-primary animate-spin" />
+                <Spinner size="sm" tone="on-primary" />
               )}
               {saving ? "Saving…" : isEdit ? "Update Role" : "Create Role"}
             </button>
