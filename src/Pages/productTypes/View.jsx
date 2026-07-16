@@ -98,9 +98,14 @@ const ProductTypeView = () => {
               <StatusBadge
                 status={productType.isActive ? "active" : "inactive"}
               />
+              {productType.isDefaultTemplate && (
+                <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+                  Default Template
+                </span>
+              )}
             </div>
             <p className="text-on-surface-variant mt-1 text-sm">
-              Rs. {productType.basePrice?.toLocaleString()} base price
+              {productType.category} · Rs. {productType.basePrice?.toLocaleString()} base price
             </p>
           </div>
           {canUpdate && (

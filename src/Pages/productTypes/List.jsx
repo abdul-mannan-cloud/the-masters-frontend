@@ -20,7 +20,20 @@ const ProductTypeList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState(""); // '' | 'true' | 'false'
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await productTypeService.getProductCategories();
+        setCategories(data);
+      } catch {
+        toast.error("Failed to load product categories");
+      }
+    })();
+  }, []);
 
   // Debounce search input so we don't hit the API on every keystroke.
   useEffect(() => {
@@ -37,6 +50,7 @@ const ProductTypeList = () => {
       const params = { page, limit: LIMIT };
       if (search) params.search = search;
       if (activeFilter) params.isActive = activeFilter;
+      if (categoryFilter) params.category = categoryFilter;
       const data = await productTypeService.getAllProductTypes(params);
       setProductTypes(data.data);
       setTotal(data.total);
@@ -53,7 +67,7 @@ const ProductTypeList = () => {
       await fetchProductTypes();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, activeFilter]);
+  }, [page, search, activeFilter, categoryFilter]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product type?"))
@@ -130,6 +144,21 @@ const ProductTypeList = () => {
           <option value="">All Statuses</option>
           <option value="true">Active</option>
           <option value="false">Inactive</option>
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => {
+            setPage(1);
+            setCategoryFilter(e.target.value);
+          }}
+          className="px-4 py-2.5 bg-white rounded-xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 font-medium"
+        >
+          <option value="">All Categories</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
       </div>
 

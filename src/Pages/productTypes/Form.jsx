@@ -76,11 +76,15 @@ const ProductTypeForm = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState("");
+  const [category, setCategory] = useState("Unisex");
+  const [isDefaultTemplate, setIsDefaultTemplate] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [measurementTemplate, setMeasurementTemplate] = useState([]);
   const [options, setOptions] = useState([]);
   const [workflow, setWorkflow] = useState([]);
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -96,6 +100,19 @@ const ProductTypeForm = () => {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const data = await productTypeService.getProductCategories();
+        setCategories(data);
+      } catch {
+        toast.error("Failed to load product categories");
+      } finally {
+        setCategoriesLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!isEdit) return;
     (async () => {
       try {
@@ -104,6 +121,8 @@ const ProductTypeForm = () => {
         setName(productType.name);
         setDescription(productType.description || "");
         setBasePrice(String(productType.basePrice));
+        setCategory(productType.category || "Unisex");
+        setIsDefaultTemplate(Boolean(productType.isDefaultTemplate));
         setIsActive(productType.isActive);
         setMeasurementTemplate(
           [...productType.measurementTemplate].sort((a, b) => a.displayOrder - b.displayOrder),
@@ -145,6 +164,7 @@ const ProductTypeForm = () => {
       name: name.trim(),
       description: description.trim(),
       basePrice: Number(basePrice),
+      category,
       isActive,
       measurementTemplate: measurementTemplate.map((f, i) => ({ ...f, displayOrder: i })),
       options,
@@ -188,11 +208,20 @@ const ProductTypeForm = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
-              {isEdit ? "Edit Product Type" : "Create Product Type"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
+                {isEdit ? "Edit Product Type" : "Create Product Type"}
+              </h1>
+              {isDefaultTemplate && (
+                <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+                  Default Template
+                </span>
+              )}
+            </div>
             <p className="text-on-surface-variant mt-1 text-sm">
-              Define the garment template's info, measurements, options, and workflow.
+              {isDefaultTemplate
+                ? "This is your business's own copy of a platform starter template — edit it freely, other businesses are unaffected."
+                : "Define the garment template's info, measurements, options, and workflow."}
             </p>
           </div>
         </div>
@@ -265,6 +294,26 @@ const ProductTypeForm = () => {
                     {errors.basePrice && (
                       <p className="mt-1 text-xs text-red-600">{errors.basePrice}</p>
                     )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      disabled={categoriesLoading}
+                      className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      {categories.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-on-surface-variant">
+                      Controls which customers (by gender) see this garment when adding an order.
+                    </p>
                   </div>
                   <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
                     <input

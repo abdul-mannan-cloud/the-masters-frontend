@@ -5,6 +5,11 @@ export const getAllProductTypes = async (params = {}) => {
   return data;
 };
 
+export const getProductCategories = async () => {
+  const { data } = await api.get("/product-type/categories");
+  return data;
+};
+
 export const getProductTypeById = async (id) => {
   const { data } = await api.get(`/product-type/${id}`);
   return data;

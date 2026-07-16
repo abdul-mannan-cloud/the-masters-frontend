@@ -64,7 +64,7 @@ const ReadOnlyMeasurement = ({ measurement }) => (
 // mode "create": no customerId yet — measurements are held as local drafts and
 // only sent to the API together with the customer, via onDraftsChange.
 // mode "manage": customerId exists — every action hits the API directly.
-const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
+const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) => {
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(mode === "manage");
   const [productTypes, setProductTypes] = useState([]);
@@ -76,13 +76,17 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
   // the existing measurement/draft this action was triggered from, if any.
   const [formState, setFormState] = useState(null);
 
+  // Re-fetches whenever the customer's gender changes (including before a new
+  // customer is saved — DetailPanel passes the live, unsaved form value) so
+  // the "Add Garment" dropdown only ever lists templates relevant to them.
+  // No gender selected yet shows every active product type, unfiltered.
   useEffect(() => {
     (async () => {
       try {
-        const data = await productTypeService.getAllProductTypes({
-          isActive: "true",
-          limit: 100,
-        });
+        setProductTypesLoading(true);
+        const params = { isActive: "true", limit: 100 };
+        if (gender) params.gender = gender;
+        const data = await productTypeService.getAllProductTypes(params);
         setProductTypes(data.data);
       } catch {
         toast.error("Failed to load product types");
@@ -90,7 +94,7 @@ const MeasurementsTab = ({ mode, customerId, drafts, onDraftsChange }) => {
         setProductTypesLoading(false);
       }
     })();
-  }, []);
+  }, [gender]);
 
   const fetchMeasurements = async () => {
     try {

@@ -72,6 +72,7 @@ const DetailPanel = ({
       nextErrors.phone = "Enter a valid 11-digit mobile number starting with 03.";
     if (form.email && !isValidEmail(form.email))
       nextErrors.email = "Enter a valid email address.";
+    if (!form.gender) nextErrors.gender = "Gender is required.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -269,14 +270,21 @@ const DetailPanel = ({
                   Gender
                 </label>
                 <select
+                  required
                   value={form.gender}
                   onChange={handleChange("gender")}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    errors.gender ? "border-red-400" : "border-transparent"
+                  }`}
                 >
-                  <option value="">Not specified</option>
+                  <option value="">Select gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
+                  <option value="other">Other</option>
                 </select>
+                {errors.gender && (
+                  <p className="mt-1 text-xs text-red-600">{errors.gender}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -311,6 +319,7 @@ const DetailPanel = ({
             <MeasurementsTab
               mode={isCreate ? "create" : "manage"}
               customerId={customer?._id}
+              gender={form.gender}
               drafts={draftMeasurements}
               onDraftsChange={setDraftMeasurements}
             />
