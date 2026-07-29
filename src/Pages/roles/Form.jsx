@@ -142,7 +142,7 @@ const RoleForm = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Receptionist"
+                  placeholder="e.g. Supervisor"
                   className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.name ? "border-red-400" : "border-transparent"
                   }`}

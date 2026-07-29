@@ -216,15 +216,19 @@ const InventoryView = () => {
                 <tr>
                   <th>Date</th>
                   <th>Type</th>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Product</th>
                   <th>Quantity</th>
                   <th>Previous → New</th>
+                  <th>Performed By</th>
                   <th>Remarks</th>
                 </tr>
               </thead>
               <tbody>
                 {txLoading ? (
                   <tr>
-                    <td colSpan="5" className="py-10 text-center">
+                    <td colSpan="9" className="py-10 text-center">
                       <div className="flex justify-center">
                         <Spinner size="md" />
                       </div>
@@ -232,7 +236,7 @@ const InventoryView = () => {
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan="5">
+                    <td colSpan="9">
                       <div className="empty-state">
                         <Package className="w-7 h-7 text-stone-300" />
                         <p className="text-sm font-bold text-on-surface-variant font-headline">
@@ -250,6 +254,21 @@ const InventoryView = () => {
                       <td>
                         <StatusBadge status={TX_BADGE[tx.transactionType] || "pending"} label={tx.transactionType} />
                       </td>
+                      <td className="text-on-surface-variant">
+                        {tx.orderId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/orders/${tx.orderId}`)}
+                            className="text-primary font-bold hover:underline"
+                          >
+                            {tx.orderNumber || String(tx.orderId).slice(-6)}
+                          </button>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="text-on-surface-variant">{tx.customerName || "—"}</td>
+                      <td className="text-on-surface-variant">{tx.productName || "—"}</td>
                       <td className="font-bold text-on-surface">
                         {tx.newStock >= tx.previousStock ? "+" : "-"}
                         {tx.quantity} {item.unit}
@@ -257,6 +276,7 @@ const InventoryView = () => {
                       <td className="text-on-surface-variant">
                         {tx.previousStock} → {tx.newStock}
                       </td>
+                      <td className="text-on-surface-variant">{tx.performedByName || "—"}</td>
                       <td className="text-on-surface-variant">{tx.remarks || "—"}</td>
                     </tr>
                   ))
@@ -312,7 +332,15 @@ const InventoryView = () => {
                   onClick={() => navigate(`/orders/${tx.orderId}`)}
                   className="w-full text-left px-6 py-3.5 flex items-center justify-between hover:bg-stone-50 transition-colors"
                 >
-                  <span className="text-sm font-medium text-on-surface">Order {String(tx.orderId).slice(-6)}</span>
+                  <span className="text-sm font-medium text-on-surface">
+                    Order {tx.orderNumber || String(tx.orderId).slice(-6)}
+                    {tx.customerName && (
+                      <span className="font-normal text-on-surface-variant"> · {tx.customerName}</span>
+                    )}
+                    {tx.productName && (
+                      <span className="font-normal text-on-surface-variant"> · {tx.productName}</span>
+                    )}
+                  </span>
                   <span className="text-xs text-on-surface-variant">
                     Consumed {tx.quantity} {item.unit} on {new Date(tx.createdAt).toLocaleDateString()}
                   </span>

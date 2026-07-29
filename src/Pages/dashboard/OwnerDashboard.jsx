@@ -53,11 +53,36 @@ const OwnerDashboard = () => {
         animate="visible"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"
       >
-        <KpiCard icon={UserCog} label="Total Employees" value={stats.totalEmployees} onClick={() => navigate("/employees")} />
-        <KpiCard icon={Users} label="Total Customers" value={stats.totalCustomers} onClick={() => navigate("/customers")} />
-        <KpiCard icon={ShoppingCart} label="Active Orders" value={stats.activeOrders} onClick={() => navigate("/orders")} />
-        <KpiCard icon={CheckCircle2} label="Completed Orders" value={stats.completedOrders} onClick={() => navigate("/orders")} />
-        <KpiCard icon={Clock} label="Pending Orders" value={stats.pendingOrders} onClick={() => navigate("/orders")} />
+        <KpiCard
+          icon={UserCog}
+          label="Total Employees"
+          value={stats.totalEmployees}
+          onClick={() => navigate("/employees")}
+        />
+        <KpiCard
+          icon={Users}
+          label="Total Customers"
+          value={stats.totalCustomers}
+          onClick={() => navigate("/customers")}
+        />
+        <KpiCard
+          icon={ShoppingCart}
+          label="Active Orders"
+          value={stats.activeOrders}
+          onClick={() => navigate("/orders")}
+        />
+        <KpiCard
+          icon={CheckCircle2}
+          label="Completed Orders"
+          value={stats.completedOrders}
+          onClick={() => navigate("/orders")}
+        />
+        <KpiCard
+          icon={Clock}
+          label="Pending Orders"
+          value={stats.pendingOrders}
+          onClick={() => navigate("/orders")}
+        />
         <KpiCard
           icon={Wallet}
           label="Monthly Revenue"
@@ -67,7 +92,7 @@ const OwnerDashboard = () => {
 
       <div className="flex gap-3 mb-8">
         <button
-          onClick={() => navigate("/customers")}
+          onClick={() => navigate("/customers/new")}
           className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold text-sm hover:bg-primary-container transition-colors"
         >
           <UserPlus className="w-4 h-4" />
@@ -116,8 +141,13 @@ const OwnerDashboard = () => {
                 </tr>
               ) : (
                 stats.recentOrders.map((order) => (
-                  <tr key={order._id} onClick={() => navigate(`/orders/${order._id}`)}>
-                    <td className="font-bold text-on-surface">{order.orderNumber}</td>
+                  <tr
+                    key={order._id}
+                    onClick={() => navigate(`/orders/${order._id}`)}
+                  >
+                    <td className="font-bold text-on-surface">
+                      {order.orderNumber}
+                    </td>
                     <td className="text-on-surface-variant">
                       {order.customerId?.name || "—"}
                     </td>

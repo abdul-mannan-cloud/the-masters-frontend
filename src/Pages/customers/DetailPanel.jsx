@@ -15,7 +15,11 @@ import PhoneInput from "../../components/PhoneInput";
 import CnicInput from "../../components/CnicInput";
 import MeasurementsTab from "./MeasurementsTab";
 import OrderHistoryTab from "./OrderHistoryTab";
-import { formatPhone, isValidPhone, isValidEmail } from "../../utils/formatters";
+import {
+  formatPhone,
+  isValidPhone,
+  isValidEmail,
+} from "../../utils/formatters";
 import { usePermission } from "../../hooks/usePermission";
 
 const emptyForm = {
@@ -74,7 +78,8 @@ const DetailPanel = ({
     if (!form.name.trim()) nextErrors.name = "Name is required.";
     if (!form.phone.trim()) nextErrors.phone = "Phone is required.";
     else if (!isValidPhone(form.phone))
-      nextErrors.phone = "Enter a valid 11-digit mobile number starting with 03.";
+      nextErrors.phone =
+        "Enter a valid 11-digit mobile number starting with 03.";
     if (form.email && !isValidEmail(form.email))
       nextErrors.email = "Enter a valid email address.";
     if (!form.gender) nextErrors.gender = "Gender is required.";
@@ -279,7 +284,9 @@ const DetailPanel = ({
             <MeasurementsTab mode="manage" customerId={customer?._id} />
           )}
 
-          {!isCreate && tab === "history" && <OrderHistoryTab customerId={customer?._id} />}
+          {!isCreate && tab === "history" && (
+            <OrderHistoryTab customerId={customer?._id} />
+          )}
         </div>
 
         <div className="flex gap-2 p-6 pt-4 border-t border-stone-100">

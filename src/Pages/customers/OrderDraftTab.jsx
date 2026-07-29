@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ShoppingCart } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
@@ -18,7 +18,7 @@ const computeTotal = (subtotal, discount, discountType) => {
   return Math.max(0, Math.round(raw * 100) / 100);
 };
 
-const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
+const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueChange }) => {
   const canAdjustPrice = usePermission("orders", "update");
   const canPickFabric = usePermission("inventory", "view");
   const [productTypes, setProductTypes] = useState([]);
@@ -101,6 +101,32 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
   const discount = Number(orderDraft.discount) || 0;
   const total = computeTotal(subtotal, discount, orderDraft.discountType);
   const includedCount = eligible.filter((m) => itemFor(m).included).length;
+
+  // Aggregated by fabric, not per item — two included garments picking the
+  // same fabric can each look fine alone but together overrun it, same
+  // aggregate check the backend runs (OrderItemService.createOrderWithItems)
+  // before actually creating the order, so the warning here and the block
+  // there never disagree about whether a given order is actually orderable.
+  const neededByFabric = useMemo(() => {
+    const map = new Map();
+    for (const m of eligible) {
+      const item = itemFor(m);
+      if (!item.included || !item.fabricId || !item.requiredFabricLength) continue;
+      const needed = (Number(item.requiredFabricLength) || 0) * (Number(item.quantity) || 1);
+      map.set(item.fabricId, (map.get(item.fabricId) || 0) + needed);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eligible, orderDraft.itemsByKey]);
+
+  const hasStockIssue = [...neededByFabric.entries()].some(([fabricId, needed]) => {
+    const fabric = fabricFor(fabricId);
+    return fabric && needed > fabric.availableQuantity;
+  });
+
+  useEffect(() => {
+    onStockIssueChange?.(hasStockIssue);
+  }, [hasStockIssue, onStockIssueChange]);
 
   if (eligible.length === 0) {
     return (
@@ -251,13 +277,16 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange }) => {
                           item.requiredFabricLength &&
                           (() => {
                             const fabric = fabricFor(item.fabricId);
-                            const needed =
-                              (Number(item.requiredFabricLength) || 0) * (Number(item.quantity) || 1);
+                            // Aggregate need for this fabric across every
+                            // included garment, not just this one — matches
+                            // neededByFabric above, so the warning agrees
+                            // with what actually blocks submission.
+                            const needed = neededByFabric.get(item.fabricId) || 0;
                             if (!fabric || needed <= fabric.availableQuantity) return null;
                             return (
                               <p className="col-span-2 text-xs font-bold text-red-600">
                                 Insufficient inventory for selected fabric. Only {fabric.availableQuantity}{" "}
-                                {fabric.unit} available, {needed} {fabric.unit} needed.
+                                {fabric.unit} available, {needed} {fabric.unit} needed in total.
                               </p>
                             );
                           })()}

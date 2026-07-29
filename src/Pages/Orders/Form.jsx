@@ -28,6 +28,7 @@ const OrderForm = () => {
   const [saving, setSaving] = useState(false);
   const [draftMeasurements, setDraftMeasurements] = useState([]);
   const [orderDraft, setOrderDraft] = useState(emptyOrderDraft);
+  const [hasStockIssue, setHasStockIssue] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -51,6 +52,10 @@ const OrderForm = () => {
 
     if (includedItems.length === 0) {
       toast.error("Select at least one garment to include in the order");
+      return;
+    }
+    if (hasStockIssue) {
+      toast.error("Fix the insufficient inventory warning before creating this order");
       return;
     }
 
@@ -203,6 +208,7 @@ const OrderForm = () => {
                 draftMeasurements={draftMeasurements}
                 orderDraft={orderDraft}
                 onChange={setOrderDraft}
+                onStockIssueChange={setHasStockIssue}
               />
             </div>
 
@@ -217,9 +223,10 @@ const OrderForm = () => {
               <motion.button
                 type="button"
                 onClick={handleSubmit}
-                disabled={saving}
+                disabled={saving || hasStockIssue}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
+                title={hasStockIssue ? "Fix the insufficient inventory warning above first" : undefined}
                 className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving && <Spinner size="sm" tone="on-primary" />}

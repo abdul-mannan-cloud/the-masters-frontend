@@ -89,6 +89,12 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="dashboard" element={<Dashboard />} />
 
+                {/* No separate "customers/new" route — "new" is intentionally
+                    matched by the :id param below (routeId === "new" means
+                    create mode, see List.jsx). A static "customers/new"
+                    route would out-rank ":id" in React Router's matching and
+                    make useParams().id come back undefined instead of "new",
+                    which breaks that derivation. */}
                 <Route element={<ProtectedRoute module="customers" />}>
                   <Route path="customers" element={<CustomerList />} />
                   <Route path="customers/:id" element={<CustomerList />} />

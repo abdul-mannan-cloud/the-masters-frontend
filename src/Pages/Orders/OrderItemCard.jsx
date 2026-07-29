@@ -92,6 +92,22 @@ const OrderItemCard = ({ item, defaultExpanded = false }) => {
                 {" — "}
                 {item.requiredFabricLength} {item.fabricUnit} required
               </p>
+              {item.inventoryTransaction ? (
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Deducted on confirmation: {item.inventoryTransaction.previousStock}{" "}
+                  {item.fabricUnit} → {item.inventoryTransaction.newStock} {item.fabricUnit}
+                  {" · "}
+                  {new Date(item.inventoryTransaction.createdAt).toLocaleString()}
+                  {" · "}
+                  <span className="font-mono">
+                    Ref {String(item.inventoryTransaction._id).slice(-8)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Not yet deducted — stock is taken when this order is confirmed.
+                </p>
+              )}
             </div>
           )}
 

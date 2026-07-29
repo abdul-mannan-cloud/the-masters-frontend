@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
 import { ArrowLeft, Upload } from "lucide-react";
 import * as inventoryService from "../../services/inventoryService";
+import * as inventoryCategoryService from "../../services/inventoryCategoryService";
 import Spinner from "../../components/Spinner";
 
 const UNITS = ["meter", "yard", "piece", "roll"];
@@ -11,14 +12,16 @@ const UNITS = ["meter", "yard", "piece", "roll"];
 const InventoryForm = () => {
   const navigate = useTenantNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const [fabricName, setFabricName] = useState("");
   const [fabricCode, setFabricCode] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") || "");
   const [color, setColor] = useState("");
   const [supplier, setSupplier] = useState("");
   const [unit, setUnit] = useState("meter");
@@ -33,6 +36,17 @@ const InventoryForm = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    (async () => {
+      try {
+        const data = await inventoryCategoryService.getAllCategoriesFlat();
+        setCategories(data);
+      } catch {
+        toast.error("Failed to load categories");
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!isEdit) return;
     (async () => {
       try {
@@ -40,7 +54,7 @@ const InventoryForm = () => {
         const item = await inventoryService.getInventoryById(id);
         setFabricName(item.fabricName);
         setFabricCode(item.fabricCode);
-        setCategory(item.category || "");
+        setCategoryId(item.categoryId || "");
         setColor(item.color || "");
         setSupplier(item.supplier || "");
         setUnit(item.unit);

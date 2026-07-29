@@ -118,7 +118,8 @@ const RoleList = () => {
                     <td className="font-bold text-on-surface">{role.name}</td>
                     <td className="text-on-surface-variant">{role.description || "—"}</td>
                     <td className="text-on-surface-variant">
-                      {countGrantedModules(role.permissions)} / 9 modules
+                      {countGrantedModules(role.permissions)} /{" "}
+                      {Object.keys(role.permissions || {}).length} modules
                     </td>
                     <td className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">

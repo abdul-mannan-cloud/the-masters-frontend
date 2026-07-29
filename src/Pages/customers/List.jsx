@@ -23,7 +23,13 @@ const CustomerList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [mode, setMode] = useState("view"); // 'view' | 'create'
+  // Derived from the URL, not local state — Layout's route-change animation
+  // remounts this component on every pathname change (including plain
+  // /customers -> /customers/:id navigations), which would silently reset a
+  // useState("view") back to its default. Reading "new" straight out of the
+  // route param means create mode survives that remount instead of being
+  // lost right after handleCreateNew sets it.
+  const mode = routeId === "new" ? "create" : "view"; // 'view' | 'create'
   const [checkedIds, setCheckedIds] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [ordersByCustomer, setOrdersByCustomer] = useState({});
@@ -72,13 +78,11 @@ const CustomerList = () => {
   const selectedCustomer = customers.find((c) => c._id === selectedId) || null;
 
   const handleSelect = (id) => {
-    setMode("view");
     navigate(`/customers/${id}`);
   };
 
   const handleCreateNew = () => {
-    setMode("create");
-    navigate("/customers");
+    navigate("/customers/new");
   };
 
   const handleSave = async (formData) => {
@@ -87,7 +91,6 @@ const CustomerList = () => {
       if (mode === "create") {
         const { customer } = await customerService.createCustomer(formData);
         await fetchCustomers();
-        setMode("view");
         toast.success("Customer added successfully");
         navigate(`/customers/${customer._id}`);
       } else {
@@ -104,7 +107,6 @@ const CustomerList = () => {
 
   const handleCancel = () => {
     if (mode !== "create") return;
-    setMode("view");
     navigate(
       customers.length > 0 ? `/customers/${customers[0]._id}` : "/customers",
     );
@@ -119,7 +121,6 @@ const CustomerList = () => {
       setCheckedIds((prev) => prev.filter((cid) => cid !== id));
       const remaining = await fetchCustomers();
       if (id === selectedId) {
-        setMode("view");
         navigate(
           remaining.length > 0
             ? `/customers/${remaining[0]._id}`
@@ -147,7 +148,6 @@ const CustomerList = () => {
       setCheckedIds([]);
       const remaining = await fetchCustomers();
       if (wasSelected) {
-        setMode("view");
         navigate(
           remaining.length > 0
             ? `/customers/${remaining[0]._id}`
