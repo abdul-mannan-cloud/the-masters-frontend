@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, SlidersHorizontal, Package } from "lucide-react";
 import * as inventoryService from "../../services/inventoryService";
+import * as inventoryCategoryService from "../../services/inventoryCategoryService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import AdjustStockDialog from "./AdjustStockDialog";
@@ -26,6 +27,7 @@ const InventoryView = () => {
   const canUpdate = usePermission("inventory", "update");
 
   const [item, setItem] = useState(null);
+  const [categoryPath, setCategoryPath] = useState([]);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [txPage, setTxPage] = useState(1);
@@ -38,6 +40,15 @@ const InventoryView = () => {
       setLoading(true);
       const data = await inventoryService.getInventoryById(id);
       setItem(data);
+      if (data.categoryId) {
+        try {
+          setCategoryPath(await inventoryCategoryService.getCategoryPath(data.categoryId));
+        } catch {
+          setCategoryPath([]);
+        }
+      } else {
+        setCategoryPath([]);
+      }
     } catch {
       toast.error("Failed to load inventory item");
       navigate("/inventory");
@@ -166,7 +177,11 @@ const InventoryView = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-xs text-on-surface-variant mb-0.5">Category</p>
-              <p className="font-medium text-on-surface">{item.category || "—"}</p>
+              <p className="font-medium text-on-surface">
+                {categoryPath.length > 0
+                  ? categoryPath.map((c) => c.name).join(" › ")
+                  : "—"}
+              </p>
             </div>
             <div>
               <p className="text-xs text-on-surface-variant mb-0.5">Color</p>
@@ -315,13 +330,13 @@ const InventoryView = () => {
         >
           <div className="px-6 py-4 border-b border-stone-100">
             <h2 className="text-sm font-extrabold text-on-surface font-headline">
-              Orders Using This Fabric
+              Orders Using This Item
             </h2>
           </div>
           {ordersUsingFabric.length === 0 ? (
             <div className="empty-state">
               <p className="text-sm font-bold text-on-surface-variant font-headline">
-                No orders have consumed this fabric yet
+                No orders have consumed this item yet
               </p>
             </div>
           ) : (

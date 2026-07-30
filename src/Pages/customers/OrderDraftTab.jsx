@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ShoppingCart } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
 import * as inventoryService from "../../services/inventoryService";
+import * as inventoryCategoryService from "../../services/inventoryCategoryService";
 import { usePermission } from "../../hooks/usePermission";
 
 // mode "create" only — lets the customer's very first order be assembled in
@@ -23,6 +24,12 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueCh
   const canPickFabric = usePermission("inventory", "view");
   const [productTypes, setProductTypes] = useState([]);
   const [fabrics, setFabrics] = useState([]);
+  const [categories, setCategories] = useState([]);
+  // Which Inventory Category is picked per garment row, keyed by
+  // m._localKey — UI-only, never submitted (only the resolved fabricId is);
+  // not stored on orderDraft since it's just a filter for the item dropdown
+  // below it, not order data.
+  const [categorySelections, setCategorySelections] = useState({});
   const eligible = draftMeasurements.filter((m) => m.productTypeId);
 
   useEffect(() => {
@@ -44,8 +51,12 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueCh
     if (eligible.length === 0 || !canPickFabric) return;
     (async () => {
       try {
-        const data = await inventoryService.getAllInventory({ isActive: "true", limit: 200 });
-        setFabrics(data.data);
+        const [inventoryData, categoryData] = await Promise.all([
+          inventoryService.getAllInventory({ isActive: "true", limit: 200 }),
+          inventoryCategoryService.getAllCategoriesFlat(),
+        ]);
+        setFabrics(inventoryData.data);
+        setCategories(categoryData);
       } catch {
         // fabric picker is optional — a failed fetch shouldn't block ordering
       }
@@ -54,6 +65,14 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueCh
 
   const productTypeFor = (id) => productTypes.find((pt) => pt._id === id);
   const fabricFor = (id) => fabrics.find((f) => f._id === id);
+  // Which category is currently selected for this garment row — either what
+  // the user just picked, or (fallback) the category the already-chosen item
+  // belongs to, so re-rendering never shows an item without its category.
+  const categoryFor = (m) => {
+    if (categorySelections[m._localKey] !== undefined) return categorySelections[m._localKey];
+    const item = itemFor(m);
+    return item.fabricId ? fabricFor(item.fabricId)?.categoryId || "" : "";
+  };
 
   const setField = (field) => (e) =>
     onChange({ ...orderDraft, [field]: e.target.value });
@@ -232,66 +251,100 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueCh
                       </div>
                     )}
 
-                    {canPickFabric && fabrics.length > 0 && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                            Fabric (optional)
-                          </label>
-                          <select
-                            value={item.fabricId}
-                            onChange={(e) =>
-                              updateItem(m, {
-                                fabricId: e.target.value,
-                                requiredFabricLength: e.target.value ? item.requiredFabricLength : "",
-                              })
-                            }
-                            className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          >
-                            <option value="">— None —</option>
-                            {fabrics.map((f) => (
-                              <option key={f._id} value={f._id}>
-                                {f.fabricName}
-                                {f.color ? ` · ${f.color}` : ""} — {f.availableQuantity} {f.unit} available
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        {item.fabricId && (
+                    {canPickFabric && categories.length > 0 && (() => {
+                      const selectedCategoryId = categoryFor(m);
+                      const itemsInCategory = fabrics.filter(
+                        (f) => String(f.categoryId) === String(selectedCategoryId),
+                      );
+                      return (
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                              Required Length ({fabricFor(item.fabricId)?.unit})
+                              Inventory Category (optional)
                             </label>
-                            <input
-                              type="number"
-                              min="0.01"
-                              step="0.01"
-                              value={item.requiredFabricLength}
-                              onChange={(e) => updateItem(m, { requiredFabricLength: e.target.value })}
-                              placeholder="e.g. 2.75"
+                            <select
+                              value={selectedCategoryId}
+                              onChange={(e) => {
+                                setCategorySelections((prev) => ({ ...prev, [m._localKey]: e.target.value }));
+                                updateItem(m, { fabricId: "", requiredFabricLength: "" });
+                              }}
                               className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                            />
+                            >
+                              <option value="">— None —</option>
+                              {categories.map((cat) => (
+                                <option key={cat._id} value={cat._id}>
+                                  {"— ".repeat(cat.depth)}
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        )}
-                        {item.fabricId &&
-                          item.requiredFabricLength &&
-                          (() => {
-                            const fabric = fabricFor(item.fabricId);
-                            // Aggregate need for this fabric across every
-                            // included garment, not just this one — matches
-                            // neededByFabric above, so the warning agrees
-                            // with what actually blocks submission.
-                            const needed = neededByFabric.get(item.fabricId) || 0;
-                            if (!fabric || needed <= fabric.availableQuantity) return null;
-                            return (
-                              <p className="col-span-2 text-xs font-bold text-red-600">
-                                Insufficient inventory for selected fabric. Only {fabric.availableQuantity}{" "}
-                                {fabric.unit} available, {needed} {fabric.unit} needed in total.
-                              </p>
-                            );
-                          })()}
-                      </div>
-                    )}
+                          {selectedCategoryId && (
+                            <div>
+                              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                                Inventory Item
+                              </label>
+                              <select
+                                value={item.fabricId}
+                                onChange={(e) =>
+                                  updateItem(m, {
+                                    fabricId: e.target.value,
+                                    requiredFabricLength: e.target.value ? item.requiredFabricLength : "",
+                                  })
+                                }
+                                className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              >
+                                <option value="">— Select —</option>
+                                {itemsInCategory.map((f) => (
+                                  <option key={f._id} value={f._id}>
+                                    {f.fabricName}
+                                    {f.color ? ` · ${f.color}` : ""} — {f.availableQuantity} {f.unit} available
+                                  </option>
+                                ))}
+                              </select>
+                              {itemsInCategory.length === 0 && (
+                                <p className="mt-1 text-xs text-on-surface-variant">
+                                  No items directly in this category.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {item.fabricId && (
+                            <div>
+                              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                                Required Quantity ({fabricFor(item.fabricId)?.unit})
+                              </label>
+                              <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={item.requiredFabricLength}
+                                onChange={(e) => updateItem(m, { requiredFabricLength: e.target.value })}
+                                placeholder="e.g. 2.75"
+                                className="w-full px-3 py-2 bg-white rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              />
+                            </div>
+                          )}
+                          {item.fabricId &&
+                            item.requiredFabricLength &&
+                            (() => {
+                              const fabric = fabricFor(item.fabricId);
+                              // Aggregate need for this fabric across every
+                              // included garment, not just this one — matches
+                              // neededByFabric above, so the warning agrees
+                              // with what actually blocks submission.
+                              const needed = neededByFabric.get(item.fabricId) || 0;
+                              if (!fabric || needed <= fabric.availableQuantity) return null;
+                              return (
+                                <p className="col-span-2 text-xs font-bold text-red-600">
+                                  Insufficient inventory for selected fabric. Only {fabric.availableQuantity}{" "}
+                                  {fabric.unit} available, {needed} {fabric.unit} needed in total.
+                                </p>
+                              );
+                            })()}
+                        </div>
+                      );
+                    })()}
 
                     <div>
                       <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">

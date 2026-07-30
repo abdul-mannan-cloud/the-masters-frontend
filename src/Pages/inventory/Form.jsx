@@ -86,8 +86,8 @@ const InventoryForm = () => {
     e.preventDefault();
 
     if (!fabricName.trim() || !fabricCode.trim()) {
-      setErrors({ fabricName: !fabricName.trim() ? "Fabric name is required." : undefined });
-      toast.error("Fabric name and code are required.");
+      setErrors({ fabricName: !fabricName.trim() ? "Item name is required." : undefined });
+      toast.error("Item name and code are required.");
       return;
     }
     if (Number(availableQuantity) < 0) {
@@ -99,7 +99,7 @@ const InventoryForm = () => {
     const fields = {
       fabricName: fabricName.trim(),
       fabricCode: fabricCode.trim(),
-      category: category.trim(),
+      categoryId: categoryId || undefined,
       color: color.trim(),
       supplier: supplier.trim(),
       unit,
@@ -160,12 +160,12 @@ const InventoryForm = () => {
           </button>
           <div>
             <h1 className="text-2xl font-semibold text-on-surface tracking-tight font-newsreader">
-              {isEdit ? "Edit Fabric" : "Add Fabric"}
+              {isEdit ? "Edit Item" : "Add Item"}
             </h1>
             <p className="text-on-surface-variant mt-1 text-sm">
               {isEdit
-                ? "Update this fabric's details. Stock is adjusted separately."
-                : "Add a new fabric to your inventory."}
+                ? "Update this item's details. Stock is adjusted separately."
+                : "Add a new item to your inventory."}
             </p>
           </div>
         </div>
@@ -178,7 +178,7 @@ const InventoryForm = () => {
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-xl bg-stone-50 border border-stone-200 overflow-hidden flex items-center justify-center shrink-0">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Fabric" className="w-full h-full object-cover" />
+                  <img src={imagePreview} alt="Item" className="w-full h-full object-cover" />
                 ) : (
                   <Upload className="w-6 h-6 text-stone-300" />
                 )}
@@ -192,13 +192,13 @@ const InventoryForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Fabric Name
+                  Item Name
                 </label>
                 <input
                   type="text"
                   value={fabricName}
                   onChange={(e) => setFabricName(e.target.value)}
-                  placeholder="e.g. Egyptian Cotton"
+                  placeholder="e.g. Black Button"
                   className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.fabricName ? "border-red-400" : "border-transparent"
                   }`}
@@ -206,7 +206,7 @@ const InventoryForm = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Fabric Code
+                  Item Code
                 </label>
                 <input
                   type="text"
@@ -220,13 +220,19 @@ const InventoryForm = () => {
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   Category
                 </label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g. Cotton"
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
                   className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border border-transparent text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+                >
+                  <option value="">— Select a category —</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {"— ".repeat(cat.depth)}
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -359,7 +365,7 @@ const InventoryForm = () => {
               {saving && (
                 <Spinner size="sm" tone="on-primary" />
               )}
-              {saving ? "Saving…" : isEdit ? "Update Fabric" : "Save Fabric"}
+              {saving ? "Saving…" : isEdit ? "Update Item" : "Save Item"}
             </button>
           </div>
         </form>
