@@ -16,6 +16,7 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { isSubdomainMode } from "../utils/subdomain";
 
 // `module` gates on the logged-in user's permission grid (view access) for
 // tenant_admin/employee/manager accounts; `roles` hard-gates to specific
@@ -58,8 +59,13 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
   }).map((item) => ({
     ...item,
     // "/tenants" is the platform-level, unprefixed route (super_admin only)
-    // — every other nav target lives under the current tenant's slug.
-    path: item.path === "/tenants" || !tenant ? item.path : `/${tenant.slug}${item.path}`,
+    // — every other nav target lives under the current tenant's slug, unless
+    // the tenant is already carried by the host (subdomain mode), where
+    // tenant-scoped routes are mounted at bare paths (see App.jsx).
+    path:
+      item.path === "/tenants" || !tenant || isSubdomainMode()
+        ? item.path
+        : `/${tenant.slug}${item.path}`,
   }));
 
   const handleLogout = () => {

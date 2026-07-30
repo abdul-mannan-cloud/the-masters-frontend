@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { toast } from "sonner";
-import { ArrowLeft, Info, Ruler, Tag, Workflow as WorkflowIcon } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Info, Ruler, Tag, Workflow as WorkflowIcon } from "lucide-react";
 import * as productTypeService from "../../services/productTypeService";
 import * as employeeService from "../../services/employeeService";
 import MeasurementTemplateBuilder from "./MeasurementTemplateBuilder";
 import ProductOptionsBuilder from "./ProductOptionsBuilder";
 import WorkflowBuilder from "./WorkflowBuilder";
+import PreviewLayersBuilder from "./PreviewLayersBuilder";
 import Spinner from "../../components/Spinner";
 
 const TABS = [
@@ -15,6 +16,7 @@ const TABS = [
   { id: "measurements", label: "Measurement Template", icon: Ruler },
   { id: "options", label: "Product Options", icon: Tag },
   { id: "workflow", label: "Production Workflow", icon: WorkflowIcon },
+  { id: "preview", label: "Preview Layers", icon: ImageIcon },
 ];
 
 const hasDuplicates = (items) => new Set(items).size !== items.length;
@@ -83,6 +85,7 @@ const ProductTypeForm = () => {
   const [measurementTemplate, setMeasurementTemplate] = useState([]);
   const [options, setOptions] = useState([]);
   const [workflow, setWorkflow] = useState([]);
+  const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -130,6 +133,7 @@ const ProductTypeForm = () => {
         );
         setOptions(productType.options);
         setWorkflow([...productType.workflow].sort((a, b) => a.sequence - b.sequence));
+        setPreview(productType.preview || null);
       } catch {
         toast.error("Failed to load product type");
         navigate("/product-types");
@@ -346,6 +350,25 @@ const ProductTypeForm = () => {
                   skills={skills}
                   skillsLoading={skillsLoading}
                 />
+              )}
+
+              {tab === "preview" && (
+                isEdit ? (
+                  <PreviewLayersBuilder
+                    productTypeId={id}
+                    options={options}
+                    preview={preview}
+                    onSaved={(updated) => setPreview(updated.preview || null)}
+                  />
+                ) : (
+                  <div className="empty-state py-10!">
+                    <ImageIcon className="w-6 h-6 text-stone-300" />
+                    <p className="text-sm text-on-surface-variant">
+                      Save this product type first, then come back here to add preview
+                      layer images for its options.
+                    </p>
+                  </div>
+                )
               )}
             </div>
           </div>

@@ -1,7 +1,10 @@
 import api from "../lib/api";
 
-export const login = async ({ email, password }) => {
-  const { data } = await api.post("/admin/login", { email, password });
+// tenantId is optional — only supplied on a business subdomain, where the
+// resolved tenant scopes the lookup (email is unique per-tenant, not
+// globally, see Models/User.js).
+export const login = async ({ email, password, tenantId }) => {
+  const { data } = await api.post("/admin/login", { email, password, tenantId });
   return data;
 };
 

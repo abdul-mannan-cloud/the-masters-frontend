@@ -1,11 +1,24 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "../../hooks/useAuth";
+import { getTenantBySlug } from "../../services/tenantService";
+import { getTenantSubdomain, isSubdomainMode } from "../../utils/subdomain";
 import scissorsImg from "../../assets/Icons/scissors.png";
 import Spinner from "../../components/Spinner";
 import AuthField from "./AuthField";
+
+// Full-page states for a business subdomain whose slug doesn't resolve to a
+// usable tenant — there's no login form to show until this is known.
+const BizUnavailable = ({ title, message }) => (
+  <div className="min-h-screen flex items-center justify-center p-5 bg-secondary font-body">
+    <div className="max-w-md text-center text-on-secondary">
+      <h1 className="font-newsreader font-semibold text-2xl mb-2">{title}</h1>
+      <p className="font-body text-sm text-on-secondary/70">{message}</p>
+    </div>
+  </div>
+);
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +27,37 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
+
+  // On a business subdomain (alitailors.localhost) the tenant must be
+  // resolved before anyone can sign in — it drives branding and scopes the
+  // login lookup (email is unique per-tenant, not globally). On plain
+  // localhost / the base domain this whole block is skipped and bizState
+  // stays "n/a", rendering the generic form exactly as before.
+  const subdomainSlug = getTenantSubdomain();
+  const [bizState, setBizState] = useState(subdomainSlug ? "loading" : "n/a");
+  const [bizTenant, setBizTenant] = useState(null);
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "wrong-business") {
+      toast.error("You were signed out — that session belonged to a different business.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!subdomainSlug) return;
+    (async () => {
+      try {
+        const found = await getTenantBySlug(subdomainSlug);
+        setBizTenant(found);
+        setBizState(found.status === "active" ? "ready" : "suspended");
+      } catch {
+        setBizState("not-found");
+      }
+    })();
+  }, [subdomainSlug]);
 
   const validate = () => {
     const next = {};
@@ -28,10 +71,14 @@ const Login = () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const { user, tenant } = await login({ email, password });
+      const { user, tenant } = await login({
+        email,
+        password,
+        tenantId: bizTenant?._id,
+      });
       toast.success("Login successful");
       navigate(
-        user.role === "super_admin" || !tenant
+        isSubdomainMode() || user.role === "super_admin" || !tenant
           ? "/dashboard"
           : `/${tenant.slug}/dashboard`,
       );
@@ -47,6 +94,32 @@ const Login = () => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSubmit();
   };
+
+  if (bizState === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary">
+        <Spinner size="xl" />
+      </div>
+    );
+  }
+
+  if (bizState === "not-found") {
+    return (
+      <BizUnavailable
+        title="Business not found"
+        message="There's no tailoring business at this address. Check the link and try again."
+      />
+    );
+  }
+
+  if (bizState === "suspended") {
+    return (
+      <BizUnavailable
+        title={`${bizTenant.businessName} is unavailable`}
+        message="This business account is suspended or no longer active. Contact your business owner for help."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5 bg-secondary font-body">
@@ -77,10 +150,14 @@ const Login = () => {
 
           <div className="relative flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
-              <img src={scissorsImg} alt="Scissors icon" className="w-full h-full object-cover" />
+              <img
+                src={bizTenant?.logo || scissorsImg}
+                alt={bizTenant ? `${bizTenant.businessName} logo` : "Scissors icon"}
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="font-headline font-semibold text-base tracking-tight">
-              Digital Tailor
+              {bizTenant?.businessName || "Digital Tailor"}
             </span>
           </div>
 
@@ -108,7 +185,7 @@ const Login = () => {
             Welcome back
           </h1>
           <p className="font-body font-medium text-sm leading-relaxed text-on-surface-variant mb-7">
-            Sign in to your business.
+            {bizTenant ? `Sign in to ${bizTenant.businessName}.` : "Sign in to your business."}
           </p>
 
           <div className="flex flex-col gap-4">

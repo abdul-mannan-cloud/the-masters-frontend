@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { getDefaultPath } from "./utils/routing.js";
+import { isSubdomainMode } from "./utils/subdomain.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import TenantSlugGuard from "./components/TenantSlugGuard.jsx";
 import Layout from "./components/Layout.jsx";
@@ -45,6 +46,11 @@ const CatchAll = () => {
 };
 
 function App() {
+  // Read once per render — the hostname can't change without a full page
+  // reload (a different tenant's subdomain is a different origin, not a
+  // client-side navigation), so there's no need for state/effect here.
+  const inSubdomainMode = isSubdomainMode();
+
   return (
     // Every Framer Motion animation added anywhere in the app inherits this
     // once — reducedMotion="user" checks the OS prefers-reduced-motion
@@ -69,78 +75,148 @@ function App() {
         />
         <AuthProvider>
           <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<CreateAccount />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<CreateAccount />} />
 
-          {/* super_admin has no tenant of its own — these routes are never slug-prefixed. */}
-          <Route element={<ProtectedRoute roles={["super_admin"]} />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/tenants" element={<TenantList />} />
-              <Route path="/tenants/new" element={<TenantForm />} />
-              <Route path="/tenants/:id/edit" element={<TenantForm />} />
-              <Route path="/tenants/:id" element={<TenantView />} />
-            </Route>
-          </Route>
+            {inSubdomainMode ? (
+              // Subdomain mode (e.g. alitailors.localhost): the tenant is
+              // already carried by the host, so these routes live at bare
+              // paths — no "/:tenantSlug" segment. TenantSlugGuard resolves
+              // the expected slug from the subdomain itself (see
+              // useExpectedTenantSlug) and still enforces it matches the
+              // logged-in user's own tenant. super_admin has no subdomain of
+              // its own, so its platform-management pages are deliberately
+              // NOT reachable here — only from the bare root domain, below.
+              <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
+                <Route element={<TenantSlugGuard />}>
+                  <Route element={<Layout />}>
+                    <Route path="dashboard" element={<Dashboard />} />
 
-          {/* Every tenant-scoped role lives under "/:tenantSlug/...". */}
-          <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
-            <Route path="/:tenantSlug" element={<TenantSlugGuard />}>
-              <Route element={<Layout />}>
-                <Route path="dashboard" element={<Dashboard />} />
+                    <Route element={<ProtectedRoute module="customers" />}>
+                      <Route path="customers" element={<CustomerList />} />
+                      <Route path="customers/:id" element={<CustomerList />} />
+                    </Route>
 
-                {/* No separate "customers/new" route — "new" is intentionally
-                    matched by the :id param below (routeId === "new" means
-                    create mode, see List.jsx). A static "customers/new"
-                    route would out-rank ":id" in React Router's matching and
-                    make useParams().id come back undefined instead of "new",
-                    which breaks that derivation. */}
-                <Route element={<ProtectedRoute module="customers" />}>
-                  <Route path="customers" element={<CustomerList />} />
-                  <Route path="customers/:id" element={<CustomerList />} />
-                </Route>
+                    <Route element={<ProtectedRoute module="orders" />}>
+                      <Route path="orders" element={<OrderList />} />
+                      <Route path="orders/new" element={<OrderForm />} />
+                      <Route path="orders/:id/checkout" element={<Checkout />} />
+                      <Route path="orders/:id" element={<OrderView />} />
+                    </Route>
 
-                <Route element={<ProtectedRoute module="orders" />}>
-                  <Route path="orders" element={<OrderList />} />
-                  <Route path="orders/new" element={<OrderForm />} />
-                  <Route path="orders/:id/checkout" element={<Checkout />} />
-                  <Route path="orders/:id" element={<OrderView />} />
-                </Route>
+                    <Route element={<ProtectedRoute module="productTypes" />}>
+                      <Route path="product-types" element={<ProductTypeList />} />
+                      <Route path="product-types/new" element={<ProductTypeForm />} />
+                      <Route path="product-types/:id/edit" element={<ProductTypeForm />} />
+                      <Route path="product-types/:id" element={<ProductTypeView />} />
+                    </Route>
 
-                <Route element={<ProtectedRoute module="productTypes" />}>
-                  <Route path="product-types" element={<ProductTypeList />} />
-                  <Route path="product-types/new" element={<ProductTypeForm />} />
-                  <Route path="product-types/:id/edit" element={<ProductTypeForm />} />
-                  <Route path="product-types/:id" element={<ProductTypeView />} />
-                </Route>
+                    <Route element={<ProtectedRoute module="employees" />}>
+                      <Route path="employees" element={<EmployeeList />} />
+                      <Route path="employees/new" element={<EmployeeForm />} />
+                      <Route path="employees/:id/edit" element={<EmployeeForm />} />
+                      <Route path="employees/:id" element={<EmployeeView />} />
+                    </Route>
 
-                <Route element={<ProtectedRoute module="employees" />}>
-                  <Route path="employees" element={<EmployeeList />} />
-                  <Route path="employees/new" element={<EmployeeForm />} />
-                  <Route path="employees/:id/edit" element={<EmployeeForm />} />
-                  <Route path="employees/:id" element={<EmployeeView />} />
-                </Route>
+                    <Route element={<ProtectedRoute module="settings" />}>
+                      <Route path="business-info" element={<BusinessInfo />} />
+                    </Route>
 
-                <Route element={<ProtectedRoute module="settings" />}>
-                  <Route path="business-info" element={<BusinessInfo />} />
-                </Route>
+                    <Route element={<ProtectedRoute module="inventory" />}>
+                      <Route path="inventory" element={<InventoryList />} />
+                      <Route path="inventory/new" element={<InventoryForm />} />
+                      <Route path="inventory/low-stock" element={<LowStockReport />} />
+                      <Route path="inventory/:id/edit" element={<InventoryForm />} />
+                      <Route path="inventory/:id" element={<InventoryView />} />
+                    </Route>
 
-                <Route element={<ProtectedRoute module="inventory" />}>
-                  <Route path="inventory" element={<InventoryList />} />
-                  <Route path="inventory/new" element={<InventoryForm />} />
-                  <Route path="inventory/low-stock" element={<LowStockReport />} />
-                  <Route path="inventory/:id/edit" element={<InventoryForm />} />
-                  <Route path="inventory/:id" element={<InventoryView />} />
-                </Route>
-
-                <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>
-                  <Route path="roles" element={<RoleList />} />
-                  <Route path="roles/new" element={<RoleForm />} />
-                  <Route path="roles/:id/edit" element={<RoleForm />} />
+                    <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>
+                      <Route path="roles" element={<RoleList />} />
+                      <Route path="roles/new" element={<RoleForm />} />
+                      <Route path="roles/:id/edit" element={<RoleForm />} />
+                    </Route>
+                  </Route>
                 </Route>
               </Route>
-            </Route>
-          </Route>
+            ) : (
+              <>
+                {/* super_admin has no tenant of its own — these routes are never slug-prefixed. */}
+                <Route element={<ProtectedRoute roles={["super_admin"]} />}>
+                  <Route element={<Layout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/tenants" element={<TenantList />} />
+                    <Route path="/tenants/new" element={<TenantForm />} />
+                    <Route path="/tenants/:id/edit" element={<TenantForm />} />
+                    <Route path="/tenants/:id" element={<TenantView />} />
+                  </Route>
+                </Route>
+
+                {/* Original path-based fallback — every tenant-scoped role
+                    reaches its pages under "/:tenantSlug/..." wherever
+                    subdomain routing isn't configured/recognized (plain
+                    localhost, or a host that isn't a subdomain of
+                    VITE_APP_BASE_DOMAIN). Kept working unchanged so nothing
+                    that relies on it today (bookmarks, hardcoded links)
+                    breaks. */}
+                <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
+                  <Route path="/:tenantSlug" element={<TenantSlugGuard />}>
+                    <Route element={<Layout />}>
+                      <Route path="dashboard" element={<Dashboard />} />
+
+                      {/* No separate "customers/new" route — "new" is intentionally
+                          matched by the :id param below (routeId === "new" means
+                          create mode, see List.jsx). A static "customers/new"
+                          route would out-rank ":id" in React Router's matching and
+                          make useParams().id come back undefined instead of "new",
+                          which breaks that derivation. */}
+                      <Route element={<ProtectedRoute module="customers" />}>
+                        <Route path="customers" element={<CustomerList />} />
+                        <Route path="customers/:id" element={<CustomerList />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="orders" />}>
+                        <Route path="orders" element={<OrderList />} />
+                        <Route path="orders/new" element={<OrderForm />} />
+                        <Route path="orders/:id/checkout" element={<Checkout />} />
+                        <Route path="orders/:id" element={<OrderView />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="productTypes" />}>
+                        <Route path="product-types" element={<ProductTypeList />} />
+                        <Route path="product-types/new" element={<ProductTypeForm />} />
+                        <Route path="product-types/:id/edit" element={<ProductTypeForm />} />
+                        <Route path="product-types/:id" element={<ProductTypeView />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="employees" />}>
+                        <Route path="employees" element={<EmployeeList />} />
+                        <Route path="employees/new" element={<EmployeeForm />} />
+                        <Route path="employees/:id/edit" element={<EmployeeForm />} />
+                        <Route path="employees/:id" element={<EmployeeView />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="settings" />}>
+                        <Route path="business-info" element={<BusinessInfo />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="inventory" />}>
+                        <Route path="inventory" element={<InventoryList />} />
+                        <Route path="inventory/new" element={<InventoryForm />} />
+                        <Route path="inventory/low-stock" element={<LowStockReport />} />
+                        <Route path="inventory/:id/edit" element={<InventoryForm />} />
+                        <Route path="inventory/:id" element={<InventoryView />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute roles={["tenant_admin"]} />}>
+                        <Route path="roles" element={<RoleList />} />
+                        <Route path="roles/new" element={<RoleForm />} />
+                        <Route path="roles/:id/edit" element={<RoleForm />} />
+                      </Route>
+                    </Route>
+                  </Route>
+                </Route>
+              </>
+            )}
 
             <Route path="*" element={<CatchAll />} />
           </Routes>

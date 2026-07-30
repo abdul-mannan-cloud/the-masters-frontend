@@ -5,6 +5,7 @@ import * as productTypeService from "../../services/productTypeService";
 import * as inventoryService from "../../services/inventoryService";
 import * as inventoryCategoryService from "../../services/inventoryCategoryService";
 import { usePermission } from "../../hooks/usePermission";
+import GarmentPreview from "../../components/GarmentPreview";
 
 // mode "create" only — lets the customer's very first order be assembled in
 // the same form as their Details + Measurements, instead of a separate trip
@@ -226,6 +227,14 @@ const OrderDraftTab = ({ draftMeasurements, orderDraft, onChange, onStockIssueCh
                         />
                       </div>
                     </div>
+
+                    {productType && (productType.options?.length > 0 || productType.preview?.baseImage) && (
+                      <GarmentPreview
+                        productType={productType}
+                        selectedOptions={item.selectedOptions}
+                        onClear={() => updateItem(m, { selectedOptions: {} })}
+                      />
+                    )}
 
                     {productType?.options?.length > 0 && (
                       <div className="grid grid-cols-2 gap-3">

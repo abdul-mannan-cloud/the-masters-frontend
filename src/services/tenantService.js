@@ -10,6 +10,14 @@ export const getTenantById = async (id) => {
   return data;
 };
 
+// Public — no auth required, works even logged out. Resolves a subdomain to
+// its tenant for the login page (branding, "business not found", and
+// scoping the login attempt by tenantId).
+export const getTenantBySlug = async (slug) => {
+  const { data } = await api.get(`/tenant/by-slug/${slug}`);
+  return data;
+};
+
 export const createTenant = async (tenant) => {
   const formData = new FormData();
   Object.entries(tenant).forEach(([key, value]) => {
