@@ -21,10 +21,10 @@ const emptyForm = {
   invoiceShowLogo: true,
   invoiceFooter: "",
   invoiceTerms: "",
-  whatsappEnabled: false,
-  whatsappPhoneNumberId: "",
-  whatsappBusinessAccountId: "",
-  whatsappAccessToken: "",
+  notifyOnOrderCreated: false,
+  notifyOnOrderReady: false,
+  whatsappOrderPlacedTemplate: "",
+  whatsappOrderCompletedTemplate: "",
 };
 
 const formFromSettings = (data) => ({
@@ -40,10 +40,10 @@ const formFromSettings = (data) => ({
   invoiceShowLogo: data.invoice?.showLogo ?? true,
   invoiceFooter: data.invoice?.footer || "",
   invoiceTerms: data.invoice?.termsAndConditions || "",
-  whatsappEnabled: data.whatsapp?.enabled ?? false,
-  whatsappPhoneNumberId: data.whatsapp?.phoneNumberId || "",
-  whatsappBusinessAccountId: data.whatsapp?.businessAccountId || "",
-  whatsappAccessToken: "", // never echoed back from the API — write-only
+  notifyOnOrderCreated: data.notifications?.autoNotifyOnOrderCreated ?? false,
+  notifyOnOrderReady: data.notifications?.autoNotifyOnOrderReady ?? false,
+  whatsappOrderPlacedTemplate: data.whatsapp?.orderPlacedTemplate || "",
+  whatsappOrderCompletedTemplate: data.whatsapp?.orderCompletedTemplate || "",
 });
 
 // Full business-profile editor: Business/Owner/Contact info, Invoice
@@ -62,6 +62,17 @@ const BusinessInfoForm = ({ tenantId }) => {
   const [form, setForm] = useState(emptyForm);
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [placeholders, setPlaceholders] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setPlaceholders(await settingsService.getWhatsAppPlaceholders());
+      } catch {
+        // Legend is a nice-to-have — a failed fetch shouldn't block editing.
+      }
+    })();
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -128,11 +139,13 @@ const BusinessInfoForm = ({ tenantId }) => {
         footer: form.invoiceFooter,
         termsAndConditions: form.invoiceTerms,
       },
+      notifications: {
+        autoNotifyOnOrderCreated: form.notifyOnOrderCreated,
+        autoNotifyOnOrderReady: form.notifyOnOrderReady,
+      },
       whatsapp: {
-        enabled: form.whatsappEnabled,
-        phoneNumberId: form.whatsappPhoneNumberId,
-        businessAccountId: form.whatsappBusinessAccountId,
-        ...(form.whatsappAccessToken && { accessToken: form.whatsappAccessToken }),
+        orderPlacedTemplate: form.whatsappOrderPlacedTemplate,
+        orderCompletedTemplate: form.whatsappOrderCompletedTemplate,
       },
     };
 
@@ -380,52 +393,58 @@ const BusinessInfoForm = ({ tenantId }) => {
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
-              WhatsApp Settings
+              WhatsApp Notifications
             </h3>
-            <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
-              <input
-                type="checkbox"
-                checked={form.whatsappEnabled}
-                onChange={set("whatsappEnabled")}
-                className="w-4 h-4 accent-primary"
+
+            {placeholders.length > 0 && (
+              <div className="p-3 bg-stone-50 rounded-xl">
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                  Available placeholders
+                </p>
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {placeholders.map((p) => (
+                    <span key={p.key} className="text-xs text-on-surface-variant" title={p.description}>
+                      <code className="font-mono text-primary">{`{{${p.key}}}`}</code>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-stone-100">
+              <label className="flex items-center gap-2 text-sm font-medium text-on-surface mb-2">
+                <input
+                  type="checkbox"
+                  checked={form.notifyOnOrderCreated}
+                  onChange={set("notifyOnOrderCreated")}
+                  className="w-4 h-4 accent-primary"
+                />
+                Send a WhatsApp message when an order is placed
+              </label>
+              <textarea
+                value={form.whatsappOrderPlacedTemplate}
+                onChange={set("whatsappOrderPlacedTemplate")}
+                rows={8}
+                className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
               />
-              Enable WhatsApp notifications
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Phone Number ID
-                </label>
+            </div>
+
+            <div className="pt-2 border-t border-stone-100">
+              <label className="flex items-center gap-2 text-sm font-medium text-on-surface mb-2">
                 <input
-                  type="text"
-                  value={form.whatsappPhoneNumberId}
-                  onChange={set("whatsappPhoneNumberId")}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  type="checkbox"
+                  checked={form.notifyOnOrderReady}
+                  onChange={set("notifyOnOrderReady")}
+                  className="w-4 h-4 accent-primary"
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Business Account ID
-                </label>
-                <input
-                  type="text"
-                  value={form.whatsappBusinessAccountId}
-                  onChange={set("whatsappBusinessAccountId")}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Access Token
-                </label>
-                <input
-                  type="password"
-                  value={form.whatsappAccessToken}
-                  onChange={set("whatsappAccessToken")}
-                  placeholder={settings.whatsapp?.accessToken ? "Leave blank to keep current token" : ""}
-                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+                Send a WhatsApp message when an order is completed
+              </label>
+              <textarea
+                value={form.whatsappOrderCompletedTemplate}
+                onChange={set("whatsappOrderCompletedTemplate")}
+                rows={6}
+                className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              />
             </div>
           </div>
 
@@ -536,11 +555,22 @@ const BusinessInfoForm = ({ tenantId }) => {
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 font-headline flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
-              WhatsApp Configuration
+              WhatsApp Notifications
             </h3>
-            <p className="text-sm text-on-surface">
-              {settings.whatsapp?.enabled ? "Enabled" : "Not enabled"}
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-on-surface-variant">On order placed</p>
+                <p className="text-on-surface">
+                  {settings.notifications?.autoNotifyOnOrderCreated ? "Enabled" : "Not enabled"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant">On order completed</p>
+                <p className="text-on-surface">
+                  {settings.notifications?.autoNotifyOnOrderReady ? "Enabled" : "Not enabled"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}

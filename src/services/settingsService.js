@@ -17,6 +17,11 @@ export const getSettings = async () => {
   return data;
 };
 
+export const getWhatsAppPlaceholders = async () => {
+  const { data } = await api.get("/settings/whatsapp-placeholders");
+  return data;
+};
+
 export const updateSettings = async (settings, logoFile) => {
   const { data } = await api.put("/settings", buildBody(settings, logoFile));
   return data;
