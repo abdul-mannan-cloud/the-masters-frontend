@@ -22,8 +22,13 @@ const Topbar = ({ onOpenMobileNav }) => {
   const pathForMatch = tenantSlug
     ? location.pathname.replace(`/${tenantSlug}`, "")
     : location.pathname;
+  // Host mode (see utils/tenantHost.js) mounts the dashboard at "/" instead
+  // of "/dashboard" — special-cased since every other TITLES path is a
+  // startsWith prefix match, and "/" would otherwise match everything.
   const title =
-    TITLES.find(([path]) => pathForMatch.startsWith(path))?.[1] || "";
+    pathForMatch === "/"
+      ? "Dashboard"
+      : TITLES.find(([path]) => pathForMatch.startsWith(path))?.[1] || "";
   const initials = user?.email?.[0]?.toUpperCase() || "?";
 
   return (

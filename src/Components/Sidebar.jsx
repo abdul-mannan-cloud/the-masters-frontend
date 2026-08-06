@@ -5,7 +5,6 @@ import {
   Users,
   ShoppingCart,
   LogOut,
-  Shirt,
   Layers,
   UserCog,
   Building2,
@@ -16,7 +15,8 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { isSubdomainMode } from "../utils/subdomain";
+import { isTenantHostMode } from "../utils/tenantHost";
+import { DEFAULT_APP_NAME, DEFAULT_LOGO } from "../utils/branding";
 
 // `module` gates on the logged-in user's permission grid (view access) for
 // tenant_admin/employee/manager accounts; `roles` hard-gates to specific
@@ -56,17 +56,26 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
     if (user?.role === "super_admin") return false;
     if (user?.role === "tenant_admin") return true;
     return permissions?.[item.module]?.view === true;
-  }).map((item) => ({
-    ...item,
-    // "/tenants" is the platform-level, unprefixed route (super_admin only)
-    // — every other nav target lives under the current tenant's slug, unless
-    // the tenant is already carried by the host (subdomain mode), where
-    // tenant-scoped routes are mounted at bare paths (see App.jsx).
-    path:
-      item.path === "/tenants" || !tenant || isSubdomainMode()
-        ? item.path
-        : `/${tenant.slug}${item.path}`,
-  }));
+  }).map((item) => {
+    // Host mode (a platform subdomain or the business's own custom domain,
+    // see utils/tenantHost.js) mounts the dashboard as the index route, not
+    // "/dashboard" (see App.jsx) — this is the one nav target whose path
+    // actually differs in that mode, not just its prefix.
+    if (item.path === "/dashboard" && isTenantHostMode()) {
+      return { ...item, path: "/" };
+    }
+    return {
+      ...item,
+      // "/tenants" is the platform-level, unprefixed route (super_admin only)
+      // — every other nav target lives under the current tenant's slug,
+      // unless the tenant is already carried by the host (host mode), where
+      // tenant-scoped routes are mounted at bare paths (see App.jsx).
+      path:
+        item.path === "/tenants" || !tenant || isTenantHostMode()
+          ? item.path
+          : `/${tenant.slug}${item.path}`,
+    };
+  });
 
   const handleLogout = () => {
     logout();
@@ -76,48 +85,29 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
   const content = (
     <>
       <div
-        className={`px-6 py-7 flex items-center gap-2.5 border-b border-stone-100 ${
+        className={`px-6 py-5 flex items-center gap-3 border-b border-stone-100 ${
           collapsed ? "lg:px-0 lg:justify-center" : ""
         }`}
       >
-        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          <Shirt className="w-5 h-5 text-on-primary" />
+        {/* Fixed square center-fill container — object-contain keeps the
+            whole logo visible (no crop/stretch) and centers it both axes
+            regardless of the source image's own aspect ratio. */}
+        <div className="w-10 h-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center shrink-0 overflow-hidden">
+          <img
+            src={tenant?.logo || DEFAULT_LOGO}
+            alt={`${tenant?.businessName || DEFAULT_APP_NAME} logo`}
+            className="w-full h-full object-contain"
+          />
         </div>
         <div className={collapsed ? "lg:hidden" : ""}>
-          <div className="text-base font-extrabold text-on-surface font-headline leading-tight">
-            Digital Tailor
-          </div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-on-surface-variant">
-            Workshop Suite
+          <div
+            className="text-base font-extrabold text-on-surface font-headline leading-tight truncate"
+            title={tenant?.businessName || DEFAULT_APP_NAME}
+          >
+            {tenant?.businessName || DEFAULT_APP_NAME}
           </div>
         </div>
       </div>
-
-      {tenant && (
-        <div
-          className={`px-6 py-4 flex items-center gap-2.5 border-b border-stone-100 ${
-            collapsed ? "lg:px-0 lg:justify-center" : ""
-          }`}
-        >
-          {tenant.logo ? (
-            <img
-              src={tenant.logo}
-              alt={`${tenant.businessName} logo`}
-              className="w-8 h-8 rounded-lg object-cover shrink-0 border border-stone-200"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center shrink-0 text-xs font-bold text-stone-400">
-              {tenant.businessName?.[0]?.toUpperCase()}
-            </div>
-          )}
-          <div
-            className={`text-sm font-bold text-on-surface truncate ${collapsed ? "lg:hidden" : ""}`}
-            title={tenant.businessName}
-          >
-            {tenant.businessName}
-          </div>
-        </div>
-      )}
 
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navItems.map((item) => {

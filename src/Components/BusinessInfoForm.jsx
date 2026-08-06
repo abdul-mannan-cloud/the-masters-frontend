@@ -113,7 +113,8 @@ const BusinessInfoForm = ({ tenantId }) => {
 
     const nextErrors = {};
     if (form.phone && !isValidPhone(form.phone))
-      nextErrors.phone = "Enter a valid 11-digit mobile number starting with 03.";
+      nextErrors.phone =
+        "Enter a valid 11-digit mobile number starting with 03.";
     if (form.email && !isValidEmail(form.email))
       nextErrors.email = "Enter a valid email address.";
     if (Object.keys(nextErrors).length > 0) {
@@ -166,7 +167,9 @@ const BusinessInfoForm = ({ tenantId }) => {
       // super_admin editing another tenant here has no tenant of their own.
       if (!tenantId) refreshTenant();
     } catch (err) {
-      toast.error(err?.response?.data?.error || "Failed to update business information");
+      toast.error(
+        err?.response?.data?.error || "Failed to update business information",
+      );
     } finally {
       setSaving(false);
     }
@@ -220,7 +223,8 @@ const BusinessInfoForm = ({ tenantId }) => {
               )}
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                  Business Logo
+                  Business Logo [upload a square image (recommended: 512×512
+                  px)]
                 </label>
                 <input
                   type="file"
@@ -260,12 +264,16 @@ const BusinessInfoForm = ({ tenantId }) => {
                 </label>
                 <PhoneInput
                   value={form.phone}
-                  onChange={(digits) => setForm((f) => ({ ...f, phone: digits }))}
+                  onChange={(digits) =>
+                    setForm((f) => ({ ...f, phone: digits }))
+                  }
                   className={`w-full px-3 py-2.5 bg-stone-50 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                     errors.phone ? "border-red-400" : "border-transparent"
                   }`}
                 />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -279,7 +287,9 @@ const BusinessInfoForm = ({ tenantId }) => {
                     errors.email ? "border-red-400" : "border-transparent"
                   }`}
                 />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -403,7 +413,11 @@ const BusinessInfoForm = ({ tenantId }) => {
                 </p>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {placeholders.map((p) => (
-                    <span key={p.key} className="text-xs text-on-surface-variant" title={p.description}>
+                    <span
+                      key={p.key}
+                      className="text-xs text-on-surface-variant"
+                      title={p.description}
+                    >
                       <code className="font-mono text-primary">{`{{${p.key}}}`}</code>
                     </span>
                   ))}
@@ -467,9 +481,7 @@ const BusinessInfoForm = ({ tenantId }) => {
               disabled={saving}
               className="flex-1 py-3 bg-primary text-on-primary font-bold rounded-full text-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {saving && (
-                <Spinner size="sm" tone="on-primary" />
-              )}
+              {saving && <Spinner size="sm" tone="on-primary" />}
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
@@ -496,35 +508,53 @@ const BusinessInfoForm = ({ tenantId }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-xs text-on-surface-variant">Business Name</p>
-                <p className="text-on-surface">{settings.business?.name || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.name || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Owner Name</p>
-                <p className="text-on-surface">{settings.business?.ownerName || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.ownerName || "—"}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant">Contact Number</p>
-                <p className="text-on-surface">{formatPhone(settings.business?.phone) || "—"}</p>
+                <p className="text-xs text-on-surface-variant">
+                  Contact Number
+                </p>
+                <p className="text-on-surface">
+                  {formatPhone(settings.business?.phone) || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Email</p>
-                <p className="text-on-surface">{settings.business?.email || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.email || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Working Hours</p>
-                <p className="text-on-surface">{settings.business?.workingHours || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.workingHours || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Currency</p>
-                <p className="text-on-surface">{settings.business?.currency || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.currency || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Timezone</p>
-                <p className="text-on-surface">{settings.business?.timezone || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.timezone || "—"}
+                </p>
               </div>
               <div className="sm:col-span-2">
                 <p className="text-xs text-on-surface-variant">Address</p>
-                <p className="text-on-surface">{settings.business?.address || "—"}</p>
+                <p className="text-on-surface">
+                  {settings.business?.address || "—"}
+                </p>
               </div>
             </div>
           </div>
@@ -539,12 +569,18 @@ const BusinessInfoForm = ({ tenantId }) => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-xs text-on-surface-variant">Invoice Prefix</p>
-                <p className="text-on-surface">{settings.invoice?.orderNumberPrefix || "—"}</p>
+                <p className="text-xs text-on-surface-variant">
+                  Invoice Prefix
+                </p>
+                <p className="text-on-surface">
+                  {settings.invoice?.orderNumberPrefix || "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-on-surface-variant">Show Logo</p>
-                <p className="text-on-surface">{settings.invoice?.showLogo ? "Yes" : "No"}</p>
+                <p className="text-on-surface">
+                  {settings.invoice?.showLogo ? "Yes" : "No"}
+                </p>
               </div>
             </div>
           </div>
@@ -559,15 +595,23 @@ const BusinessInfoForm = ({ tenantId }) => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-xs text-on-surface-variant">On order placed</p>
+                <p className="text-xs text-on-surface-variant">
+                  On order placed
+                </p>
                 <p className="text-on-surface">
-                  {settings.notifications?.autoNotifyOnOrderCreated ? "Enabled" : "Not enabled"}
+                  {settings.notifications?.autoNotifyOnOrderCreated
+                    ? "Enabled"
+                    : "Not enabled"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-on-surface-variant">On order completed</p>
+                <p className="text-xs text-on-surface-variant">
+                  On order completed
+                </p>
                 <p className="text-on-surface">
-                  {settings.notifications?.autoNotifyOnOrderReady ? "Enabled" : "Not enabled"}
+                  {settings.notifications?.autoNotifyOnOrderReady
+                    ? "Enabled"
+                    : "Not enabled"}
                 </p>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useExpectedTenantSlug } from "../hooks/useExpectedTenantSlug";
-import { isSubdomainMode } from "../utils/subdomain";
+import { isTenantHostMode } from "../utils/tenantHost";
 import Spinner from "./Spinner";
 
 const FullPageLoader = () => (
@@ -10,8 +10,9 @@ const FullPageLoader = () => (
   </div>
 );
 
-// Guards every tenant-scoped route, whichever way it got there — a
-// subdomain (alitailors.localhost, routes at bare paths) or the original
+// Guards every tenant-scoped route, whichever way it got there — the host
+// itself (alitailors.localhost, or a business's own custom domain like
+// pakistan-tailors.com, both routed at bare paths) or the original
 // "/:tenantSlug/*" path prefix, via useExpectedTenantSlug. The backend
 // already scopes every request by the JWT's tenantId regardless of what's in
 // the URL/host — this only keeps the address bar honest.
@@ -24,13 +25,13 @@ const TenantSlugGuard = () => {
   if (!tenant) return <Navigate to="/login" replace />;
 
   if (tenant.slug !== expectedSlug) {
-    // A subdomain mismatch can't be fixed by rewriting the path — the wrong
+    // A host mismatch can't be fixed by rewriting the path — the wrong
     // tenant is baked into the host itself, and client-side routing can
-    // never change host. Logging out and sending them to this subdomain's
-    // own login page is the honest outcome (this is "unauthorized tenant
+    // never change host. Logging out and sending them to this host's own
+    // login page is the honest outcome (this is "unauthorized tenant
     // access": a session for a different business than this address),
     // rather than silently redirecting them across hosts.
-    if (isSubdomainMode()) {
+    if (isTenantHostMode()) {
       logout();
       return <Navigate to="/login?reason=wrong-business" replace />;
     }

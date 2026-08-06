@@ -4,7 +4,8 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { getDefaultPath } from "./utils/routing.js";
-import { isSubdomainMode } from "./utils/subdomain.js";
+import { isTenantHostMode } from "./utils/tenantHost.js";
+import BrandingSync from "./components/BrandingSync.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import TenantSlugGuard from "./components/TenantSlugGuard.jsx";
 import Layout from "./components/Layout.jsx";
@@ -47,9 +48,10 @@ const CatchAll = () => {
 
 function App() {
   // Read once per render — the hostname can't change without a full page
-  // reload (a different tenant's subdomain is a different origin, not a
-  // client-side navigation), so there's no need for state/effect here.
-  const inSubdomainMode = isSubdomainMode();
+  // reload (a different tenant's host — subdomain or custom domain — is a
+  // different origin, not a client-side navigation), so there's no need for
+  // state/effect here.
+  const inTenantHostMode = isTenantHostMode();
 
   return (
     // Every Framer Motion animation added anywhere in the app inherits this
@@ -74,22 +76,31 @@ function App() {
           }}
         />
         <AuthProvider>
+          <BrandingSync />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<CreateAccount />} />
 
-            {inSubdomainMode ? (
-              // Subdomain mode (e.g. alitailors.localhost): the tenant is
-              // already carried by the host, so these routes live at bare
-              // paths — no "/:tenantSlug" segment. TenantSlugGuard resolves
-              // the expected slug from the subdomain itself (see
-              // useExpectedTenantSlug) and still enforces it matches the
-              // logged-in user's own tenant. super_admin has no subdomain of
-              // its own, so its platform-management pages are deliberately
-              // NOT reachable here — only from the bare root domain, below.
+            {inTenantHostMode ? (
+              // Host mode: a platform subdomain (alitailors.localhost) or a
+              // business's own custom domain (pakistan-tailors.com, resolved
+              // by convention from its hostname — see utils/tenantHost.js).
+              // Either way the tenant is already carried by the host, so
+              // these routes live at bare paths — no "/:tenantSlug" segment,
+              // and the dashboard is the index route ("/") rather than
+              // "/dashboard" so the business's own root URL loads it
+              // directly. "dashboard" is kept as a path alias to the same
+              // element so nothing bookmarked under the old shape breaks.
+              // TenantSlugGuard resolves the expected slug from the host
+              // itself (see useExpectedTenantSlug) and still enforces it
+              // matches the logged-in user's own tenant. super_admin has no
+              // host of its own, so its platform-management pages are
+              // deliberately NOT reachable here — only from the bare root
+              // domain, below.
               <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
                 <Route element={<TenantSlugGuard />}>
                   <Route element={<Layout />}>
+                    <Route index element={<Dashboard />} />
                     <Route path="dashboard" element={<Dashboard />} />
 
                     <Route element={<ProtectedRoute module="customers" />}>
@@ -152,12 +163,12 @@ function App() {
                 </Route>
 
                 {/* Original path-based fallback — every tenant-scoped role
-                    reaches its pages under "/:tenantSlug/..." wherever
-                    subdomain routing isn't configured/recognized (plain
-                    localhost, or a host that isn't a subdomain of
-                    VITE_APP_BASE_DOMAIN). Kept working unchanged so nothing
-                    that relies on it today (bookmarks, hardcoded links)
-                    breaks. */}
+                    reaches its pages under "/:tenantSlug/..." wherever host
+                    mode isn't recognized (plain localhost, or a host that's
+                    neither a VITE_APP_BASE_DOMAIN subdomain nor a business's
+                    own custom domain — see utils/tenantHost.js). Kept
+                    working unchanged so nothing that relies on it today
+                    (bookmarks, hardcoded links) breaks. */}
                 <Route element={<ProtectedRoute roles={["tenant_admin", "manager", "employee"]} />}>
                   <Route path="/:tenantSlug" element={<TenantSlugGuard />}>
                     <Route element={<Layout />}>

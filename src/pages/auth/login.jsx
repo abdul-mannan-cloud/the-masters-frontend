@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "../../hooks/useAuth";
 import { getTenantBySlug } from "../../services/tenantService";
-import { getTenantSubdomain, isSubdomainMode } from "../../utils/subdomain";
+import { getTenantHostSlug, isTenantHostMode } from "../../utils/tenantHost";
 import scissorsImg from "../../assets/Icons/scissors.png";
 import Spinner from "../../components/Spinner";
 import AuthField from "./AuthField";
@@ -30,13 +30,14 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
 
-  // On a business subdomain (alitailors.localhost) the tenant must be
+  // On a business host — a platform subdomain (alitailors.localhost) or the
+  // business's own custom domain (pakistan-tailors.com) — the tenant must be
   // resolved before anyone can sign in — it drives branding and scopes the
   // login lookup (email is unique per-tenant, not globally). On plain
   // localhost / the base domain this whole block is skipped and bizState
   // stays "n/a", rendering the generic form exactly as before.
-  const subdomainSlug = getTenantSubdomain();
-  const [bizState, setBizState] = useState(subdomainSlug ? "loading" : "n/a");
+  const hostSlug = getTenantHostSlug();
+  const [bizState, setBizState] = useState(hostSlug ? "loading" : "n/a");
   const [bizTenant, setBizTenant] = useState(null);
 
   useEffect(() => {
@@ -47,17 +48,17 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (!subdomainSlug) return;
+    if (!hostSlug) return;
     (async () => {
       try {
-        const found = await getTenantBySlug(subdomainSlug);
+        const found = await getTenantBySlug(hostSlug);
         setBizTenant(found);
         setBizState(found.status === "active" ? "ready" : "suspended");
       } catch {
         setBizState("not-found");
       }
     })();
-  }, [subdomainSlug]);
+  }, [hostSlug]);
 
   const validate = () => {
     const next = {};
@@ -78,9 +79,11 @@ const Login = () => {
       });
       toast.success("Login successful");
       navigate(
-        isSubdomainMode() || user.role === "super_admin" || !tenant
+        user.role === "super_admin" || !tenant
           ? "/dashboard"
-          : `/${tenant.slug}/dashboard`,
+          : isTenantHostMode()
+            ? "/"
+            : `/${tenant.slug}/dashboard`,
       );
     } catch (error) {
       const message =
