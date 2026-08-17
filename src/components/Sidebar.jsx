@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { isTenantHostMode } from "../utils/tenantHost";
-import { DEFAULT_APP_NAME, DEFAULT_LOGO } from "../utils/branding";
+import { DEFAULT_APP_NAME, DEFAULT_LOGO, DEFAULT_TENANT_FALLBACK } from "../utils/branding";
 
 // `module` gates on the logged-in user's permission grid (view access) for
 // tenant_admin/employee/manager accounts; `roles` hard-gates to specific
@@ -96,6 +96,16 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
     navigate("/login");
   };
 
+  // super_admin has no business of its own — "Digital Tailor" (the platform's
+  // own name) is reserved for that case specifically. Every tenant-scoped
+  // role shows its real business name once loaded, or "Business" as a
+  // transient placeholder while `tenant` is still loading / genuinely unset
+  // — never the platform name standing in for a real business.
+  const brandName =
+    user?.role === "super_admin"
+      ? DEFAULT_APP_NAME
+      : tenant?.businessName || DEFAULT_TENANT_FALLBACK;
+
   const content = (
     <>
       <div
@@ -109,16 +119,16 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
         <div className="w-10 h-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center shrink-0 overflow-hidden">
           <img
             src={tenant?.logo || DEFAULT_LOGO}
-            alt={`${tenant?.businessName || DEFAULT_APP_NAME} logo`}
+            alt={`${brandName} logo`}
             className="w-full h-full object-contain"
           />
         </div>
         <div className={collapsed ? "lg:hidden" : ""}>
           <div
             className="text-base font-extrabold text-on-surface font-headline leading-tight truncate"
-            title={tenant?.businessName || DEFAULT_APP_NAME}
+            title={brandName}
           >
-            {tenant?.businessName || DEFAULT_APP_NAME}
+            {brandName}
           </div>
         </div>
       </div>

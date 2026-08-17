@@ -8,6 +8,7 @@ import { getTenantHostSlug, isTenantHostMode } from "../../utils/tenantHost";
 import scissorsImg from "../../assets/Icons/scissors.png";
 import Spinner from "../../components/Spinner";
 import AuthField from "./AuthField";
+import { DEFAULT_APP_NAME } from "../../utils/branding";
 
 // Full-page states for a business subdomain whose slug doesn't resolve to a
 // usable tenant — there's no login form to show until this is known.
@@ -160,7 +161,7 @@ const Login = () => {
               />
             </div>
             <span className="font-headline font-semibold text-base tracking-tight">
-              {bizTenant?.businessName || "Digital Tailor"}
+              {bizTenant?.businessName || DEFAULT_APP_NAME}
             </span>
           </div>
 

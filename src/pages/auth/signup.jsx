@@ -8,6 +8,7 @@ import PhoneInput from "../../components/PhoneInput";
 import Spinner from "../../components/Spinner";
 import { isValidPhone } from "../../utils/formatters";
 import AuthField from "./AuthField";
+import { DEFAULT_APP_NAME } from "../../utils/branding";
 
 const CreateAccount = () => {
   const [email, setEmail] = useState("");
@@ -97,7 +98,7 @@ const CreateAccount = () => {
               <img src={scissorsImg} alt="Scissors icon" className="w-full h-full object-cover" />
             </div>
             <span className="font-headline font-semibold text-base tracking-tight">
-              Digital Tailor
+              {DEFAULT_APP_NAME}
             </span>
           </div>
 

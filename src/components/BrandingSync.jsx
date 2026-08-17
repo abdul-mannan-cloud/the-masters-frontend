@@ -1,20 +1,27 @@
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { DEFAULT_APP_NAME, DEFAULT_LOGO } from "../utils/branding";
+import { DEFAULT_APP_NAME, DEFAULT_LOGO, DEFAULT_TENANT_FALLBACK } from "../utils/branding";
 
 const FAVICON_ID = "app-favicon";
 
 // Keeps the browser tab's title/favicon in sync with the logged-in tenant.
-// Reads `tenant` straight from AuthContext (already loaded on login/refresh,
-// cleared on logout) instead of fetching anything of its own — see
-// AuthContext.jsx's loadTenant/logout for where that state actually changes.
-// Mounted once near the root (App.jsx), so it keeps working across route
-// navigation without re-running per page.
+// Reads `tenant`/`user` straight from AuthContext (already loaded on
+// login/refresh, cleared on logout) instead of fetching anything of its own
+// — see AuthContext.jsx's loadTenant/logout for where that state actually
+// changes. Mounted once near the root (App.jsx), so it keeps working across
+// route navigation without re-running per page.
 const BrandingSync = () => {
-  const { tenant } = useAuth();
+  const { user, tenant } = useAuth();
 
   useEffect(() => {
-    document.title = tenant?.businessName || DEFAULT_APP_NAME;
+    // Same reservation as Sidebar.jsx: "Digital Tailor" is the platform's own
+    // name, shown only for super_admin (no business of its own). A
+    // tenant-scoped account gets its real business name, or "Business" as a
+    // transient placeholder — never the platform name.
+    document.title =
+      user?.role === "super_admin"
+        ? DEFAULT_APP_NAME
+        : tenant?.businessName || DEFAULT_TENANT_FALLBACK;
 
     const faviconLink = document.getElementById(FAVICON_ID);
     if (!faviconLink) return;
@@ -30,7 +37,7 @@ const BrandingSync = () => {
       faviconLink.type = "image/svg+xml";
       faviconLink.href = DEFAULT_LOGO;
     }
-  }, [tenant]);
+  }, [user, tenant]);
 
   return null;
 };
