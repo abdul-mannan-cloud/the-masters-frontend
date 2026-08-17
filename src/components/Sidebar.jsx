@@ -13,6 +13,8 @@ import {
   Boxes,
   ChevronsLeft,
   ChevronsRight,
+  Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { isTenantHostMode } from "../utils/tenantHost";
@@ -25,8 +27,20 @@ import { DEFAULT_APP_NAME, DEFAULT_LOGO } from "../utils/branding";
 const ALL_NAV_ITEMS = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Tenants", path: "/tenants", icon: Building2, roles: ["super_admin"] },
+  {
+    name: "Preview Prototype",
+    path: "/preview-prototype",
+    icon: Sparkles,
+    roles: ["super_admin"],
+  },
   { name: "Customers", path: "/customers", icon: Users, module: "customers" },
   { name: "Orders", path: "/orders", icon: ShoppingCart, module: "orders" },
+  {
+    name: "Pending WhatsApp",
+    path: "/notifications/pending",
+    icon: MessageCircle,
+    module: "notifications",
+  },
   { name: "Product Types", path: "/product-types", icon: Layers, module: "productTypes" },
   { name: "Inventory", path: "/inventory", icon: Boxes, module: "inventory" },
   { name: "Employees", path: "/employees", icon: UserCog, module: "employees" },

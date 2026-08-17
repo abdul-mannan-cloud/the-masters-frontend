@@ -23,8 +23,11 @@ const emptyForm = {
   invoiceTerms: "",
   notifyOnOrderCreated: false,
   notifyOnOrderReady: false,
+  notifyOnPaymentReceived: false,
+  orderCompletedMode: "automatic",
   whatsappOrderPlacedTemplate: "",
   whatsappOrderCompletedTemplate: "",
+  whatsappPaymentReceivedTemplate: "",
 };
 
 const formFromSettings = (data) => ({
@@ -42,8 +45,11 @@ const formFromSettings = (data) => ({
   invoiceTerms: data.invoice?.termsAndConditions || "",
   notifyOnOrderCreated: data.notifications?.autoNotifyOnOrderCreated ?? false,
   notifyOnOrderReady: data.notifications?.autoNotifyOnOrderReady ?? false,
+  notifyOnPaymentReceived: data.notifications?.autoNotifyOnPaymentReceived ?? false,
+  orderCompletedMode: data.notifications?.orderCompletedMode || "automatic",
   whatsappOrderPlacedTemplate: data.whatsapp?.orderPlacedTemplate || "",
   whatsappOrderCompletedTemplate: data.whatsapp?.orderCompletedTemplate || "",
+  whatsappPaymentReceivedTemplate: data.whatsapp?.paymentReceivedTemplate || "",
 });
 
 // Full business-profile editor: Business/Owner/Contact info, Invoice
@@ -143,10 +149,13 @@ const BusinessInfoForm = ({ tenantId }) => {
       notifications: {
         autoNotifyOnOrderCreated: form.notifyOnOrderCreated,
         autoNotifyOnOrderReady: form.notifyOnOrderReady,
+        autoNotifyOnPaymentReceived: form.notifyOnPaymentReceived,
+        orderCompletedMode: form.orderCompletedMode,
       },
       whatsapp: {
         orderPlacedTemplate: form.whatsappOrderPlacedTemplate,
         orderCompletedTemplate: form.whatsappOrderCompletedTemplate,
+        paymentReceivedTemplate: form.whatsappPaymentReceivedTemplate,
       },
     };
 
@@ -453,9 +462,61 @@ const BusinessInfoForm = ({ tenantId }) => {
                 />
                 Send a WhatsApp message when an order is completed
               </label>
+
+              {form.notifyOnOrderReady && (
+                <div className="flex flex-wrap gap-4 mb-3">
+                  <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
+                    <input
+                      type="radio"
+                      name="orderCompletedMode"
+                      value="automatic"
+                      checked={form.orderCompletedMode === "automatic"}
+                      onChange={set("orderCompletedMode")}
+                      className="w-4 h-4 accent-primary"
+                    />
+                    Send automatically
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
+                    <input
+                      type="radio"
+                      name="orderCompletedMode"
+                      value="confirm"
+                      checked={form.orderCompletedMode === "confirm"}
+                      onChange={set("orderCompletedMode")}
+                      className="w-4 h-4 accent-primary"
+                    />
+                    Require confirmation before sending
+                  </label>
+                </div>
+              )}
+
               <textarea
                 value={form.whatsappOrderCompletedTemplate}
                 onChange={set("whatsappOrderCompletedTemplate")}
+                rows={6}
+                className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              />
+              {form.orderCompletedMode === "confirm" && form.notifyOnOrderReady && (
+                <p className="text-xs text-on-surface-variant mt-1.5">
+                  Messages will wait in <span className="font-semibold">Pending WhatsApp Notifications</span> for
+                  an authorized user to review and send.
+                </p>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-stone-100">
+              <label className="flex items-center gap-2 text-sm font-medium text-on-surface mb-2">
+                <input
+                  type="checkbox"
+                  checked={form.notifyOnPaymentReceived}
+                  onChange={set("notifyOnPaymentReceived")}
+                  className="w-4 h-4 accent-primary"
+                />
+                Send a WhatsApp message when a payment is received
+              </label>
+              <textarea
+                value={form.whatsappPaymentReceivedTemplate}
+                onChange={set("whatsappPaymentReceivedTemplate")}
                 rows={6}
                 className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
               />

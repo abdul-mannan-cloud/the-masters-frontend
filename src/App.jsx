@@ -33,6 +33,8 @@ import InventoryList from "./pages/inventory/List.jsx";
 import InventoryForm from "./pages/inventory/Form.jsx";
 import InventoryView from "./pages/inventory/View.jsx";
 import LowStockReport from "./pages/inventory/LowStockReport.jsx";
+import PreviewPrototype from "./pages/PreviewPrototype.jsx";
+import PendingNotifications from "./pages/PendingNotifications.jsx";
 
 // Catches anything unmatched — including a bare "/dashboard" hit by a
 // tenant-scoped user (that path only exists for super_admin now).
@@ -133,6 +135,10 @@ function App() {
                       <Route path="business-info" element={<BusinessInfo />} />
                     </Route>
 
+                    <Route element={<ProtectedRoute module="notifications" />}>
+                      <Route path="notifications/pending" element={<PendingNotifications />} />
+                    </Route>
+
                     <Route element={<ProtectedRoute module="inventory" />}>
                       <Route path="inventory" element={<InventoryList />} />
                       <Route path="inventory/new" element={<InventoryForm />} />
@@ -159,6 +165,9 @@ function App() {
                     <Route path="/tenants/new" element={<TenantForm />} />
                     <Route path="/tenants/:id/edit" element={<TenantForm />} />
                     <Route path="/tenants/:id" element={<TenantView />} />
+                    {/* LOCAL-ONLY prototype (hardcoded demo data, no MongoDB
+                        reads/writes) — see src/data/previewPrototypeData.js */}
+                    <Route path="/preview-prototype" element={<PreviewPrototype />} />
                   </Route>
                 </Route>
 
@@ -208,6 +217,10 @@ function App() {
 
                       <Route element={<ProtectedRoute module="settings" />}>
                         <Route path="business-info" element={<BusinessInfo />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute module="notifications" />}>
+                        <Route path="notifications/pending" element={<PendingNotifications />} />
                       </Route>
 
                       <Route element={<ProtectedRoute module="inventory" />}>
