@@ -6,11 +6,13 @@ import { Plus, Search, Eye, Pencil, Trash2, Building2, Ban } from "lucide-react"
 import * as tenantService from "../../services/tenantService";
 import StatusBadge from "../../components/StatusBadge";
 import { SkeletonTableRows } from "../../components/Skeleton";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const LIMIT = 10;
 
 const TenantList = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [tenants, setTenants] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,9 +57,10 @@ const TenantList = () => {
 
   const handleDelete = async (tenant) => {
     if (
-      !window.confirm(
+      !(await confirm(
         `Delete "${tenant.businessName}"? Their historical data is kept, but the business will no longer be accessible.`,
-      )
+        { confirmLabel: "Delete" },
+      ))
     )
       return;
     try {
@@ -72,11 +75,12 @@ const TenantList = () => {
   const handleToggleStatus = async (tenant) => {
     const suspending = tenant.status === "active";
     if (
-      !window.confirm(
+      !(await confirm(
         suspending
           ? `Suspend "${tenant.businessName}"? All of its users will be blocked from logging in.`
           : `Reactivate "${tenant.businessName}"?`,
-      )
+        { danger: suspending, confirmLabel: suspending ? "Suspend" : "Reactivate" },
+      ))
     )
       return;
     try {
@@ -116,7 +120,7 @@ const TenantList = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-50">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by name, slug, or email…"

@@ -11,9 +11,11 @@ import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone, formatCnic } from "../../utils/formatters";
 import Spinner from "../../components/Spinner";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const EmployeeView = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const { id } = useParams();
   const canUpdate = usePermission("employees", "update");
   const canDelete = usePermission("employees", "delete");
@@ -58,7 +60,7 @@ const EmployeeView = () => {
     const activating = linkedUser.status !== "active";
     if (
       !activating &&
-      !window.confirm(`Suspend portal access for "${employee.name}"?`)
+      !(await confirm(`Suspend portal access for "${employee.name}"?`, { confirmLabel: "Suspend" }))
     )
       return;
     setUpdatingStatus(true);
@@ -96,9 +98,10 @@ const EmployeeView = () => {
 
   const handleDelete = async () => {
     if (
-      !window.confirm(
+      !(await confirm(
         `Delete "${employee.name}"? This will also revoke their portal access.`,
-      )
+        { confirmLabel: "Delete" },
+      ))
     )
       return;
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Phone,
   Mail,
@@ -9,12 +9,14 @@ import {
   History,
   PenSquare,
   Ruler,
+  UserCog,
 } from "lucide-react";
 import Avatar from "../../components/Avatar";
 import PhoneInput from "../../components/PhoneInput";
 import CnicInput from "../../components/CnicInput";
 import MeasurementsTab from "./MeasurementsTab";
 import OrderHistoryTab from "./OrderHistoryTab";
+import * as employeeService from "../../services/employeeService";
 import {
   formatPhone,
   isValidPhone,
@@ -30,6 +32,7 @@ const emptyForm = {
   email: "",
   gender: "",
   notes: "",
+  assignedEmployeeId: "",
 };
 
 // The Customer module only manages customer information — measurements and
@@ -65,10 +68,19 @@ const DetailPanel = ({
           email: customer.email || "",
           gender: customer.gender || "",
           notes: customer.notes || "",
+          assignedEmployeeId: customer.assignedEmployeeId || "",
         }
       : emptyForm,
   );
   const [errors, setErrors] = useState({});
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    employeeService
+      .getAllEmployees()
+      .then(setEmployees)
+      .catch(() => setEmployees([]));
+  }, []);
 
   const handleChange = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -167,7 +179,7 @@ const DetailPanel = ({
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+                  <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
@@ -206,7 +218,7 @@ const DetailPanel = ({
                   Phone
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+                  <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <PhoneInput
                     value={form.phone}
                     onChange={(digits) =>
@@ -224,7 +236,7 @@ const DetailPanel = ({
                   CNIC (if applicable)
                 </label>
                 <div className="relative">
-                  <IdCard className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+                  <IdCard className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <CnicInput
                     value={form.cnic}
                     onChange={(digits) =>
@@ -239,7 +251,7 @@ const DetailPanel = ({
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     value={form.email}
@@ -263,6 +275,26 @@ const DetailPanel = ({
                     rows={2}
                     className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                   />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Assigned Employee
+                </label>
+                <div className="relative">
+                  <UserCog className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <select
+                    value={form.assignedEmployeeId}
+                    onChange={handleChange("assignedEmployeeId")}
+                    className="w-full pl-9 pr-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                  >
+                    <option value="">Unassigned</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>

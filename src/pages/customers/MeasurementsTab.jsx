@@ -16,6 +16,7 @@ import Modal from "../../components/Modal";
 import StatusBadge from "../../components/StatusBadge";
 import MeasurementForm from "./MeasurementForm";
 import Spinner from "../../components/Spinner";
+import { useConfirm } from "../../hooks/useConfirm";
 
 let draftKeySeq = 0;
 const nextDraftKey = () => `draft-${++draftKeySeq}`;
@@ -66,6 +67,7 @@ const ReadOnlyMeasurement = ({ measurement }) => (
 // only sent to the API together with the customer, via onDraftsChange.
 // mode "manage": customerId exists — every action hits the API directly.
 const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) => {
+  const confirm = useConfirm();
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(mode === "manage");
   const [productTypes, setProductTypes] = useState([]);
@@ -179,7 +181,7 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
   // enforces the same "locked measurements can't be deleted" rule this
   // button already respects by only rendering for an unlocked, latest version.
   const handleDeleteMeasurement = async (measurement) => {
-    if (!window.confirm(`Delete this ${measurement.garmentType} measurement?`)) return;
+    if (!(await confirm(`Delete this ${measurement.garmentType} measurement?`, { confirmLabel: "Delete" }))) return;
     setSaving(true);
     try {
       await measurementService.deleteMeasurement(measurement._id);

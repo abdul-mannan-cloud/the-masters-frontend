@@ -23,11 +23,13 @@ import KpiCard from "../../components/KpiCard";
 import { usePermission } from "../../hooks/usePermission";
 import { Skeleton, SkeletonTableRows } from "../../components/Skeleton";
 import CategoryFormModal from "./CategoryFormModal";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const ITEM_LIMIT = 100;
 
 const InventoryList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const canCreate = usePermission("inventory", "create");
   const canUpdate = usePermission("inventory", "update");
   const canDelete = usePermission("inventory", "delete");
@@ -124,7 +126,7 @@ const InventoryList = () => {
   };
 
   const handleDeleteItem = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this inventory item?")) return;
+    if (!(await confirm("Are you sure you want to delete this inventory item?", { confirmLabel: "Delete" }))) return;
     try {
       await inventoryService.deleteInventory(id);
       toast.success("Inventory item deleted successfully");
@@ -136,7 +138,7 @@ const InventoryList = () => {
   };
 
   const handleDeleteCategory = async (category) => {
-    if (!window.confirm(`Delete the "${category.name}" category?`)) return;
+    if (!(await confirm(`Delete the "${category.name}" category?`, { confirmLabel: "Delete" }))) return;
     try {
       await inventoryCategoryService.deleteCategory(category._id);
       toast.success("Category deleted successfully");

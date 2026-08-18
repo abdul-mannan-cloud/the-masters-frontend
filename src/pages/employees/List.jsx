@@ -10,9 +10,11 @@ import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
 import { SkeletonTableRows } from "../../components/Skeleton";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const EmployeeList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const canCreate = usePermission("employees", "create");
   const canUpdate = usePermission("employees", "update");
   const canDelete = usePermission("employees", "delete");
@@ -58,9 +60,10 @@ const EmployeeList = () => {
 
   const handleDelete = async (employee) => {
     if (
-      !window.confirm(
+      !(await confirm(
         `Delete "${employee.name}"? This will also revoke their portal access.`,
-      )
+        { confirmLabel: "Delete" },
+      ))
     )
       return;
     try {
@@ -98,7 +101,7 @@ const EmployeeList = () => {
       </div>
 
       <div className="relative mb-6 max-w-md">
-        <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+        <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           placeholder="Search by name or phone…"

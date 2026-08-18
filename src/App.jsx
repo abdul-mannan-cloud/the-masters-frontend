@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { ConfirmProvider } from "./context/ConfirmProvider.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { getDefaultPath } from "./utils/routing.js";
 import { isTenantHostMode } from "./utils/tenantHost.js";
@@ -78,6 +79,7 @@ function App() {
           }}
         />
         <AuthProvider>
+          <ConfirmProvider>
           <BrandingSync />
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -244,6 +246,7 @@ function App() {
 
             <Route path="*" element={<CatchAll />} />
           </Routes>
+          </ConfirmProvider>
         </AuthProvider>
       </BrowserRouter>
     </MotionConfig>

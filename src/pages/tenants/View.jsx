@@ -8,9 +8,11 @@ import StatusBadge from "../../components/StatusBadge";
 import BusinessInfoForm from "../../components/BusinessInfoForm";
 import { formatPhone } from "../../utils/formatters";
 import Spinner from "../../components/Spinner";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const TenantView = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const { id } = useParams();
   const [tenant, setTenant] = useState(null);
   const [stats, setStats] = useState(null);
@@ -44,11 +46,12 @@ const TenantView = () => {
   const handleToggleStatus = async () => {
     const suspending = tenant.status === "active";
     if (
-      !window.confirm(
+      !(await confirm(
         suspending
           ? `Suspend "${tenant.businessName}"? All of its users will be blocked from logging in.`
           : `Reactivate "${tenant.businessName}"?`,
-      )
+        { danger: suspending, confirmLabel: suspending ? "Suspend" : "Reactivate" },
+      ))
     )
       return;
     setUpdatingStatus(true);
@@ -67,9 +70,10 @@ const TenantView = () => {
 
   const handleDelete = async () => {
     if (
-      !window.confirm(
+      !(await confirm(
         `Delete "${tenant.businessName}"? Their historical data is kept, but the business will no longer be accessible.`,
-      )
+        { confirmLabel: "Delete" },
+      ))
     )
       return;
     try {

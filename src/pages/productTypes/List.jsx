@@ -7,11 +7,13 @@ import * as productTypeService from "../../services/productTypeService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { SkeletonTableRows } from "../../components/Skeleton";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const LIMIT = 10;
 
 const ProductTypeList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const canCreate = usePermission("productTypes", "create");
   const canUpdate = usePermission("productTypes", "update");
   const canDelete = usePermission("productTypes", "delete");
@@ -72,7 +74,7 @@ const ProductTypeList = () => {
   }, [page, search, activeFilter, categoryFilter]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product type?"))
+    if (!(await confirm("Are you sure you want to delete this product type?", { confirmLabel: "Delete" })))
       return;
     try {
       await productTypeService.deleteProductType(id);
@@ -87,7 +89,7 @@ const ProductTypeList = () => {
 
   const handleToggleStatus = async (productType) => {
     const activating = !productType.isActive;
-    if (!activating && !window.confirm(`Deactivate "${productType.name}"?`))
+    if (!activating && !(await confirm(`Deactivate "${productType.name}"?`, { confirmLabel: "Deactivate" })))
       return;
     try {
       await productTypeService.toggleProductTypeStatus(
@@ -128,7 +130,7 @@ const ProductTypeList = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-50">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by name…"

@@ -5,9 +5,11 @@ import { toast } from "sonner";
 import { Plus, Search, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import * as roleService from "../../services/roleService";
 import { SkeletonTableRows } from "../../components/Skeleton";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const RoleList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const [roles, setRoles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ const RoleList = () => {
   }, [roles, searchQuery]);
 
   const handleDelete = async (role) => {
-    if (!window.confirm(`Delete the "${role.name}" role?`)) return;
+    if (!(await confirm(`Delete the "${role.name}" role?`, { confirmLabel: "Delete" }))) return;
     try {
       await roleService.deleteRole(role._id);
       toast.success("Role deleted successfully");
@@ -74,7 +76,7 @@ const RoleList = () => {
       </div>
 
       <div className="relative mb-6 max-w-md">
-        <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+        <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           placeholder="Search by name…"

@@ -7,9 +7,11 @@ import * as productTypeService from "../../services/productTypeService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import Spinner from "../../components/Spinner";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const ProductTypeView = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const { id } = useParams();
   const canUpdate = usePermission("productTypes", "update");
   const canDelete = usePermission("productTypes", "delete");
@@ -38,7 +40,7 @@ const ProductTypeView = () => {
 
   const handleToggleStatus = async () => {
     const activating = !productType.isActive;
-    if (!activating && !window.confirm(`Deactivate "${productType.name}"?`))
+    if (!activating && !(await confirm(`Deactivate "${productType.name}"?`, { confirmLabel: "Deactivate" })))
       return;
     try {
       const { productType: updated } =
@@ -51,7 +53,7 @@ const ProductTypeView = () => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this product type?"))
+    if (!(await confirm("Are you sure you want to delete this product type?", { confirmLabel: "Delete" })))
       return;
     try {
       await productTypeService.deleteProductType(id);

@@ -8,9 +8,11 @@ import * as customerService from "../../services/customerService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { SkeletonTableRows } from "../../components/Skeleton";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const OrderList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const canCreate = usePermission("orders", "create");
   const canDelete = usePermission("orders", "delete");
   const [orders, setOrders] = useState([]);
@@ -45,7 +47,7 @@ const OrderList = () => {
   }, [fetchData]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    if (!(await confirm("Are you sure you want to delete this order?", { confirmLabel: "Delete" }))) return;
     try {
       await orderService.deleteOrder(id);
       toast.success("Order deleted successfully");

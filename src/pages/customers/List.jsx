@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Search, Eye, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Search, Eye, Trash2, ChevronDown, ChevronRight, CheckSquare, X } from "lucide-react";
 import * as customerService from "../../services/customerService";
 import * as orderService from "../../services/orderService";
 import Avatar from "../../components/Avatar";
@@ -11,11 +11,13 @@ import StatusBadge from "../../components/StatusBadge";
 import DetailPanel from "./DetailPanel";
 import { formatPhone } from "../../utils/formatters";
 import { usePermission } from "../../hooks/usePermission";
+import { useConfirm } from "../../hooks/useConfirm";
 import Spinner from "../../components/Spinner";
 import { SkeletonTableRows } from "../../components/Skeleton";
 
 const CustomerList = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const { id: routeId } = useParams();
   const canCreate = usePermission("customers", "create");
   const canDelete = usePermission("customers", "delete");
@@ -23,6 +25,11 @@ const CustomerList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Off by default — a checkbox on every row by default reads as cluttered
+  // for a page most people use in single-row "view details" mode. Turning
+  // this on reveals the per-row checkboxes; turning it off clears any
+  // in-progress selection rather than leaving a stale, hidden selection.
+  const [selectMode, setSelectMode] = useState(false);
   // Derived from the URL, not local state — Layout's route-change animation
   // remounts this component on every pathname change (including plain
   // /customers -> /customers/:id navigations), which would silently reset a
@@ -113,7 +120,7 @@ const CustomerList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this customer?"))
+    if (!(await confirm("Are you sure you want to delete this customer?", { confirmLabel: "Delete" })))
       return;
     try {
       await customerService.deleteCustomer(id);
@@ -137,7 +144,7 @@ const CustomerList = () => {
 
   const handleBulkDelete = async () => {
     if (checkedIds.length === 0) return;
-    if (!window.confirm(`Delete ${checkedIds.length} selected customer(s)?`))
+    if (!(await confirm(`Delete ${checkedIds.length} selected customer(s)?`, { confirmLabel: "Delete" })))
       return;
     try {
       await Promise.all(
@@ -146,6 +153,7 @@ const CustomerList = () => {
       toast.success("Selected customers deleted");
       const wasSelected = checkedIds.includes(selectedId);
       setCheckedIds([]);
+      setSelectMode(false);
       const remaining = await fetchCustomers();
       if (wasSelected) {
         navigate(
@@ -166,6 +174,11 @@ const CustomerList = () => {
     setCheckedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+
+  const toggleSelectMode = () => {
+    setSelectMode((prev) => !prev);
+    setCheckedIds([]);
+  };
 
   const toggleExpand = async (id) => {
     if (expandedId === id) {
@@ -213,7 +226,7 @@ const CustomerList = () => {
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="relative flex-1 min-w-50">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -transtone-y-1/2" />
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search by name, phone, email, or customer #…"
@@ -223,6 +236,19 @@ const CustomerList = () => {
               />
             </div>
             {canDelete && (
+              <button
+                onClick={toggleSelectMode}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold border transition-colors ${
+                  selectMode
+                    ? "bg-primary/10 border-primary/20 text-primary"
+                    : "border-stone-200 text-on-surface-variant hover:bg-stone-50"
+                }`}
+              >
+                {selectMode ? <X className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+                {selectMode ? "Cancel Selection" : "Select Multiple"}
+              </button>
+            )}
+            {canDelete && selectMode && (
               <button
                 onClick={handleBulkDelete}
                 disabled={checkedIds.length === 0}
@@ -276,7 +302,7 @@ const CustomerList = () => {
                             }
                           >
                             <td onClick={(e) => e.stopPropagation()}>
-                              {canDelete && (
+                              {canDelete && selectMode && (
                                 <input
                                   type="checkbox"
                                   checked={checkedIds.includes(customer._id)}

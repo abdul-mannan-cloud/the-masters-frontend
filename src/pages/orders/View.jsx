@@ -14,6 +14,7 @@ import OrderItemCard from "./OrderItemCard";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
 import Spinner from "../../components/Spinner";
+import { useConfirm } from "../../hooks/useConfirm";
 
 const PRODUCTION_STATUSES = [
   "pending",
@@ -26,6 +27,7 @@ const TERMINAL_STATUSES = ["completed", "delivered", "cancelled"];
 
 const OrderView = () => {
   const navigate = useTenantNavigate();
+  const confirm = useConfirm();
   const { id } = useParams();
   const canUpdate = usePermission("orders", "update");
   const canDelete = usePermission("orders", "delete");
@@ -95,7 +97,12 @@ const OrderView = () => {
   };
 
   const handleConfirmOrder = async () => {
-    if (!window.confirm("Confirm this order? Fabric for any selected garments will be deducted from inventory."))
+    if (
+      !(await confirm(
+        "Confirm this order? Fabric for any selected garments will be deducted from inventory.",
+        { danger: false, confirmLabel: "Confirm Order" },
+      ))
+    )
       return;
     setConfirming(true);
     try {
@@ -110,7 +117,7 @@ const OrderView = () => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    if (!(await confirm("Are you sure you want to delete this order?", { confirmLabel: "Delete" }))) return;
     try {
       await orderService.deleteOrder(id);
       toast.success("Order deleted successfully");
@@ -136,9 +143,10 @@ const OrderView = () => {
 
   const handleReverse = async (paymentId) => {
     if (
-      !window.confirm(
+      !(await confirm(
         "Reverse this payment? A new refund record will be created — the original stays in history.",
-      )
+        { confirmLabel: "Reverse" },
+      ))
     )
       return;
     setReversingId(paymentId);
