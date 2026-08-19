@@ -16,6 +16,7 @@ const MODULE_LABELS = {
   payments: "Payments",
   notifications: "Notifications",
   settings: "Settings",
+  inventory: "Inventory",
 };
 
 const buildEmptyPermissions = (modules, actions) =>

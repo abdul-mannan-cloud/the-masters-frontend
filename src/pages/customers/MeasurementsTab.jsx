@@ -17,6 +17,7 @@ import StatusBadge from "../../components/StatusBadge";
 import MeasurementForm from "./MeasurementForm";
 import Spinner from "../../components/Spinner";
 import { useConfirm } from "../../hooks/useConfirm";
+import { usePermission } from "../../hooks/usePermission";
 
 let draftKeySeq = 0;
 const nextDraftKey = () => `draft-${++draftKeySeq}`;
@@ -68,6 +69,11 @@ const ReadOnlyMeasurement = ({ measurement }) => (
 // mode "manage": customerId exists — every action hits the API directly.
 const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) => {
   const confirm = useConfirm();
+  // "create" mode drafts are gated by the surrounding customer-create form's
+  // own customers.create check (DetailPanel's canSubmit) — these only matter
+  // for "manage" mode, where actions hit the Measurement API directly.
+  const canUpdate = usePermission("measurements", "update");
+  const canDelete = usePermission("measurements", "delete");
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(mode === "manage");
   const [productTypes, setProductTypes] = useState([]);
@@ -230,23 +236,27 @@ const MeasurementsTab = ({ mode, customerId, gender, drafts, onDraftsChange }) =
         <>
           {isLatest && !item.lockedForOrder && (
             <>
-              <button
-                onClick={() => setFormState({ action: "edit", source: item })}
-                className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
-                title="Edit"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handleDeleteMeasurement(item)}
-                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {canUpdate && (
+                <button
+                  onClick={() => setFormState({ action: "edit", source: item })}
+                  className="p-1.5 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => handleDeleteMeasurement(item)}
+                  className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </>
           )}
-          {isLatest && item.lockedForOrder && (
+          {isLatest && item.lockedForOrder && canUpdate && (
             <button
               onClick={() =>
                 setFormState({ action: "newVersion", source: item })
