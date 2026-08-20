@@ -213,7 +213,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setIsPasswordVisible((v) => !v)}
-                  className="absolute right-1 top-1 bottom-1 px-3 flex items-center text-stone-400 hover:text-primary transition-colors"
+                  className="absolute right-1 top-5 bottom-2 px-3 flex items-center text-stone-400 hover:text-primary transition-colors"
                   tabIndex={-1}
                 >
                   <span className="material-symbols-outlined text-[20px]">
