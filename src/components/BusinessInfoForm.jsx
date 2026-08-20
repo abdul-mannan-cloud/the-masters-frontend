@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Building2, MessageCircle, Receipt } from "lucide-react";
+import { Pencil, Building2, MessageCircle, Receipt, Smartphone } from "lucide-react";
 import * as settingsService from "../services/settingsService";
 import PhoneInput from "./PhoneInput";
+import StatusBadge from "./StatusBadge";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../hooks/useAuth";
 import { formatPhone, isValidPhone, isValidEmail } from "../utils/formatters";
 import Spinner from "./Spinner";
+
+// Masks everything but the last 4 characters — used for Meta account
+// identifiers in the read-only view (not secret like the access token, but
+// still not something to display in full per the Settings mockup).
+const maskId = (value) => {
+  if (!value) return "Not configured";
+  if (value.length <= 4) return "•".repeat(value.length);
+  return `${"•".repeat(value.length - 4)}${value.slice(-4)}`;
+};
 
 const emptyForm = {
   name: "",
@@ -28,6 +38,11 @@ const emptyForm = {
   whatsappOrderPlacedTemplate: "",
   whatsappOrderCompletedTemplate: "",
   whatsappPaymentReceivedTemplate: "",
+  whatsappEnabled: true,
+  whatsappPhoneNumber: "",
+  whatsappPhoneNumberId: "",
+  whatsappBusinessAccountId: "",
+  whatsappAccessToken: "", // never pre-filled from the backend — see formFromSettings
 };
 
 const formFromSettings = (data) => ({
@@ -50,6 +65,15 @@ const formFromSettings = (data) => ({
   whatsappOrderPlacedTemplate: data.whatsapp?.orderPlacedTemplate || "",
   whatsappOrderCompletedTemplate: data.whatsapp?.orderCompletedTemplate || "",
   whatsappPaymentReceivedTemplate: data.whatsapp?.paymentReceivedTemplate || "",
+  whatsappEnabled: data.whatsapp?.enabled ?? true,
+  whatsappPhoneNumber: data.whatsapp?.phoneNumber || "",
+  whatsappPhoneNumberId: data.whatsapp?.phoneNumberId || "",
+  whatsappBusinessAccountId: data.whatsapp?.businessAccountId || "",
+  // Deliberately always "" — the backend never returns the real token (see
+  // Models/Settings.js's `select: false`), so there is nothing to load here.
+  // A blank field on save means "leave the stored token untouched"; typing a
+  // new value replaces it. See handleSubmit's payload assembly.
+  whatsappAccessToken: "",
 });
 
 // Full business-profile editor: Business/Owner/Contact info, Invoice
@@ -156,6 +180,14 @@ const BusinessInfoForm = ({ tenantId }) => {
         orderPlacedTemplate: form.whatsappOrderPlacedTemplate,
         orderCompletedTemplate: form.whatsappOrderCompletedTemplate,
         paymentReceivedTemplate: form.whatsappPaymentReceivedTemplate,
+        enabled: form.whatsappEnabled,
+        phoneNumber: form.whatsappPhoneNumber,
+        phoneNumberId: form.whatsappPhoneNumberId,
+        businessAccountId: form.whatsappBusinessAccountId,
+        // Omitted entirely when blank — that means "leave the stored token
+        // as-is". Only a non-empty value here sets/rotates it; the backend
+        // never gave us the real one to send back unchanged.
+        ...(form.whatsappAccessToken ? { accessToken: form.whatsappAccessToken } : {}),
       },
     };
 
@@ -410,6 +442,81 @@ const BusinessInfoForm = ({ tenantId }) => {
             className="bg-white rounded-2xl p-6 space-y-4"
             style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
           >
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                WhatsApp Business Account
+              </h3>
+              <label className="flex items-center gap-2 text-sm font-bold text-on-surface cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.whatsappEnabled}
+                  onChange={set("whatsappEnabled")}
+                  className="w-4 h-4 accent-primary"
+                />
+                {form.whatsappEnabled ? "Enabled" : "Disabled"}
+              </label>
+            </div>
+            <p className="text-xs text-on-surface-variant -mt-2">
+              Connect this business's own WhatsApp Business account. While disabled, no WhatsApp
+              message is ever sent for this business, regardless of the triggers below.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Business WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  value={form.whatsappPhoneNumber}
+                  onChange={set("whatsappPhoneNumber")}
+                  placeholder="+92 300 1234567"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Phone Number ID
+                </label>
+                <input
+                  type="text"
+                  value={form.whatsappPhoneNumberId}
+                  onChange={set("whatsappPhoneNumberId")}
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  WhatsApp Business Account ID
+                </label>
+                <input
+                  type="text"
+                  value={form.whatsappBusinessAccountId}
+                  onChange={set("whatsappBusinessAccountId")}
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Access Token
+                </label>
+                <input
+                  type="password"
+                  value={form.whatsappAccessToken}
+                  onChange={set("whatsappAccessToken")}
+                  placeholder={settings.whatsapp?.hasAccessToken ? "•••••••• (unchanged — leave blank to keep)" : "Enter access token"}
+                  autoComplete="new-password"
+                  className="w-full px-3 py-2.5 bg-stone-50 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="bg-white rounded-2xl p-6 space-y-4"
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.08)" }}
+          >
             <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               WhatsApp Notifications
@@ -642,6 +749,41 @@ const BusinessInfoForm = ({ tenantId }) => {
                 <p className="text-on-surface">
                   {settings.invoice?.showLogo ? "Yes" : "No"}
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="bg-white rounded-2xl p-6"
+            style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                WhatsApp Business Account
+              </h3>
+              <StatusBadge status={settings.whatsapp?.enabled ? "active" : "inactive"} label={settings.whatsapp?.enabled ? "Enabled" : "Disabled"} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-on-surface-variant">Business WhatsApp Number</p>
+                <p className="text-on-surface">{settings.whatsapp?.phoneNumber || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant">Connection Status</p>
+                <p className="text-on-surface">
+                  {settings.whatsapp?.hasAccessToken && settings.whatsapp?.phoneNumberId
+                    ? "Connected"
+                    : "Not Connected"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant">Phone Number ID</p>
+                <p className="text-on-surface font-mono">{maskId(settings.whatsapp?.phoneNumberId)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-on-surface-variant">WhatsApp Business Account ID</p>
+                <p className="text-on-surface font-mono">{maskId(settings.whatsapp?.businessAccountId)}</p>
               </div>
             </div>
           </div>
