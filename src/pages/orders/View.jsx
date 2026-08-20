@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2, PackageCheck } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Printer, Download, Undo2, PackageCheck, UserCog } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as paymentService from "../../services/paymentService";
 import * as settingsService from "../../services/settingsService";
@@ -11,6 +11,7 @@ import Avatar from "../../components/Avatar";
 import StatusBadge from "../../components/StatusBadge";
 import AddPaymentDialog from "./AddPaymentDialog";
 import OrderItemCard from "./OrderItemCard";
+import AssignEmployeesModal from "./AssignEmployeesModal";
 import { usePermission } from "../../hooks/usePermission";
 import { formatPhone } from "../../utils/formatters";
 import Spinner from "../../components/Spinner";
@@ -42,6 +43,7 @@ const OrderView = () => {
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [reversingId, setReversingId] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   const fetchAll = async () => {
     try {
@@ -174,6 +176,11 @@ const OrderView = () => {
   const { order, customer, items, paymentSummary } = data;
   const { totalPaid, remainingBalance } = paymentSummary;
   const locked = TERMINAL_STATUSES.includes(order.productionStatus);
+  const assignedEmployees = items.flatMap((item) =>
+    (item.assignedEmployees || [])
+      .filter((a) => a.status !== "reassigned")
+      .map((a) => ({ ...a, garmentType: item.garmentType })),
+  );
 
   return (
     <div className="p-8 font-body print:p-0">
@@ -357,6 +364,55 @@ const OrderView = () => {
       </div>
 
       <div
+        className="bg-white rounded-2xl p-6 mt-6 print:hidden"
+        style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline flex items-center gap-1.5">
+            <UserCog className="w-3.5 h-3.5" />
+            Assigned Employees
+          </h3>
+          {canUpdate && !locked && (
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-bold rounded-full text-xs hover:bg-primary-container transition-colors"
+            >
+              <UserCog className="w-3.5 h-3.5" />
+              Assign Employees
+            </button>
+          )}
+        </div>
+        {assignedEmployees.length === 0 ? (
+          <p className="text-sm text-on-surface-variant py-2">Not Assigned</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full masters-table">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Role</th>
+                  <th>Garment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignedEmployees.map((a) => (
+                  <tr key={a._id}>
+                    <td className="font-bold text-on-surface">{a.employeeName || "—"}</td>
+                    <td className="text-on-surface-variant">{a.workflowStep?.step}</td>
+                    <td className="text-on-surface-variant">{a.garmentType}</td>
+                    <td>
+                      <StatusBadge status={a.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div
         className="bg-white rounded-2xl p-6 mt-6"
         style={{ boxShadow: "0 4px 20px rgba(26,26,26,0.05)" }}
       >
@@ -461,6 +517,20 @@ const OrderView = () => {
             saving={savingPayment}
             onSave={handleAddPayment}
             onCancel={() => setShowAddPayment(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAssignModal && (
+          <AssignEmployeesModal
+            order={order}
+            items={items}
+            onClose={() => setShowAssignModal(false)}
+            onAssigned={async () => {
+              setShowAssignModal(false);
+              await fetchAll();
+            }}
           />
         )}
       </AnimatePresence>

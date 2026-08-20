@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,10 +16,12 @@ import {
   ChevronsRight,
   Sparkles,
   MessageCircle,
+  BellRing,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { isTenantHostMode } from "../utils/tenantHost";
 import { DEFAULT_APP_NAME, DEFAULT_LOGO, DEFAULT_TENANT_FALLBACK } from "../utils/branding";
+import * as alertService from "../services/alertService";
 
 // `module` gates on the logged-in user's permission grid (view access) for
 // tenant_admin/employee/manager accounts; `roles` hard-gates to specific
@@ -35,6 +38,12 @@ const ALL_NAV_ITEMS = [
   },
   { name: "Customers", path: "/customers", icon: Users, module: "customers" },
   { name: "Orders", path: "/orders", icon: ShoppingCart, module: "orders" },
+  {
+    name: "Alerts",
+    path: "/alerts",
+    icon: BellRing,
+    roles: ["tenant_admin", "manager", "employee"],
+  },
   {
     name: "Pending WhatsApp",
     path: "/notifications/pending",
@@ -57,10 +66,35 @@ const ALL_NAV_ITEMS = [
 // per-user workspace preference, not per-visit). mobileOpen/onCloseMobile
 // drive the small-screen off-canvas drawer variant — see Layout.jsx, which
 // owns both pieces of state since Topbar's hamburger needs to reach mobileOpen.
+const ALERT_POLL_INTERVAL_MS = 60000;
+
 const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) => {
   const { user, permissions, tenant, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const isTenantScoped = user && ["tenant_admin", "manager", "employee"].includes(user.role);
+
+  // Polled rather than pushed — simplest way to keep the badge roughly fresh
+  // without adding websocket infrastructure for what's an at-a-glance count.
+  useEffect(() => {
+    if (!isTenantScoped) return;
+    let cancelled = false;
+    const fetchCount = () => {
+      alertService
+        .getUnreadCount()
+        .then((count) => {
+          if (!cancelled) setUnreadAlerts(count);
+        })
+        .catch(() => {});
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, ALERT_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isTenantScoped]);
 
   const navItems = ALL_NAV_ITEMS.filter((item) => {
     if (item.roles) return item.roles.includes(user?.role);
@@ -164,7 +198,14 @@ const Sidebar = ({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }) =>
                 className="relative z-10 flex items-center gap-3"
               >
                 <item.icon className="w-4.5 h-4.5 shrink-0" />
-                <span className={collapsed ? "lg:hidden" : ""}>{item.name}</span>
+                <span className={`flex items-center gap-1.5 ${collapsed ? "lg:hidden" : ""}`}>
+                  {item.name}
+                  {item.name === "Alerts" && unreadAlerts > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-600 leading-none">
+                      {unreadAlerts > 99 ? "99+" : unreadAlerts}
+                    </span>
+                  )}
+                </span>
               </motion.span>
             </NavLink>
           );

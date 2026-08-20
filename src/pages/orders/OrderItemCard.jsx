@@ -111,6 +111,29 @@ const OrderItemCard = ({ item, defaultExpanded = false }) => {
             </div>
           )}
 
+          {item.materials?.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                Other Materials
+              </p>
+              <div className="space-y-1.5">
+                {item.materials.map((m) => (
+                  <div
+                    key={String(m.inventoryId)}
+                    className="flex items-center justify-between text-sm px-3 py-1.5 bg-stone-50 rounded-lg"
+                  >
+                    <span className="text-on-surface-variant">
+                      {m.fabricName || "Material"}
+                    </span>
+                    <span className="font-medium text-on-surface">
+                      {m.quantity} {m.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {item.instructions && (
             <div>
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">

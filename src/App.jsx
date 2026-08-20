@@ -36,6 +36,7 @@ import InventoryView from "./pages/inventory/View.jsx";
 import LowStockReport from "./pages/inventory/LowStockReport.jsx";
 import PreviewPrototype from "./pages/PreviewPrototype.jsx";
 import PendingNotifications from "./pages/PendingNotifications.jsx";
+import Alerts from "./pages/Alerts.jsx";
 
 // Catches anything unmatched — including a bare "/dashboard" hit by a
 // tenant-scoped user (that path only exists for super_admin now).
@@ -106,6 +107,7 @@ function App() {
                   <Route element={<Layout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="alerts" element={<Alerts />} />
 
                     <Route element={<ProtectedRoute module="customers" />}>
                       <Route path="customers" element={<CustomerList />} />
@@ -184,6 +186,7 @@ function App() {
                   <Route path="/:tenantSlug" element={<TenantSlugGuard />}>
                     <Route element={<Layout />}>
                       <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="alerts" element={<Alerts />} />
 
                       {/* No separate "customers/new" route — "new" is intentionally
                           matched by the :id param below (routeId === "new" means
