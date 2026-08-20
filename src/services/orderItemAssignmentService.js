@@ -5,10 +5,12 @@ export const getAllAssignments = async (filters = {}) => {
   return data;
 };
 
-// { assignments: [{ orderItemId, sequence, employeeId, notes? }] }
-export const bulkAssignEmployees = async (orderId, assignments) => {
-  const { data } = await api.post(`/order-item-assignment/order/${orderId}/assign`, {
-    assignments,
+// Sets the order's full assigned-employee roster — the backend reconciles
+// this against whoever is currently assigned (adds new ones, removes
+// unchecked ones), so this is the complete desired list, not a delta.
+export const syncOrderAssignments = async (orderId, employeeIds) => {
+  const { data } = await api.put(`/order-item-assignment/order/${orderId}/assign`, {
+    employeeIds,
   });
   return data;
 };

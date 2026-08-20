@@ -1,24 +1,27 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useTenantNavigate } from "../../hooks/useTenantNavigate";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Eye, Trash2, ReceiptText } from "lucide-react";
+import { Plus, Eye, Trash2, ReceiptText, UserCog } from "lucide-react";
 import * as orderService from "../../services/orderService";
 import * as customerService from "../../services/customerService";
 import StatusBadge from "../../components/StatusBadge";
 import { usePermission } from "../../hooks/usePermission";
 import { SkeletonTableRows } from "../../components/Skeleton";
 import { useConfirm } from "../../hooks/useConfirm";
+import AssignEmployeesModal from "./AssignEmployeesModal";
 
 const OrderList = () => {
   const navigate = useTenantNavigate();
   const confirm = useConfirm();
   const canCreate = usePermission("orders", "create");
   const canDelete = usePermission("orders", "delete");
+  const canAssign = usePermission("orders", "update");
   const [orders, setOrders] = useState([]);
   const [customersById, setCustomersById] = useState({});
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [assigningOrderId, setAssigningOrderId] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -112,6 +115,7 @@ const OrderList = () => {
                 <th>Order #</th>
                 <th>Customer</th>
                 <th>Items</th>
+                <th>Assigned Employees</th>
                 <th>Date</th>
                 <th>Total</th>
                 <th>Production</th>
@@ -121,10 +125,10 @@ const OrderList = () => {
             </thead>
             <tbody>
               {loading ? (
-                <SkeletonTableRows rows={6} columns={8} />
+                <SkeletonTableRows rows={6} columns={9} />
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="8">
+                  <td colSpan="9">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <ReceiptText className="w-7 h-7 text-stone-300" />
@@ -165,6 +169,29 @@ const OrderList = () => {
                         "—"
                       )}
                     </td>
+                    <td className="max-w-48">
+                      {order.assignedEmployees?.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {order.assignedEmployees.slice(0, 3).map((a, i) => (
+                            <span
+                              key={`${a.employeeId}-${i}`}
+                              className="px-2 py-0.5 bg-stone-100 rounded-full text-[11px] font-medium text-on-surface-variant whitespace-nowrap"
+                              title={a.role}
+                            >
+                              {a.employeeName || "—"}
+                              {a.role && <span className="text-on-surface-variant/70"> ({a.role})</span>}
+                            </span>
+                          ))}
+                          {order.assignedEmployees.length > 3 && (
+                            <span className="px-2 py-0.5 text-[11px] font-medium text-on-surface-variant">
+                              +{order.assignedEmployees.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-on-surface-variant/70">Not Assigned</span>
+                      )}
+                    </td>
                     <td className="text-on-surface-variant">
                       {new Date(order.orderDate).toLocaleDateString()}
                     </td>
@@ -186,6 +213,15 @@ const OrderList = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
+                        {canAssign && !["completed", "delivered", "cancelled"].includes(order.productionStatus) && (
+                          <button
+                            onClick={() => setAssigningOrderId(order._id)}
+                            className="p-2 text-stone-400 hover:text-primary hover:bg-stone-50 rounded-lg transition-colors"
+                            title="Assign Employees"
+                          >
+                            <UserCog className="w-4 h-4" />
+                          </button>
+                        )}
                         {canDelete && (
                           <button
                             onClick={() => handleDelete(order._id)}
@@ -204,6 +240,19 @@ const OrderList = () => {
           </table>
         </div>
       </div>
+
+      <AnimatePresence>
+        {assigningOrderId && (
+          <AssignEmployeesModal
+            orderId={assigningOrderId}
+            onClose={() => setAssigningOrderId(null)}
+            onAssigned={async () => {
+              setAssigningOrderId(null);
+              await fetchData();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

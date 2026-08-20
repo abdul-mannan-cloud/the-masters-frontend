@@ -524,8 +524,7 @@ const OrderView = () => {
       <AnimatePresence>
         {showAssignModal && (
           <AssignEmployeesModal
-            order={order}
-            items={items}
+            orderId={order._id}
             onClose={() => setShowAssignModal(false)}
             onAssigned={async () => {
               setShowAssignModal(false);
