@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTenantNavigate } from "../hooks/useTenantNavigate";
 import { toast } from "sonner";
-import { Boxes, CalendarDays, Wallet, BellRing, CheckCheck } from "lucide-react";
+import { Boxes, CalendarDays, Wallet, BellRing, CheckCheck, UserX } from "lucide-react";
 import * as alertService from "../services/alertService";
 import Spinner from "../components/Spinner";
 
@@ -10,12 +10,14 @@ const TABS = [
   { value: "inventory", label: "Inventory" },
   { value: "delivery", label: "Delivery" },
   { value: "payment", label: "Payment" },
+  { value: "assignment", label: "Assignment" },
 ];
 
 const TYPE_META = {
   inventory: { icon: Boxes, label: "Low Inventory", tone: "text-amber-600 bg-amber-50" },
   delivery: { icon: CalendarDays, label: "Delivery Approaching", tone: "text-primary bg-primary/10" },
   payment: { icon: Wallet, label: "Payment Remaining", tone: "text-red-600 bg-red-50" },
+  assignment: { icon: UserX, label: "Unassigned Order", tone: "text-orange-600 bg-orange-50" },
 };
 
 const PRIORITY_TONE = {

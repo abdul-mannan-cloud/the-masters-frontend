@@ -122,6 +122,7 @@ const OwnerDashboard = () => {
               <tr>
                 <th>Order #</th>
                 <th>Customer</th>
+                <th>Assigned Employees</th>
                 <th>Total</th>
                 <th>Status</th>
                 <th>Date</th>
@@ -130,7 +131,7 @@ const OwnerDashboard = () => {
             <tbody>
               {stats.recentOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="5">
+                  <td colSpan="6">
                     <div className="empty-state">
                       <ShoppingCart className="w-7 h-7 text-stone-300" />
                       <p className="text-sm font-bold text-on-surface-variant font-headline">
@@ -150,6 +151,29 @@ const OwnerDashboard = () => {
                     </td>
                     <td className="text-on-surface-variant">
                       {order.customerId?.name || "—"}
+                    </td>
+                    <td className="max-w-48">
+                      {order.assignedEmployees?.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {order.assignedEmployees.slice(0, 2).map((a, i) => (
+                            <span
+                              key={`${a.employeeId}-${i}`}
+                              className="px-2 py-0.5 bg-stone-100 rounded-full text-[11px] font-medium text-on-surface-variant whitespace-nowrap"
+                              title={a.role}
+                            >
+                              {a.employeeName || "—"}
+                              {a.role && <span className="text-on-surface-variant/70"> ({a.role})</span>}
+                            </span>
+                          ))}
+                          {order.assignedEmployees.length > 2 && (
+                            <span className="px-2 py-0.5 text-[11px] font-medium text-on-surface-variant">
+                              +{order.assignedEmployees.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-on-surface-variant/70">Not Assigned</span>
+                      )}
                     </td>
                     <td className="text-on-surface-variant">
                       Rs. {order.total?.toLocaleString()}
